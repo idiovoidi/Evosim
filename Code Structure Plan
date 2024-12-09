@@ -1,0 +1,61 @@
+Entity System:
+Defines the Entity class
+Manages entity creation, destruction, and component assignment
+Provides methods to query entities based on components
+
+Component System:
+Defines various component classes (e.g., Position, Velocity, Appearance, Stats, etc.)
+Each component class encapsulates specific data and behavior
+Components are added to entities to define their characteristics and state
+
+World System:
+Manages the game world, including the world map and entities
+Updates the world state based on game logic and entity interactions
+Handles spawning, despawning, and spatial queries
+
+Rendering System:
+Responsible for rendering the game world and entities
+Queries entities with specific components (e.g., Position, Appearance)
+Draws the world map and entities on the screen
+
+Input System:
+Handles user input and translates it into game actions
+Updates entity components based on user input (e.g., movement, interactions)
+
+AI System:
+Implements artificial intelligence behavior for entities
+Updates entity components based on AI decision-making (e.g., movement, actions)
+Physics System:
+Simulates physics interactions between entities
+Updates entity positions and velocities based on physics rules
+Handles collision detection and resolution
+
+UI System:
+Manages the user interface elements (e.g., menus, HUD, tooltips)
+Renders UI components and handles user interactions
+
+9. Event System:
+Implements an event-driven architecture for communication between systems
+Allows systems to subscribe to and publish events
+Facilitates decoupled interaction between systems
+
+10. Resource Management System:
+Handles loading, caching, and unloading of game resources (e.g., textures, sounds, maps)
+Provides efficient access to resources for other systems
+
+
+project/
+├── systems/
+│   ├── __init__.py          # Exports all systems
+│   ├── base_system.py       # Base system class
+│   ├── movement_system.py   # Handles entity movement
+│   ├── health_system.py     # Handles health and status
+│   ├── rendering_system.py  # Handles rendering
+│   ├── ai_system.py        # Will handle AI behaviors
+│   ├── physics_system.py   # Will handle physics/collisions
+│   ├── event_system.py     # Will handle events
+│   └── resource_system.py  # Will handle resource management
+├── components.py
+├── entity.py
+├── main.py
+└── ... (other files)

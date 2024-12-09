@@ -1,0 +1,174 @@
+from dataclasses import dataclass
+from enum import Enum, auto
+import numpy as np
+from PyQt6.QtGui import QColor
+from typing import Dict, List, Optional
+
+class ComponentType(Enum):
+    POSITION = auto()
+    VELOCITY = auto()
+    APPEARANCE = auto()
+    STATS = auto()
+    MEMORY = auto()
+    STATUS = auto()
+    TRAITS = auto()
+    INVENTORY = auto()
+    SKILLS = auto()
+    AI = auto()
+    COLLISION = auto()
+
+class Position:
+    def __init__(self, value):
+        """Initialize position with a numpy array or x,y coordinates"""
+        if isinstance(value, np.ndarray):
+            self.value = value
+        else:
+            self.value = np.array([value[0], value[1]], dtype=float)
+        self.previous = self.value.copy()  # For interpolation/collision detection
+
+class Velocity:
+    def __init__(self, value):
+        """Initialize velocity with a numpy array or dx,dy values"""
+        if isinstance(value, np.ndarray):
+            self.value = value
+        else:
+            self.value = np.array([value[0], value[1]], dtype=float)
+        self.max_speed = 5.0
+    
+    def clamp_velocity(self):
+        """Limit velocity to max speed"""
+        speed = np.linalg.norm(self.value)
+        if speed > self.max_speed:
+            self.value = (self.value / speed) * self.max_speed
+
+class Appearance:
+    def __init__(self, char, color, size=1.0, visible=True, layer=0):
+        self.char = char
+        self.color = color
+        self.size = size
+        self.visible = visible
+        self.layer = layer
+
+class Stats:
+    def __init__(self, energy, max_energy=None, species_type='plant', 
+                 health=100.0, max_health=None, age=0, 
+                 reproduction_cooldown=0, showing_heart=0):
+        self.energy = energy
+        self.max_energy = max_energy or energy * 1.5
+        self.species_type = species_type
+        self.health = health
+        self.max_health = max_health or health
+        self.age = age
+        self.reproduction_cooldown = reproduction_cooldown
+        self.showing_heart = showing_heart
+
+class Memory:
+    def __init__(self, spots=None, capacity=10):
+        """Initialize memory with optional spots dictionary and capacity"""
+        self.spots = spots if spots is not None else {
+            'food': [],
+            'danger': [],
+            'water': []
+        }
+        self.capacity = capacity
+    
+    def remember(self, category, pos, value=1.0):
+        """Remember a location in a specific category"""
+        if category not in self.spots:
+            return
+        
+        self.spots[category].append({
+            'pos': pos.copy() if hasattr(pos, 'copy') else pos,
+            'time': 0,
+            'value': value
+        })
+        
+        # Maintain capacity limit
+        if len(self.spots[category]) > self.capacity:
+            self.spots[category].pop(0)
+
+class Status:
+    def __init__(self, is_hungry=False, is_thirsty=False, is_tired=False, 
+                 is_mating=False, last_reproduction=0, state='idle', 
+                 status_effects=None):
+        self.is_hungry = is_hungry
+        self.is_thirsty = is_thirsty
+        self.is_tired = is_tired
+        self.is_mating = is_mating
+        self.last_reproduction = last_reproduction
+        self.state = state
+        self.status_effects = status_effects or []
+
+class Traits:
+    def __init__(self, speed, sense_radius, metabolism, size, 
+                 aggression, intelligence, memory):
+        self.speed = speed
+        self.sense_radius = sense_radius
+        self.metabolism = metabolism
+        self.size = size
+        self.aggression = aggression
+        self.intelligence = intelligence
+        self.memory = memory
+    
+    def mutate(self, mutation_rate=0.1):
+        """Return a new Traits instance with mutated values"""
+        import random
+        
+        # Create a copy of the current traits
+        mutated_traits = Traits(
+            speed=self.speed,
+            sense_radius=self.sense_radius,
+            metabolism=self.metabolism,
+            size=self.size,
+            aggression=self.aggression,
+            intelligence=self.intelligence,
+            memory=self.memory
+        )
+        
+        # Randomly mutate some traits
+        traits_to_mutate = [
+            'speed', 'sense_radius', 'metabolism', 
+            'size', 'aggression', 'intelligence', 'memory'
+        ]
+        
+        for trait in traits_to_mutate:
+            if random.random() < mutation_rate:
+                current_value = getattr(mutated_traits, trait)
+                setattr(mutated_traits, trait, 
+                        current_value * random.uniform(0.8, 1.2))
+        
+        return mutated_traits
+
+class Inventory:
+    def __init__(self, capacity, items=None):
+        self.capacity = capacity
+        self.items = items or {}
+
+class Skills:
+    def __init__(self):
+        self.values = {}
+        self.experience = {}
+    
+    def improve(self, skill, amount):
+        if skill not in self.values:
+            self.values[skill] = 0.0
+            self.experience[skill] = 0.0
+        
+        self.experience[skill] += amount
+        while self.experience[skill] >= 1.0:
+            self.experience[skill] -= 1.0
+            self.values[skill] += 0.1
+
+class AI:
+    def __init__(self, behavior_tree=None, current_task=None, target=None):
+        self.behavior_tree = behavior_tree or {}
+        self.current_task = current_task
+        self.target = target
+
+class Collision:
+    def __init__(self, radius, mask=1, is_trigger=False):
+        self.radius = radius
+        self.mask = mask
+        self.is_trigger = is_trigger
+
+# Define other component classes as needed

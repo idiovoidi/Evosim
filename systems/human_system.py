@@ -13,46 +13,47 @@ class BuildingType(Enum):
     WELL = 5
 
 class Building:
+    # Move properties to class level
+    PROPERTIES = {
+        BuildingType.HOUSE: {
+            'capacity': 4,
+            'char': '🏠',
+            'color': QColor(139, 69, 19),  # Brown
+            'build_cost': 50
+        },
+        BuildingType.FARM: {
+            'food_production': 0.1,
+            'char': '🌾',
+            'color': QColor(205, 133, 63),  # Peru
+            'build_cost': 30
+        },
+        BuildingType.WORKSHOP: {
+            'production_rate': 0.05,
+            'char': '🏭',
+            'color': QColor(169, 169, 169),  # Dark gray
+            'build_cost': 70
+        },
+        BuildingType.STORAGE: {
+            'capacity': 1000,
+            'char': '🏪',
+            'color': QColor(160, 82, 45),  # Sienna
+            'build_cost': 40
+        },
+        BuildingType.WELL: {
+            'water_production': 0.1,
+            'char': '⛲',
+            'color': QColor(70, 130, 180),  # Steel blue
+            'build_cost': 20
+        }
+    }
+
     def __init__(self, building_type, pos):
         self.type = building_type
         self.pos = np.array(pos, dtype=float)
         self.health = 100
         self.resources = 0
         self.occupants = []
-        
-        # Building-specific properties
-        self.properties = {
-            BuildingType.HOUSE: {
-                'capacity': 4,
-                'char': '🏠',
-                'color': QColor(139, 69, 19),  # Brown
-                'build_cost': 50
-            },
-            BuildingType.FARM: {
-                'food_production': 0.1,
-                'char': '🌾',
-                'color': QColor(205, 133, 63),  # Peru
-                'build_cost': 30
-            },
-            BuildingType.WORKSHOP: {
-                'production_rate': 0.05,
-                'char': '🏭',
-                'color': QColor(169, 169, 169),  # Dark gray
-                'build_cost': 70
-            },
-            BuildingType.STORAGE: {
-                'capacity': 1000,
-                'char': '🏪',
-                'color': QColor(160, 82, 45),  # Sienna
-                'build_cost': 40
-            },
-            BuildingType.WELL: {
-                'water_production': 0.1,
-                'char': '⛲',
-                'color': QColor(70, 130, 180),  # Steel blue
-                'build_cost': 20
-            }
-        }[building_type]
+        self.properties = self.PROPERTIES[building_type]
 
 class Human:
     def __init__(self, pos):
@@ -220,8 +221,11 @@ class Human:
             self.build(BuildingType.FARM if random.random() < 0.5 else BuildingType.WORKSHOP)
     
     def build(self, building_type):
-        if self.inventory['materials'] >= self.properties[building_type]['build_cost']:
-            self.inventory['materials'] -= self.properties[building_type]['build_cost']
+        # Get building properties from Building class
+        building_properties = Building.PROPERTIES[building_type]
+        
+        if self.inventory['materials'] >= building_properties['build_cost']:
+            self.inventory['materials'] -= building_properties['build_cost']
             new_building = Building(building_type, self.pos + np.random.uniform(-2, 2, 2))
             self.skills['building'] += 0.1
             return new_building

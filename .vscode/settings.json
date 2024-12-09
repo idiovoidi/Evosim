@@ -1,0 +1,15 @@
+{
+    "files.exclude": {
+      "**/.venv": true,
+      "**/__pycache__": true,
+      "**/__init__.py": true,
+      "**/chrome-data": true,
+      "**/.gitignore": true,
+      "**.env": true,
+      "**/.cursorignore": true,
+      "**/inspectionProfiles": true,
+      "**/.idea": true,
+      "**jobs.sqlite": true,
+      "**/thumbnails": true,
+    }
+  }
