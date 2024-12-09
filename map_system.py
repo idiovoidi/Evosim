@@ -2,12 +2,12 @@ from enum import Enum, auto
 from dataclasses import dataclass
 from typing import Dict, Any, Tuple
 import random
-from PyQt6.QtGui import QColor, QFont
-from PyQt6.QtCore import QPoint, QRect
+from PyQt6.QtGui import QColor
 import noise
 import os
 import json
 import numpy as np
+import math
 
 class TerrainType(Enum):
     DEEP_WATER = auto()
@@ -44,7 +44,7 @@ class TerrainTile:
     TERRAIN_PROPERTIES = {
         TerrainType.DEEP_WATER: TileProperties(
             char='🌊',
-            color=QColor(0, 105, 148),
+            color=QColor(28, 107, 160),
             movement_cost=10.0,
             food_value=50.0,
             food_growth_rate=0.2,
@@ -56,8 +56,8 @@ class TerrainTile:
             resources={'fish': 100.0, 'water': 100.0}
         ),
         TerrainType.SHALLOW_WATER: TileProperties(
-            char='💧',
-            color=QColor(51, 153, 255),
+            char='🌊',
+            color=QColor(65, 155, 249),
             movement_cost=5.0,
             food_value=30.0,
             food_growth_rate=0.3,
@@ -70,7 +70,7 @@ class TerrainTile:
         ),
         TerrainType.GRASSLAND: TileProperties(
             char='🌿',
-            color=QColor(95, 189, 51),
+            color=QColor(126, 200, 80),
             movement_cost=1.0,
             food_value=100.0,
             food_growth_rate=1.0,
@@ -83,7 +83,7 @@ class TerrainTile:
         ),
         TerrainType.FOREST: TileProperties(
             char='🌲',
-            color=QColor(0, 100, 0),
+            color=QColor(34, 139, 34),
             movement_cost=1.5,
             food_value=80.0,
             food_growth_rate=0.8,
@@ -96,7 +96,7 @@ class TerrainTile:
         ),
         TerrainType.MOUNTAIN: TileProperties(
             char='⛰️',
-            color=QColor(128, 128, 128),
+            color=QColor(139, 137, 137),
             movement_cost=3.0,
             food_value=30.0,
             food_growth_rate=0.3,
@@ -112,11 +112,10 @@ class TerrainTile:
     def __init__(self, terrain_type: TerrainType, position: tuple):
         self.terrain_type = terrain_type
         self.position = position
-        self.properties = self.TERRAIN_PROPERTIES[terrain_type]
-        self.current_resources = self.properties.resources.copy()
+        self.current_resources = self.TERRAIN_PROPERTIES[terrain_type].resources.copy()
         
         # Dynamic properties that can change
-        self.current_food = self.properties.food_value
+        self.current_food = self.TERRAIN_PROPERTIES[terrain_type].food_value
         self.is_occupied = False
         self.occupant = None
         self.structure = None
@@ -128,12 +127,12 @@ class TerrainTile:
         
     def update(self):
         # Regrow food
-        if self.current_food < self.properties.food_value:
-            self.current_food += self.properties.food_growth_rate
+        if self.current_food < self.TERRAIN_PROPERTIES[self.terrain_type].food_value:
+            self.current_food += self.TERRAIN_PROPERTIES[self.terrain_type].food_growth_rate
         
         # Regenerate resources
         for resource, amount in self.current_resources.items():
-            max_amount = self.properties.resources[resource]
+            max_amount = self.TERRAIN_PROPERTIES[self.terrain_type].resources[resource]
             if amount < max_amount:
                 self.current_resources[resource] += max_amount * 0.01
         
@@ -143,8 +142,8 @@ class TerrainTile:
             self.pollution_level += 0.1
         
         if self.is_flooded:
-            self.properties.movement_cost *= 1.5
-            self.humidity = min(1.0, self.properties.humidity + 0.1)
+            self.TERRAIN_PROPERTIES[self.terrain_type].movement_cost *= 1.5
+            self.TERRAIN_PROPERTIES[self.terrain_type].humidity = min(1.0, self.TERRAIN_PROPERTIES[self.terrain_type].humidity + 0.1)
 
 class WorldMap:
     def __init__(self, width, height, tile_size=40):
@@ -266,41 +265,6 @@ class WorldMap:
             return TerrainType.FOREST
         
         return TerrainType.GRASSLAND
-    
-    def draw(self, painter):
-        """Draw the world map"""
-        tile_size = self.tile_size
-        
-        for y in range(self.height):
-            for x in range(self.width):
-                tile = self.tiles[y][x]
-                
-                # Get tile properties
-                properties = TerrainTile.TERRAIN_PROPERTIES[tile.terrain_type]
-                
-                # Calculate pixel coordinates
-                px = x * tile_size
-                py = y * tile_size
-                
-                # Draw tile background
-                painter.fillRect(
-                    px, py, tile_size, tile_size,
-                    properties.color
-                )
-                
-                # Draw tile character
-                painter.setPen(properties.color.darker(150))
-                painter.setFont(QFont('Segoe UI Emoji', int(tile_size/2)))
-                
-                # Create QPoint for text position with integer coordinates
-                text_pos = QPoint(
-                    int(px + tile_size/4),
-                    int(py + tile_size/2 + tile_size/4)
-                )
-                painter.drawText(text_pos, properties.char)
-                
-                # Optional: Draw tile borders
-                painter.drawRect(px, py, tile_size, tile_size)
     
     def create_predefined_features(self):
         """Create predefined map features like lakes, rivers, and biome clusters"""

@@ -183,10 +183,10 @@ class EventIndicator:
 class EcosystemWidget(QWidget):
     def __init__(self, log_panel):
         super().__init__()
-        self.bounds = (0, 1200)
+        self.bounds = (0, 2000)
         self.entities = []
         self.log_panel = log_panel
-        self.stats = {}  # Current population stats
+        self.stats = {}
         
         # Initialize systems
         self.movement_system = MovementSystem(self)
@@ -197,12 +197,12 @@ class EcosystemWidget(QWidget):
         self.systems = [
             self.movement_system,
             self.health_system,
-            self.ui_system,  # Add UI system
+            self.ui_system,
             self.rendering_system
         ]
         
         # Generate new map
-        self.world_map = WorldMap(width=30, height=30, tile_size=40)
+        self.world_map = WorldMap(width=40, height=40, tile_size=50)
         self.log_panel.log("Generated new map")
         
         # Add counters for statistics
@@ -331,15 +331,9 @@ class EcosystemWidget(QWidget):
         return None
     
     def paintEvent(self, event):
-        # Use rendering system for world and entities
-        self.rendering_system.render(self)
-        
-        # Create painter for UI
-        painter = QPainter(self)
-        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        
-        # Render UI on top
-        self.ui_system.render(painter)
+        """Handle paint event using the rendering system"""
+        if hasattr(self, 'rendering_system'):
+            self.rendering_system.render(self)
     
     def update_population_stats(self):
         """Update population statistics based on entities"""
@@ -448,16 +442,16 @@ class MainWindow(QMainWindow):
         super().__init__()
         self.setWindowTitle("Ecosystem Simulation")
         
-        # Calculate window size based on map size and tile size
-        map_width = 30 * 40  # tiles * tile_size
-        map_height = 30 * 40
-        log_width = 300  # Width for log panel
+        # Increase map size and tile size for better visibility
+        map_width = 40 * 50  # 40 tiles * 50 pixels
+        map_height = 40 * 50
+        log_width = 400  # Wider log panel
         
-        total_width = map_width + log_width + 50  # Add padding
+        total_width = map_width + log_width + 50
         total_height = map_height + 50
         
         self.setGeometry(50, 50, total_width, total_height)
-        self.setFixedSize(total_width, total_height)  # Lock window size
+        self.setFixedSize(total_width, total_height)
         
         # Create main widget and layout
         main_widget = QWidget()
@@ -469,16 +463,17 @@ class MainWindow(QMainWindow):
         
         # Create and add log panel
         self.log_panel = LogPanel()
+        self.log_panel.setFont(QFont('Courier', 11))  # Larger font
         
-        # Create and add ecosystem
+        # Create and add ecosystem with larger dimensions
         self.ecosystem = EcosystemWidget(self.log_panel)
         
         # Add widgets to splitter
         splitter.addWidget(self.ecosystem)
         splitter.addWidget(self.log_panel)
         
-        # Set initial sizes (70% ecosystem, 30% log)
-        splitter.setSizes([840, 360])
+        # Set initial sizes (75% ecosystem, 25% log)
+        splitter.setSizes([map_width, log_width])
         
         layout.addWidget(splitter)
 
