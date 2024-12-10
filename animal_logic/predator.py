@@ -119,6 +119,7 @@ class Predator(BaseAnimal):
         """Handle successful prey catch"""
         stats = self.entity.get_component(ComponentType.STATS)
         prey_stats = prey.get_component(ComponentType.STATS)
+        prey_pos = prey.get_component(ComponentType.POSITION).value
         
         # Convert prey energy to predator energy
         gained_energy = prey_stats.energy * 0.5
@@ -129,14 +130,17 @@ class Predator(BaseAnimal):
         experience_gain = 10.0 * prey_size  # More experience for catching larger prey
         self.gain_experience(experience_gain)
         
+        # Add bones effect at prey's position
+        self.ecosystem.effect_system.add_bones_effect(prey_pos)
+        
+        # Add eat effect slightly offset
+        eat_pos = prey_pos + np.array([10, -10])  # Offset the eating effect
+        self.ecosystem.effect_system.add_eat_effect(eat_pos)
+        
         # Remove prey
         prey.destroy()
         self.ecosystem.entities.remove(prey)
         self.ecosystem.log_panel.log(f"🦊 caught prey! (Energy: {stats.energy:.1f}, Size: {self.entity.get_component(ComponentType.APPEARANCE).size:.1f})")
-        
-        # Add eat effect at prey's position
-        prey_pos = prey.get_component(ComponentType.POSITION).value
-        self.ecosystem.effect_system.add_eat_effect(prey_pos)
     
     def find_nearest_prey(self):
         """Find nearest suitable prey"""

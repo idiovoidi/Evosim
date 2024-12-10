@@ -3,88 +3,165 @@ import numpy as np
 from components import ComponentType, Genetics
 
 class GeneticSystem:
+    # Define trait ranges and their impact on appearance
+    TRAIT_DEFINITIONS = {
+        'herbivore': {
+            'body_length': {
+                'range': (0.85, 1.15),    # More conservative range
+                'mutation_step': 0.05,     # Small steps for gradual change
+                'description': 'Controls overall body length'
+            },
+            'body_width': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.04,
+                'description': 'Controls body width'
+            },
+            'head_size': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.03,
+                'description': 'Controls head size'
+            },
+            'face_shape': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.03,
+                'description': 'Controls face roundness'
+            },
+            'ear_length': {
+                'range': (0.8, 1.2),      # Wider range for distinctive feature
+                'mutation_step': 0.05,
+                'description': 'Controls ear length'
+            },
+            'ear_width': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.03,
+                'description': 'Controls ear width'
+            },
+            'leg_length': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.04,
+                'description': 'Controls leg height'
+            },
+            'fluffiness': {
+                'range': (0.8, 1.2),
+                'mutation_step': 0.05,
+                'description': 'Controls fur appearance'
+            },
+            'color_brightness': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.03,
+                'description': 'Controls color brightness'
+            },
+            'pattern_intensity': {
+                'range': (0.0, 0.3),
+                'mutation_step': 0.02,
+                'description': 'Controls pattern visibility'
+            }
+        },
+        'predator': {
+            'body_length': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.04,
+                'description': 'Controls body length'
+            },
+            'body_width': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.03,
+                'description': 'Controls body width'
+            },
+            'head_size': {
+                'range': (0.95, 1.05),    # More consistent head size
+                'mutation_step': 0.02,
+                'description': 'Controls head size'
+            },
+            'snout_length': {
+                'range': (0.85, 1.15),
+                'mutation_step': 0.04,
+                'description': 'Controls snout length'
+            },
+            'ear_length': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.03,
+                'description': 'Controls ear length'
+            },
+            'ear_width': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.03,
+                'description': 'Controls ear width'
+            },
+            'tail_length': {
+                'range': (0.8, 1.2),
+                'mutation_step': 0.05,
+                'description': 'Controls tail length'
+            },
+            'tail_thickness': {
+                'range': (0.9, 1.1),
+                'mutation_step': 0.03,
+                'description': 'Controls tail thickness'
+            },
+            'color_brightness': {
+                'range': (0.8, 1.2),
+                'mutation_step': 0.04,
+                'description': 'Controls color brightness'
+            },
+            'pattern_intensity': {
+                'range': (0.2, 0.8),
+                'mutation_step': 0.05,
+                'description': 'Controls pattern visibility'
+            }
+        }
+    }
+
     def __init__(self, ecosystem):
         self.ecosystem = ecosystem
         
     def create_initial_genetics(self, species_type):
-        """Create initial genetics for a new organism"""
-        # Base gene ranges for different species
-        gene_ranges = {
-            'herbivore': {
-                'body_length': (0.7, 1.3),     # More variation in body shape
-                'body_width': (0.7, 1.3),
-                'neck_length': (0.8, 1.2),
-                'head_size': (0.8, 1.2),
-                'ear_length': (0.6, 1.4),      # Big variation in ear length
-                'ear_width': (0.7, 1.3),
-                'color_brightness': (0.85, 1.15),  # Subtle variation in white/gray
-                'pattern_intensity': (0.0, 0.4),   # Some might have spots
-                'fluffiness': (0.7, 1.3),      # New trait for fur appearance
-                'leg_length': (0.8, 1.2),      # Affects overall height
-                'face_shape': (0.8, 1.2)       # Affects head roundness
-            },
-            'predator': {
-                'body_length': (0.8, 1.2),
-                'body_width': (0.7, 1.3),
-                'neck_length': (0.8, 1.2),
-                'head_size': (0.8, 1.2),
-                'snout_length': (0.7, 1.3),    # More variation in fox faces
-                'ear_length': (0.7, 1.3),
-                'ear_width': (0.6, 1.4),
-                'tail_length': (0.7, 1.3),
-                'tail_thickness': (0.7, 1.3),
-                'color_brightness': (0.7, 1.3), # More color variation
-                'pattern_intensity': (0.2, 0.8),# Some might have stronger markings
-                'mane_size': (0.6, 1.4),       # New trait for neck fur
-                'eye_shape': (0.8, 1.2),       # Affects eye appearance
-                'muscle_definition': (0.8, 1.2) # Affects body shape
-            }
-        }
-        
-        # Generate random genes with more variation
+        """Create initial genetics with controlled variation"""
         genes = {}
-        if species_type in gene_ranges:
-            for gene, (min_val, max_val) in gene_ranges[species_type].items():
+        if species_type in self.TRAIT_DEFINITIONS:
+            traits = self.TRAIT_DEFINITIONS[species_type]
+            for trait_name, trait_info in traits.items():
+                min_val, max_val = trait_info['range']
                 # Use triangular distribution for more natural variation
-                mode = (min_val + max_val) / 2
-                genes[gene] = random.triangular(min_val, max_val, mode)
-                
-                # Occasionally create extreme variations
-                if random.random() < 0.1:  # 10% chance
-                    genes[gene] = random.uniform(min_val * 0.8, max_val * 1.2)
+                mode = 1.0  # Center point is normal proportions
+                genes[trait_name] = random.triangular(min_val, max_val, mode)
         
         return Genetics(genes)
     
-    def mix_parent_genes(self, parent1, parent2, mutation_rate=0.15):
-        """Create offspring genetics by mixing parents' genes with more mutation"""
+    def mix_parent_genes(self, parent1, parent2, mutation_rate=0.1):
+        """Mix genes with controlled mutations"""
         if not (parent1.has_component(ComponentType.GENETICS) and 
                 parent2.has_component(ComponentType.GENETICS)):
             return None
-            
+
         parent1_genes = parent1.get_component(ComponentType.GENETICS)
         parent2_genes = parent2.get_component(ComponentType.GENETICS)
         
-        # Mix genes with more complex inheritance
+        # Determine species type from parent
+        stats = parent1.get_component(ComponentType.STATS)
+        species_type = stats.species_type
+        traits = self.TRAIT_DEFINITIONS.get(species_type, {})
+
         mixed_genes = {}
         for gene in parent1_genes.genes:
+            # Get trait definition
+            trait_info = traits.get(gene, {})
+            mutation_step = trait_info.get('mutation_step', 0.05)
+            min_val, max_val = trait_info.get('range', (0.8, 1.2))
+
+            # Mix genes
             if random.random() < 0.7:  # 70% dominant inheritance
-                # Take more genes from the fitter parent
-                fitter_parent = parent1_genes if random.random() < 0.6 else parent2_genes
-                mixed_genes[gene] = fitter_parent.genes[gene]
+                mixed_genes[gene] = parent1_genes.genes[gene]
             else:
-                # Blend genes from both parents
-                mixed_genes[gene] = (parent1_genes.genes[gene] + parent2_genes.genes[gene]) / 2
-            
-            # Apply mutations with varying intensity
+                mixed_genes[gene] = parent2_genes.genes[gene]
+
+            # Apply controlled mutation
             if random.random() < mutation_rate:
-                mutation_strength = random.uniform(0.8, 1.2)
-                if random.random() < 0.2:  # 20% chance of larger mutation
-                    mutation_strength = random.uniform(0.6, 1.4)
-                mixed_genes[gene] *= mutation_strength
-                
-                # Ensure values stay within reasonable bounds
-                mixed_genes[gene] = max(0.5, min(1.5, mixed_genes[gene]))
-        
+                # Use mutation step for controlled changes
+                mutation = random.choice([-1, 1]) * mutation_step
+                mixed_genes[gene] += mutation
+                # Clamp to valid range
+                mixed_genes[gene] = max(min_val, min(max_val, mixed_genes[gene]))
+
         return Genetics(mixed_genes)
     
     def calculate_trait_compatibility(self, entity1, entity2):
