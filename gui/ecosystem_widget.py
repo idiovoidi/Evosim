@@ -13,6 +13,7 @@ from PyQt6.QtGui import QColor
 from components import (ComponentType, Position, Velocity, Stats, Status, 
                        Appearance, Memory, Traits, Collision)
 from entity import Entity
+from systems.event_effect_system import EventEffectSystem
 
 class EcosystemWidget(QWidget):
     def __init__(self, log_panel):
@@ -29,12 +30,14 @@ class EcosystemWidget(QWidget):
         self.ui_system = UISystem(self)
         self.rendering_system = RenderingSystem(self)
         self.plant_system = PlantSystem(self)
+        self.effect_system = EventEffectSystem(self)
         
         self.systems = [
             self.movement_system,
             self.health_system,
             self.behavior_system,
             self.plant_system,
+            self.effect_system,
             self.ui_system,
             self.rendering_system
         ]

@@ -120,6 +120,10 @@ class Predator(BaseAnimal):
         prey.destroy()
         self.ecosystem.entities.remove(prey)
         self.ecosystem.log_panel.log(f"🦊 caught prey! (Energy: {stats.energy:.1f})")
+        
+        # Add eat effect at prey's position
+        prey_pos = prey.get_component(ComponentType.POSITION).value
+        self.ecosystem.effect_system.add_eat_effect(prey_pos)
     
     def find_nearest_prey(self):
         """Find nearest suitable prey"""

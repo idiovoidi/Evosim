@@ -212,3 +212,7 @@ class Herbivore(BaseAnimal):
         # Set reproduction cooldown and consume energy
         stats.reproduction_cooldown = 300  # 5 seconds at 60 fps
         stats.energy *= 0.6  # Consume 40% energy for reproduction
+        
+        # Add heart effect
+        pos = self.entity.get_component(ComponentType.POSITION).value
+        self.ecosystem.effect_system.add_heart_effect(pos)

@@ -125,6 +125,7 @@ class RenderingSystem:
         try:
             self.render_world(painter)
             self.render_entities(painter)
+            self.render_effects(painter)
             
             # Only render UI if it exists
             if hasattr(self.ecosystem, 'ui_system'):
@@ -220,3 +221,25 @@ class RenderingSystem:
                 int(pos.value[1] + size/2)
             )
             painter.drawText(painter_pos, appearance.char) 
+
+    def render_effects(self, painter):
+        """Render visual effects"""
+        if not hasattr(self.ecosystem, 'effect_system'):
+            return
+        
+        for effect in self.ecosystem.effect_system.effects:
+            # Set color with fade
+            color = effect.color
+            if effect.fade:
+                alpha = int(255 * effect.lifetime / effect.duration)
+                color.setAlpha(alpha)
+            painter.setPen(color)
+            
+            # Draw effect with scaling
+            size = 20 * effect.scale
+            painter.setFont(QFont('Segoe UI Emoji', int(size)))
+            painter_pos = QPoint(
+                int(effect.position[0] - size/2),
+                int(effect.position[1] + size/2)
+            )
+            painter.drawText(painter_pos, effect.char)
