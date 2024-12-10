@@ -188,8 +188,30 @@ class RenderingSystem:
             if not appearance.visible:
                 continue
             
+            # Get health percentage if entity has stats
+            health_percent = 1.0
+            if entity.has_component(ComponentType.STATS):
+                stats = entity.get_component(ComponentType.STATS)
+                health_percent = max(0.0, min(1.0, stats.energy / stats.max_energy))
+            
+            # Modify color based on health
+            base_color = appearance.color
+            if health_percent < 1.0:
+                # Create faded color
+                faded_color = QColor(
+                    int(base_color.red() * health_percent + 128 * (1 - health_percent)),
+                    int(base_color.green() * health_percent + 128 * (1 - health_percent)),
+                    int(base_color.blue() * health_percent + 128 * (1 - health_percent))
+                )
+                
+                # Set opacity based on health
+                faded_color.setAlpha(int(255 * (0.4 + 0.6 * health_percent)))
+                
+                painter.setPen(faded_color)
+            else:
+                painter.setPen(base_color)
+            
             # Draw entity
-            painter.setPen(appearance.color)
             size = 20 * appearance.size
             painter.setFont(QFont('Segoe UI Emoji', int(size)))
             

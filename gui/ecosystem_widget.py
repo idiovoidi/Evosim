@@ -75,15 +75,15 @@ class EcosystemWidget(QWidget):
     def init_ecosystem(self):
         """Initialize the ecosystem with starting entities"""
         # Initialize plants
-        for _ in range(20):
+        for _ in range(120):
             self.spawn_organism('plant', '🌿')
         
         # Initialize herbivores
-        for _ in range(10):
+        for _ in range(60):
             self.spawn_organism('herbivore', '🐰')
         
         # Initialize predators
-        for _ in range(5):
+        for _ in range(25):
             self.spawn_organism('predator', '🦊')
         
         # Initialize fish in water tiles
