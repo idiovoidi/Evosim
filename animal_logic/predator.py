@@ -20,6 +20,18 @@ class Predator(BaseAnimal):
             
         stats = self.entity.get_component(ComponentType.STATS)
         status = self.entity.get_component(ComponentType.STATUS)
+        traits = self.entity.get_component(ComponentType.TRAITS)
+        
+        # Update hunger status
+        status.is_hungry = stats.energy < stats.max_energy * 0.7
+        
+        # Increase energy consumption based on activity
+        base_consumption = traits.metabolism * dt
+        if self.current_target:  # Hunting consumes more energy
+            stats.energy -= base_consumption * 2
+        else:
+            stats.energy -= base_consumption
+        
         pos = self.entity.get_component(ComponentType.POSITION)
         
         # Update hunt cooldown
@@ -53,10 +65,6 @@ class Predator(BaseAnimal):
             # Rest when not hungry
             if random.random() < 0.02:
                 self.random_movement()
-        
-        # Update energy
-        traits = self.entity.get_component(ComponentType.TRAITS)
-        stats.energy -= traits.metabolism * dt
     
     def chase_prey(self, prey):
         """Chase prey with increased speed and prediction"""

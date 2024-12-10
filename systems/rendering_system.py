@@ -121,12 +121,14 @@ class AnimalRenderer:
         size = int(size)
         
         if genetics:
-            # Apply genetic modifications
+            # Apply more genetic modifications
             body_width = size * 0.4 * genetics.genes['body_width']
             body_length = size * 0.6 * genetics.genes['body_length']
-            head_size = size * 0.35 * genetics.genes['head_size']
+            head_size = size * 0.35 * genetics.genes['head_size'] * genetics.genes['face_shape']
             ear_length = size * 0.5 * genetics.genes['ear_length']
             ear_width = size * 0.15 * genetics.genes['ear_width']
+            leg_height = size * 0.2 * genetics.genes['leg_length']
+            fluff_factor = genetics.genes['fluffiness']
         else:
             # Default proportions
             body_width = size * 0.4
@@ -134,14 +136,39 @@ class AnimalRenderer:
             head_size = size * 0.35
             ear_length = size * 0.5
             ear_width = size * 0.15
+            leg_height = size * 0.2
+            fluff_factor = 1.0
         
-        # Body
+        # Body with fluff variation
         body = QPainterPath()
-        body.addEllipse(x + size*0.2, y + size*0.3, body_length, body_width)
+        if fluff_factor > 1.1:
+            # Fluffier body shape
+            body.addEllipse(x + size*0.15, y + size*0.25, body_length*1.1, body_width*1.1)
+            # Add fur tufts
+            for _ in range(int(fluff_factor * 5)):
+                angle = random.uniform(0, 2 * np.pi)
+                tuft_x = x + size*0.5 + np.cos(angle) * body_length*0.6
+                tuft_y = y + size*0.4 + np.sin(angle) * body_width*0.6
+                body.moveTo(tuft_x, tuft_y)
+                body.quadTo(
+                    tuft_x + random.uniform(-5, 5),
+                    tuft_y + random.uniform(-5, 5),
+                    tuft_x + random.uniform(-10, 10),
+                    tuft_y + random.uniform(-10, 10)
+                )
+        else:
+            # Regular body
+            body.addEllipse(x + size*0.2, y + size*0.3, body_length, body_width)
         
-        # Head
+        # Head with shape variation
         head = QPainterPath()
-        head.addEllipse(x + size*0.45, y + size*0.15, head_size, head_size)
+        head_x = x + size*0.45
+        head_y = y + size*0.15
+        if genetics and genetics.genes['face_shape'] > 1.1:
+            # Rounder head
+            head.addEllipse(head_x, head_y, head_size*1.1, head_size)
+        else:
+            head.addEllipse(head_x, head_y, head_size, head_size)
         
         # Ears with genetic variation
         ears = QPainterPath()
@@ -152,60 +179,46 @@ class AnimalRenderer:
         ears.moveTo(x + size*0.7, y + size*0.2)
         ears.quadTo(x + size*0.75, y - ear_length, x + size*0.75, y + size*0.15)
         
-        # Draw parts
+        # Legs with height variation
+        legs = QPainterPath()
+        for leg_x in [x + size*0.3, x + size*0.7]:
+            legs.addRect(leg_x, y + size*0.6, size*0.1, leg_height)
+        
+        # Draw parts in order
         painter.fillPath(body, color)
+        painter.fillPath(legs, color.darker(110))
         painter.fillPath(head, color)
         
         # Draw ears with thicker outline
         painter.setPen(QPen(color.darker(130), 3))
         painter.drawPath(ears)
         
-        # Eyes and nose remain constant
+        # Eyes
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
         painter.setBrush(QBrush(QColor(0, 0, 0)))
-        painter.drawEllipse(
-            int(x + size*0.55),
-            int(y + size*0.25),
-            int(size*0.08),
-            int(size*0.08)
-        )
+        
+        eye_size = size * 0.08
+        for eye_x in [x + size*0.5, x + size*0.65]:
+            painter.drawEllipse(
+                int(eye_x),
+                int(y + size*0.25),
+                int(eye_size),
+                int(eye_size)
+            )
+            # White reflection
+            painter.setBrush(QBrush(QColor(255, 255, 255)))
+            painter.drawEllipse(
+                int(eye_x + eye_size*0.2),
+                int(y + size*0.26),
+                int(eye_size*0.3),
+                int(eye_size*0.3)
+            )
         
         # Pink nose
         nose = QPainterPath()
         nose.addEllipse(x + size*0.7, y + size*0.35, size*0.06, size*0.04)
         painter.fillPath(nose, QColor(255, 192, 203))
-        
-        # Draw eyes (simple black circles)
-        painter.setPen(Qt.NoPen)  # No outline for eyes
-        painter.setBrush(QBrush(QColor(0, 0, 0)))  # Black eyes
-        
-        # Left eye
-        eye_size = size * 0.08
-        painter.drawEllipse(
-            int(x + size * 0.5),  # Left eye position
-            int(y + size * 0.25),
-            int(eye_size),
-            int(eye_size)
-        )
-        
-        # Right eye
-        painter.drawEllipse(
-            int(x + size * 0.65),  # Right eye position
-            int(y + size * 0.25),
-            int(eye_size),
-            int(eye_size)
-        )
-        
-        # Add white reflection dots in eyes
-        painter.setBrush(QBrush(QColor(255, 255, 255)))
-        reflection_size = eye_size * 0.3
-        for eye_x in [x + size * 0.52, x + size * 0.67]:
-            painter.drawEllipse(
-                int(eye_x),
-                int(y + size * 0.26),
-                int(reflection_size),
-                int(reflection_size)
-            )
-    
+
     @staticmethod
     def draw_predator(painter, x, y, size, color, genetics=None):
         """Draw a detailed fox with genetic variations"""
@@ -304,7 +317,7 @@ class AnimalRenderer:
         painter.drawPath(ears)
         
         # Draw eyes (yellow with black pupils)
-        painter.setPen(Qt.NoPen)
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
         
         # Yellow eye base
         eye_color = QColor(255, 215, 0)  # Golden yellow
@@ -454,10 +467,15 @@ class RenderingSystem:
 
     def render_entities(self, painter):
         """Render entities with vector graphics"""
+        # Sort entities by layer, putting plants behind animals
         entities = sorted(
             [e for e in self.ecosystem.entities 
              if e.active and e.has_components(ComponentType.POSITION, ComponentType.APPEARANCE)],
-            key=lambda e: e.get_component(ComponentType.APPEARANCE).layer
+            key=lambda e: (
+                0 if e.get_component(ComponentType.STATS).species_type == 'plant' 
+                else 1,
+                e.get_component(ComponentType.APPEARANCE).layer
+            )
         )
         
         for entity in entities:

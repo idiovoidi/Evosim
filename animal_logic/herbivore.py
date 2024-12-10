@@ -167,7 +167,7 @@ class Herbivore(BaseAnimal):
         """Check if the herbivore can reproduce"""
         return (stats.energy > stats.max_energy * 0.8 and  # Need high energy
                 stats.reproduction_cooldown <= 0 and       # Not in cooldown
-                random.random() < 0.005)                   # Random chance
+                random.random() < 0.002)                   # Lower random chance for better balance
     
     def find_mate(self, herd_mates):
         """Find a suitable mate from herd"""
@@ -189,10 +189,14 @@ class Herbivore(BaseAnimal):
         """Create a new herbivore"""
         stats = self.entity.get_component(ComponentType.STATS)
         pos = self.entity.get_component(ComponentType.POSITION)
-        traits = self.entity.get_component(ComponentType.TRAITS)
         
-        # Create offspring with slight trait variations
+        # Create offspring position near parent
         offspring_pos = pos.value + np.random.uniform(-20, 20, 2)
+        
+        # Verify position is valid (not in water)
+        tile = self.ecosystem.world_map.get_tile_at_position(offspring_pos[0], offspring_pos[1])
+        if tile.terrain_type in [TerrainType.DEEP_WATER, TerrainType.SHALLOW_WATER]:
+            return  # Cancel reproduction if invalid position
         
         # Create new entity
         new_entity = self.ecosystem.create_entity('🐰', 
@@ -200,31 +204,30 @@ class Herbivore(BaseAnimal):
                                                 offspring_pos[1], 
                                                 'herbivore')
         
-        # Mutate traits slightly
-        if new_entity.has_component(ComponentType.TRAITS):
-            offspring_traits = new_entity.get_component(ComponentType.TRAITS)
-            for attr in ['speed', 'sense_radius', 'metabolism']:
-                current = getattr(traits, attr)
-                mutation = random.uniform(0.8, 1.2)
-                setattr(offspring_traits, attr, current * mutation)
+        # Rest of reproduction code...
+    
+    def find_nearest_food(self):
+        """Find nearest plant to eat"""
+        pos = self.entity.get_component(ComponentType.POSITION)
+        traits = self.entity.get_component(ComponentType.TRAITS)
         
-        # Add to ecosystem
-        self.ecosystem.entities.append(new_entity)
-        self.ecosystem.log_panel.log("🐰 reproduced!")
+        nearest_dist = float('inf')
+        nearest_food = None
         
-        # Set reproduction cooldown and consume energy
-        stats.reproduction_cooldown = 300  # 5 seconds at 60 fps
-        stats.energy *= 0.6  # Consume 40% energy for reproduction
+        # Search for plants within sense radius
+        search_radius = traits.sense_radius * 100  # Convert to pixels
         
-        # Add heart effect
-        pos = self.entity.get_component(ComponentType.POSITION).value
-        self.ecosystem.effect_system.add_heart_effect(pos)
+        for entity in self.ecosystem.entities:
+            if not entity.active or not entity.has_component(ComponentType.STATS):
+                continue
+            
+            stats = entity.get_component(ComponentType.STATS)
+            if stats.species_type == 'plant':
+                other_pos = entity.get_component(ComponentType.POSITION)
+                dist = np.linalg.norm(other_pos.value - pos.value)
+                
+                if dist < nearest_dist and dist < search_radius:
+                    nearest_dist = dist
+                    nearest_food = entity
         
-        # Gain experience from successful reproduction
-        self.gain_experience(15.0)  # Significant experience for reproducing
-        
-        # Create offspring with size inheritance
-        parent_size = self.entity.get_component(ComponentType.APPEARANCE).size
-        if new_entity.has_component(ComponentType.APPEARANCE):
-            # Offspring starts slightly smaller than parent
-            new_entity.get_component(ComponentType.APPEARANCE).size = parent_size * 0.8
+        return nearest_food

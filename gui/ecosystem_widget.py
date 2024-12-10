@@ -101,15 +101,33 @@ class EcosystemWidget(QWidget):
     def spawn_organism(self, species_type, char):
         """Spawn a new organism in a valid location"""
         for _ in range(10):  # Maximum attempts
-            x = random.uniform(*self.bounds)
-            y = random.uniform(*self.bounds)
-            tile = self.world_map.get_tile_at_position(x, y)
-            
-            # Don't spawn in water
-            if tile.terrain_type not in [TerrainType.DEEP_WATER, TerrainType.SHALLOW_WATER]:
-                entity = self.create_entity(char, x, y, species_type)
-                self.entities.append(entity)
-                return entity
+            if species_type == 'plant':
+                # Get random tile position for plants
+                tile_x = random.randint(0, self.world_map.width - 1)
+                tile_y = random.randint(0, self.world_map.height - 1)
+                tile = self.world_map.tiles[tile_y][tile_x]
+                
+                # Only spawn on grassland
+                if tile.terrain_type == TerrainType.GRASSLAND:
+                    # Calculate world position with some randomness within tile
+                    x = tile_x * self.world_map.tile_size + random.uniform(10, self.world_map.tile_size-10)
+                    y = tile_y * self.world_map.tile_size + random.uniform(10, self.world_map.tile_size-10)
+                    
+                    entity = self.create_entity(char, x, y, species_type)
+                    if entity:
+                        self.entities.append(entity)
+                        return entity
+            else:
+                # Original logic for animals
+                x = random.uniform(*self.bounds)
+                y = random.uniform(*self.bounds)
+                tile = self.world_map.get_tile_at_position(x, y)
+                
+                if tile.terrain_type not in [TerrainType.DEEP_WATER, TerrainType.SHALLOW_WATER]:
+                    entity = self.create_entity(char, x, y, species_type)
+                    if entity:
+                        self.entities.append(entity)
+                        return entity
         
         return None
     
@@ -152,27 +170,32 @@ class EcosystemWidget(QWidget):
         
         # Appearance component
         base_colors = {
-            'plant': QColor(50, 205, 50),      # Green for plants
+            'plant': QColor(50, 205, 50),      # Bright green for plants
             'herbivore': QColor(240, 240, 240), # Light gray/white for rabbits
             'predator': QColor(220, 20, 60),    # Red for predators
             'fish': QColor(70, 130, 180)        # Steel blue for fish
         }
         
-        # Add slight variations to herbivore colors
-        if species_type == 'herbivore':
-            # Add slight random variation to make each rabbit slightly unique
-            variation = int(random.uniform(-15, 15))  # Convert to integer
-            base_value = 240
-            color = QColor(
-                min(255, max(0, base_value + variation)),  # Ensure integer RGB values
-                min(255, max(0, base_value + variation)),
-                min(255, max(0, base_value + variation))
-            )
+        # Special appearance handling for plants
+        if species_type == 'plant':
+            color = base_colors['plant']
+            size = random.uniform(0.8, 1.2)  # Random plant size
         else:
-            color = base_colors.get(species_type, QColor(128, 128, 128))
+            # Existing color logic for animals...
+            if species_type == 'herbivore':
+                variation = int(random.uniform(-15, 15))
+                base_value = 240
+                color = QColor(
+                    min(255, max(0, base_value + variation)),
+                    min(255, max(0, base_value + variation)),
+                    min(255, max(0, base_value + variation))
+                )
+            else:
+                color = base_colors.get(species_type, QColor(128, 128, 128))
+            size = 1.0
         
         entity.add_component(ComponentType.APPEARANCE, 
-                        Appearance(char=char, color=color))
+                        Appearance(char=char, color=color, size=size))
         
         # Add components for animals
         if species_type != 'plant':
@@ -237,6 +260,13 @@ class EcosystemWidget(QWidget):
             return
         
         stats = entity.get_component(ComponentType.STATS)
+        pos = entity.get_component(ComponentType.POSITION)
+        
+        # Only add bones for animals, not plants
+        if stats.species_type in ['herbivore', 'predator', 'fish']:
+            # Add bones effect at death location
+            self.effect_system.add_bones_effect(pos.value)
+        
         self.stats['deaths']['starvation'] += 1
         
         # Log death with more information
