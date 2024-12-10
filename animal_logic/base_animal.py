@@ -20,24 +20,43 @@ class BaseAnimal:
         traits = self.entity.get_component(ComponentType.TRAITS)
         target_pos = target.get_component(ComponentType.POSITION)
         
+        # Calculate direction
         direction = target_pos.value - pos.value
         if flee:
             direction = -direction
         
-        if np.linalg.norm(direction) > 0:
-            direction = direction / np.linalg.norm(direction)
-            speed = traits.speed * 15
-            vel.value = direction * speed
+        # Normalize direction
+        distance = np.linalg.norm(direction)
+        if distance > 0:
+            direction = direction / distance
             
+            # Scale speed by traits
+            base_speed = traits.speed * 50  # Increase base speed multiplier
+            
+            # Add some randomness to movement
+            direction += np.random.normal(0, 0.1, 2)  # Add noise
+            direction = direction / np.linalg.norm(direction)  # Renormalize
+            
+            # Set velocity
+            vel.value = direction * base_speed
+            
+            # Clamp velocity
             if hasattr(vel, 'clamp_velocity'):
                 vel.clamp_velocity()
     
     def random_movement(self):
-        """Common random movement logic"""
-        angle = random.uniform(0, 2 * math.pi)
-        speed = self.entity.get_component(ComponentType.TRAITS).speed * 5
+        """Enhanced random movement logic"""
         vel = self.entity.get_component(ComponentType.VELOCITY)
-        vel.value = np.array([
-            math.cos(angle) * speed,
-            math.sin(angle) * speed
-        ]) 
+        traits = self.entity.get_component(ComponentType.TRAITS)
+        
+        # Generate random direction
+        direction = np.random.uniform(-1, 1, 2)
+        direction = direction / np.linalg.norm(direction)
+        
+        # Set velocity with trait-based speed
+        base_speed = traits.speed * 30  # Adjust base speed multiplier
+        vel.value = direction * base_speed
+        
+        # Clamp velocity
+        if hasattr(vel, 'clamp_velocity'):
+            vel.clamp_velocity() 
