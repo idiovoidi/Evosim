@@ -63,6 +63,7 @@ class Predator(BaseAnimal):
         pos = self.entity.get_component(ComponentType.POSITION)
         vel = self.entity.get_component(ComponentType.VELOCITY)
         traits = self.entity.get_component(ComponentType.TRAITS)
+        stats = self.entity.get_component(ComponentType.STATS)
         
         prey_pos = prey.get_component(ComponentType.POSITION).value
         prey_vel = prey.get_component(ComponentType.VELOCITY).value
@@ -79,6 +80,10 @@ class Predator(BaseAnimal):
             # Apply chase speed boost
             speed = traits.speed * 50 * self.chase_speed_multiplier
             vel.value = direction * speed
+            
+            # Increase energy consumption during chase
+            energy_cost = traits.metabolism * 3.0  # Triple energy consumption while chasing
+            stats.energy -= energy_cost
             
             # Store last known position
             self.target_last_pos = prey_pos.copy()
