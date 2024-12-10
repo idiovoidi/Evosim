@@ -6,8 +6,12 @@ import math
 
 class BaseAnimal:
     def __init__(self, entity, ecosystem):
+        super().__init__()
         self.entity = entity
         self.ecosystem = ecosystem
+        self.experience = 0.0
+        self.max_size = 2.0  # Maximum size multiplier
+        self.growth_rate = 0.001  # Base growth rate
     
     def update(self):
         """Base update method to be overridden"""
@@ -60,3 +64,19 @@ class BaseAnimal:
         # Clamp velocity
         if hasattr(vel, 'clamp_velocity'):
             vel.clamp_velocity() 
+    
+    def gain_experience(self, amount):
+        """Gain experience and grow"""
+        self.experience += amount
+        
+        # Update size based on experience
+        appearance = self.entity.get_component(ComponentType.APPEARANCE)
+        traits = self.entity.get_component(ComponentType.TRAITS)
+        
+        # Calculate new size based on experience and traits
+        base_size = 1.0 + (self.experience * self.growth_rate)
+        size_multiplier = traits.size  # Use trait size as a multiplier
+        new_size = min(self.max_size, base_size * size_multiplier)
+        
+        # Update appearance size
+        appearance.size = new_size 

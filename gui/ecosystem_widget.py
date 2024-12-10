@@ -11,9 +11,10 @@ import random
 import numpy as np
 from PyQt6.QtGui import QColor
 from components import (ComponentType, Position, Velocity, Stats, Status, 
-                       Appearance, Memory, Traits, Collision)
+                       Appearance, Memory, Traits, Collision, Genetics)
 from entity import Entity
 from systems.event_effect_system import EventEffectSystem
+from systems.genetic_system import GeneticSystem
 
 class EcosystemWidget(QWidget):
     def __init__(self, log_panel):
@@ -31,6 +32,7 @@ class EcosystemWidget(QWidget):
         self.rendering_system = RenderingSystem(self)
         self.plant_system = PlantSystem(self)
         self.effect_system = EventEffectSystem(self)
+        self.genetic_system = GeneticSystem(self)
         
         self.systems = [
             self.movement_system,
@@ -82,11 +84,11 @@ class EcosystemWidget(QWidget):
             self.spawn_organism('plant', '🌿')
         
         # Initialize herbivores
-        for _ in range(60):
+        for _ in range(66):
             self.spawn_organism('herbivore', '🐰')
         
         # Initialize predators
-        for _ in range(25):
+        for _ in range(15):
             self.spawn_organism('predator', '🦊')
         
         # Initialize fish in water tiles
@@ -151,12 +153,24 @@ class EcosystemWidget(QWidget):
         # Appearance component
         base_colors = {
             'plant': QColor(50, 205, 50),      # Green for plants
-            'herbivore': QColor(30, 144, 255), # Blue for herbivores
-            'predator': QColor(220, 20, 60),   # Red for predators
-            'fish': QColor(70, 130, 180)       # Steel blue for fish
+            'herbivore': QColor(240, 240, 240), # Light gray/white for rabbits
+            'predator': QColor(220, 20, 60),    # Red for predators
+            'fish': QColor(70, 130, 180)        # Steel blue for fish
         }
         
-        color = base_colors.get(species_type, QColor(128, 128, 128))  # Gray as default
+        # Add slight variations to herbivore colors
+        if species_type == 'herbivore':
+            # Add slight random variation to make each rabbit slightly unique
+            variation = int(random.uniform(-15, 15))  # Convert to integer
+            base_value = 240
+            color = QColor(
+                min(255, max(0, base_value + variation)),  # Ensure integer RGB values
+                min(255, max(0, base_value + variation)),
+                min(255, max(0, base_value + variation))
+            )
+        else:
+            color = base_colors.get(species_type, QColor(128, 128, 128))
+        
         entity.add_component(ComponentType.APPEARANCE, 
                         Appearance(char=char, color=color))
         
@@ -186,6 +200,11 @@ class EcosystemWidget(QWidget):
             
             entity.add_component(ComponentType.COLLISION, 
                            Collision(radius=10.0))
+        
+        # Add genetics component with initial traits
+        if species_type in ['predator', 'herbivore']:
+            genetics = self.genetic_system.create_initial_genetics(species_type)
+            entity.add_component(ComponentType.GENETICS, genetics)
         
         return entity
     

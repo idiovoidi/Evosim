@@ -16,6 +16,10 @@ class BehaviorSystem:
             if not entity.active or not entity.has_component(ComponentType.STATS):
                 continue
             
+            # Update age
+            stats = entity.get_component(ComponentType.STATS)
+            stats.age += dt
+            
             # Get or create behavior instance for this entity
             if entity.id not in self.behaviors:
                 self.create_behavior(entity)

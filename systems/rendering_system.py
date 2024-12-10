@@ -1,7 +1,7 @@
 from PyQt6.QtGui import (QPainter, QFont, QColor, QPainterPath, 
-                        QLinearGradient, QPen)
+                        QLinearGradient, QPen, QBrush)
 from PyQt6.QtCore import QPoint, Qt
-from components import Position, Appearance, ComponentType
+from components import Position, Appearance, ComponentType, Genetics
 from map_system import TerrainType, TerrainTile
 from entity import Entity
 import numpy as np
@@ -112,6 +112,284 @@ class TerrainRenderer:
         painter.setPen(grass_pen)
         painter.drawPath(grass_path)
 
+class AnimalRenderer:
+    @staticmethod
+    def draw_herbivore(painter, x, y, size, color, genetics=None):
+        """Draw a detailed rabbit with genetic variations"""
+        x = int(x)
+        y = int(y)
+        size = int(size)
+        
+        if genetics:
+            # Apply genetic modifications
+            body_width = size * 0.4 * genetics.genes['body_width']
+            body_length = size * 0.6 * genetics.genes['body_length']
+            head_size = size * 0.35 * genetics.genes['head_size']
+            ear_length = size * 0.5 * genetics.genes['ear_length']
+            ear_width = size * 0.15 * genetics.genes['ear_width']
+        else:
+            # Default proportions
+            body_width = size * 0.4
+            body_length = size * 0.6
+            head_size = size * 0.35
+            ear_length = size * 0.5
+            ear_width = size * 0.15
+        
+        # Body
+        body = QPainterPath()
+        body.addEllipse(x + size*0.2, y + size*0.3, body_length, body_width)
+        
+        # Head
+        head = QPainterPath()
+        head.addEllipse(x + size*0.45, y + size*0.15, head_size, head_size)
+        
+        # Ears with genetic variation
+        ears = QPainterPath()
+        # Left ear
+        ears.moveTo(x + size*0.55, y + size*0.2)
+        ears.quadTo(x + size*0.5, y - ear_length, x + size*0.6, y + size*0.15)
+        # Right ear
+        ears.moveTo(x + size*0.7, y + size*0.2)
+        ears.quadTo(x + size*0.75, y - ear_length, x + size*0.75, y + size*0.15)
+        
+        # Draw parts
+        painter.fillPath(body, color)
+        painter.fillPath(head, color)
+        
+        # Draw ears with thicker outline
+        painter.setPen(QPen(color.darker(130), 3))
+        painter.drawPath(ears)
+        
+        # Eyes and nose remain constant
+        painter.setBrush(QBrush(QColor(0, 0, 0)))
+        painter.drawEllipse(
+            int(x + size*0.55),
+            int(y + size*0.25),
+            int(size*0.08),
+            int(size*0.08)
+        )
+        
+        # Pink nose
+        nose = QPainterPath()
+        nose.addEllipse(x + size*0.7, y + size*0.35, size*0.06, size*0.04)
+        painter.fillPath(nose, QColor(255, 192, 203))
+        
+        # Draw eyes (simple black circles)
+        painter.setPen(Qt.NoPen)  # No outline for eyes
+        painter.setBrush(QBrush(QColor(0, 0, 0)))  # Black eyes
+        
+        # Left eye
+        eye_size = size * 0.08
+        painter.drawEllipse(
+            int(x + size * 0.5),  # Left eye position
+            int(y + size * 0.25),
+            int(eye_size),
+            int(eye_size)
+        )
+        
+        # Right eye
+        painter.drawEllipse(
+            int(x + size * 0.65),  # Right eye position
+            int(y + size * 0.25),
+            int(eye_size),
+            int(eye_size)
+        )
+        
+        # Add white reflection dots in eyes
+        painter.setBrush(QBrush(QColor(255, 255, 255)))
+        reflection_size = eye_size * 0.3
+        for eye_x in [x + size * 0.52, x + size * 0.67]:
+            painter.drawEllipse(
+                int(eye_x),
+                int(y + size * 0.26),
+                int(reflection_size),
+                int(reflection_size)
+            )
+    
+    @staticmethod
+    def draw_predator(painter, x, y, size, color, genetics=None):
+        """Draw a detailed fox with genetic variations"""
+        x = int(x)
+        y = int(y)
+        size = int(size)
+        
+        if genetics:
+            # Apply genetic modifications
+            body_width = size * 0.35 * genetics.genes['body_width']
+            body_length = size * 0.8 * genetics.genes['body_length']
+            head_size = size * 0.3 * genetics.genes['head_size']
+            snout_length = size * 0.3 * genetics.genes['snout_length']
+            ear_length = size * 0.3 * genetics.genes['ear_length']
+            ear_width = size * 0.15 * genetics.genes['ear_width']
+            tail_length = size * 0.4 * genetics.genes['tail_length']
+        else:
+            # Default proportions
+            body_width = size * 0.35
+            body_length = size * 0.8
+            head_size = size * 0.3
+            snout_length = size * 0.3
+            ear_length = size * 0.3
+            ear_width = size * 0.15
+            tail_length = size * 0.4
+        
+        # Body
+        body = QPainterPath()
+        body.addEllipse(x + size*0.2, y + size*0.3, body_length, body_width)
+        
+        # Tail (bushy, S-shaped)
+        tail = QPainterPath()
+        tail.moveTo(x + size*0.2, y + size*0.4)
+        tail.cubicTo(
+            x + size*0.1, y + size*0.3,  # Control point 1
+            x, y + size*0.4,             # Control point 2
+            x + size*0.05, y + size*0.5  # End point
+        )
+        tail.cubicTo(
+            x, y + size*0.6,             # Control point 1
+            x + size*0.1, y + size*0.5,  # Control point 2
+            x + size*0.2, y + size*0.4   # Back to start
+        )
+        
+        # Head
+        head = QPainterPath()
+        head_x = x + size*0.6
+        head_y = y + size*0.3
+        
+        # Base of head
+        head.addEllipse(head_x, head_y, head_size, head_size)
+        
+        # Snout
+        snout = QPainterPath()
+        snout.moveTo(head_x + head_size*0.7, head_y + head_size*0.5)
+        snout.quadTo(
+            head_x + head_size + snout_length, head_y + head_size*0.5,  # Control point
+            head_x + head_size*0.7, head_y + head_size*0.8             # End point
+        )
+        
+        # Ears
+        ears = QPainterPath()
+        # Left ear
+        ear_base_x = head_x + head_size*0.2
+        ear_base_y = head_y
+        ears.moveTo(ear_base_x, ear_base_y)
+        ears.lineTo(ear_base_x - ear_width/2, ear_base_y - ear_length)  # Tip
+        ears.lineTo(ear_base_x + ear_width/2, ear_base_y)
+        # Right ear
+        ear_base_x = head_x + head_size*0.7
+        ears.moveTo(ear_base_x, ear_base_y)
+        ears.lineTo(ear_base_x - ear_width/2, ear_base_y - ear_length)  # Tip
+        ears.lineTo(ear_base_x + ear_width/2, ear_base_y)
+        
+        # Draw parts in order
+        painter.fillPath(tail, color)  # Draw tail first (behind body)
+        painter.fillPath(body, color)
+        painter.fillPath(head, color)
+        painter.fillPath(snout, color)
+        
+        # White parts
+        white_color = QColor(255, 255, 255)
+        # Chest/belly patch
+        belly = QPainterPath()
+        belly.addEllipse(x + size*0.4, y + size*0.4, body_length*0.4, body_width*0.8)
+        painter.fillPath(belly, white_color)
+        
+        # Tail tip
+        tail_tip = QPainterPath()
+        tail_tip.addEllipse(x, y + size*0.45, size*0.1, size*0.1)
+        painter.fillPath(tail_tip, white_color)
+        
+        # Draw ears with outline
+        painter.setPen(QPen(color.darker(130), 2))
+        painter.fillPath(ears, color)
+        painter.drawPath(ears)
+        
+        # Draw eyes (yellow with black pupils)
+        painter.setPen(Qt.NoPen)
+        
+        # Yellow eye base
+        eye_color = QColor(255, 215, 0)  # Golden yellow
+        painter.setBrush(QBrush(eye_color))
+        
+        eye_size = size * 0.1
+        # Left eye
+        painter.drawEllipse(
+            int(x + size * 0.6),
+            int(y + size * 0.25),
+            int(eye_size),
+            int(eye_size * 0.8)  # Slightly oval
+        )
+        
+        # Right eye
+        painter.drawEllipse(
+            int(x + size * 0.75),
+            int(y + size * 0.25),
+            int(eye_size),
+            int(eye_size * 0.8)
+        )
+        
+        # Draw black pupils
+        painter.setBrush(QBrush(QColor(0, 0, 0)))
+        pupil_size = eye_size * 0.4
+        
+        for eye_x in [x + size * 0.63, x + size * 0.78]:
+            painter.drawEllipse(
+                int(eye_x),
+                int(y + size * 0.27),
+                int(pupil_size),
+                int(pupil_size)
+            )
+        
+        # Add white reflection dots
+        painter.setBrush(QBrush(QColor(255, 255, 255)))
+        reflection_size = pupil_size * 0.3
+        
+        for eye_x in [x + size * 0.635, x + size * 0.785]:
+            painter.drawEllipse(
+                int(eye_x),
+                int(y + size * 0.275),
+                int(reflection_size),
+                int(reflection_size)
+            )
+    
+    @staticmethod
+    def draw_fish(painter, x, y, size, color):
+        """Draw a fish"""
+        # Convert coordinates to integers
+        x = int(x)
+        y = int(y)
+        size = int(size)
+        
+        # Body
+        body = QPainterPath()
+        body.moveTo(x + size*0.3, y + size*0.5)
+        body.quadTo(x + size*0.5, y + size*0.3, x + size*0.7, y + size*0.5)
+        body.quadTo(x + size*0.5, y + size*0.7, x + size*0.3, y + size*0.5)
+        
+        # Tail
+        tail = QPainterPath()
+        tail.moveTo(x + size*0.3, y + size*0.5)
+        tail.lineTo(x + size*0.1, y + size*0.3)
+        tail.lineTo(x + size*0.1, y + size*0.7)
+        tail.closeSubpath()
+        
+        # Draw with gradients
+        gradient = QLinearGradient(x, y, x + size, y + size)
+        gradient.setColorAt(0, color)
+        gradient.setColorAt(1, color.darker(120))
+        
+        painter.fillPath(body, gradient)
+        painter.fillPath(tail, gradient)
+        
+        # Eye (convert all coordinates to integers)
+        eye_color = QColor(0, 0, 0)
+        painter.fillRect(
+            int(x + size*0.6), 
+            int(y + size*0.45), 
+            int(size*0.05), 
+            int(size*0.05), 
+            eye_color
+        )
+
 class RenderingSystem:
     def __init__(self, ecosystem):
         self.ecosystem = ecosystem
@@ -175,7 +453,7 @@ class RenderingSystem:
                 painter.drawRect(px, py, tile_size, tile_size)
 
     def render_entities(self, painter):
-        """Render entities with Position and Appearance components"""
+        """Render entities with vector graphics"""
         entities = sorted(
             [e for e in self.ecosystem.entities 
              if e.active and e.has_components(ComponentType.POSITION, ComponentType.APPEARANCE)],
@@ -185,42 +463,55 @@ class RenderingSystem:
         for entity in entities:
             pos = entity.get_component(ComponentType.POSITION)
             appearance = entity.get_component(ComponentType.APPEARANCE)
+            stats = entity.get_component(ComponentType.STATS)
+            genetics = entity.get_component(ComponentType.GENETICS) if entity.has_component(ComponentType.GENETICS) else None
             
             if not appearance.visible:
                 continue
             
-            # Get health percentage if entity has stats
-            health_percent = 1.0
-            if entity.has_component(ComponentType.STATS):
-                stats = entity.get_component(ComponentType.STATS)
-                health_percent = max(0.0, min(1.0, stats.energy / stats.max_energy))
+            # Calculate health and age factors
+            health_percent = max(0.0, min(1.0, stats.energy / stats.max_energy))
+            max_age = 3000
+            age_factor = min(1.0, stats.age / max_age)
             
-            # Modify color based on health
+            # Calculate final color
             base_color = appearance.color
-            if health_percent < 1.0:
-                # Create faded color
-                faded_color = QColor(
-                    int(base_color.red() * health_percent + 128 * (1 - health_percent)),
-                    int(base_color.green() * health_percent + 128 * (1 - health_percent)),
-                    int(base_color.blue() * health_percent + 128 * (1 - health_percent))
+            if genetics and 'color_brightness' in genetics.genes:
+                # Apply genetic color modification
+                brightness = genetics.genes['color_brightness']
+                base_color = QColor(
+                    min(255, int(base_color.red() * brightness)),
+                    min(255, int(base_color.green() * brightness)),
+                    min(255, int(base_color.blue() * brightness))
                 )
-                
-                # Set opacity based on health
-                faded_color.setAlpha(int(255 * (0.4 + 0.6 * health_percent)))
-                
-                painter.setPen(faded_color)
-            else:
-                painter.setPen(base_color)
             
-            # Draw entity
-            size = 20 * appearance.size
-            painter.setFont(QFont('Segoe UI Emoji', int(size)))
-            
-            painter_pos = QPoint(
-                int(pos.value[0] - size/2),
-                int(pos.value[1] + size/2)
+            # Apply health and age effects
+            aged_color = QColor(
+                int(base_color.red() * (1 - age_factor * 0.5) + 128 * age_factor * 0.5),
+                int(base_color.green() * (1 - age_factor * 0.5) + 128 * age_factor * 0.5),
+                int(base_color.blue() * (1 - age_factor * 0.5) + 128 * age_factor * 0.5)
             )
-            painter.drawText(painter_pos, appearance.char) 
+            
+            final_color = QColor(
+                int(aged_color.red() * health_percent + 128 * (1 - health_percent)),
+                int(aged_color.green() * health_percent + 128 * (1 - health_percent)),
+                int(aged_color.blue() * health_percent + 128 * (1 - health_percent))
+            )
+            
+            # Calculate size
+            base_size = 30 * appearance.size  # Increased base size for vector graphics
+            size_modifier = 1.0 - (age_factor * 0.2)
+            size = base_size * size_modifier
+            
+            # Draw appropriate vector graphic based on species type
+            if stats.species_type == 'herbivore':
+                AnimalRenderer.draw_herbivore(painter, pos.value[0], pos.value[1], size, final_color, genetics)
+            elif stats.species_type == 'predator':
+                AnimalRenderer.draw_predator(painter, pos.value[0], pos.value[1], size, final_color, genetics)
+            elif stats.species_type == 'fish':
+                AnimalRenderer.draw_fish(painter, pos.value[0], pos.value[1], size, final_color)
+            elif stats.species_type == 'plant':
+                self.terrain_renderer.draw_tree(painter, pos.value[0], pos.value[1], size)
 
     def render_effects(self, painter):
         """Render visual effects"""

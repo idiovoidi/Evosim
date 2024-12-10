@@ -155,10 +155,13 @@ class Herbivore(BaseAnimal):
         gained_energy = min(50.0, food_stats.energy)
         stats.energy += gained_energy
         
+        # Gain experience from eating
+        self.gain_experience(5.0)  # Base experience for eating
+        
         # Remove consumed plant
         food_entity.destroy()
         self.ecosystem.entities.remove(food_entity)
-        self.ecosystem.log_panel.log(f"🐰 ate food (Energy: {stats.energy:.1f})")
+        self.ecosystem.log_panel.log(f"🐰 ate food (Energy: {stats.energy:.1f}, Size: {self.entity.get_component(ComponentType.APPEARANCE).size:.1f})")
     
     def can_reproduce(self, stats):
         """Check if the herbivore can reproduce"""
@@ -216,3 +219,12 @@ class Herbivore(BaseAnimal):
         # Add heart effect
         pos = self.entity.get_component(ComponentType.POSITION).value
         self.ecosystem.effect_system.add_heart_effect(pos)
+        
+        # Gain experience from successful reproduction
+        self.gain_experience(15.0)  # Significant experience for reproducing
+        
+        # Create offspring with size inheritance
+        parent_size = self.entity.get_component(ComponentType.APPEARANCE).size
+        if new_entity.has_component(ComponentType.APPEARANCE):
+            # Offspring starts slightly smaller than parent
+            new_entity.get_component(ComponentType.APPEARANCE).size = parent_size * 0.8

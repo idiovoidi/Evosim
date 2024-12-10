@@ -116,10 +116,15 @@ class Predator(BaseAnimal):
         gained_energy = prey_stats.energy * 0.5
         stats.energy = min(stats.max_energy, stats.energy + gained_energy)
         
+        # Gain experience from successful hunt
+        prey_size = prey.get_component(ComponentType.APPEARANCE).size
+        experience_gain = 10.0 * prey_size  # More experience for catching larger prey
+        self.gain_experience(experience_gain)
+        
         # Remove prey
         prey.destroy()
         self.ecosystem.entities.remove(prey)
-        self.ecosystem.log_panel.log(f"🦊 caught prey! (Energy: {stats.energy:.1f})")
+        self.ecosystem.log_panel.log(f"🦊 caught prey! (Energy: {stats.energy:.1f}, Size: {self.entity.get_component(ComponentType.APPEARANCE).size:.1f})")
         
         # Add eat effect at prey's position
         prey_pos = prey.get_component(ComponentType.POSITION).value
@@ -147,3 +152,48 @@ class Predator(BaseAnimal):
                     nearest_prey = entity
         
         return nearest_prey
+    
+    def reproduce(self):
+        """Create offspring with inherited genetics"""
+        stats = self.entity.get_component(ComponentType.STATS)
+        pos = self.entity.get_component(ComponentType.POSITION)
+        traits = self.entity.get_component(ComponentType.TRAITS)
+        parent_genetics = self.entity.get_component(ComponentType.GENETICS)
+        
+        # Create offspring position near parent
+        offspring_pos = pos.value + np.random.uniform(-20, 20, 2)
+        
+        # Create new entity
+        offspring = self.ecosystem.create_entity('predator', 
+                                              offspring_pos[0], 
+                                              offspring_pos[1], 
+                                              'predator')
+        
+        # Mix genetics if mate exists
+        if hasattr(self, 'mate') and self.mate:
+            mate_genetics = self.mate.get_component(ComponentType.GENETICS)
+            offspring_genetics = parent_genetics.mix_genes(mate_genetics)
+            offspring.add_component(ComponentType.GENETICS, offspring_genetics)
+        else:
+            # Self reproduction - just mutate current genetics
+            offspring_genetics = parent_genetics.mix_genes(parent_genetics)
+            offspring.add_component(ComponentType.GENETICS, offspring_genetics)
+        
+        # Mutate traits
+        if offspring.has_component(ComponentType.TRAITS):
+            offspring_traits = offspring.get_component(ComponentType.TRAITS)
+            for attr in ['speed', 'sense_radius', 'metabolism']:
+                current = getattr(traits, attr)
+                mutation = random.uniform(0.8, 1.2)
+                setattr(offspring_traits, attr, current * mutation)
+        
+        # Add to ecosystem
+        self.ecosystem.entities.append(offspring)
+        self.ecosystem.log_panel.log("🦊 reproduced!")
+        
+        # Add heart effect
+        self.ecosystem.effect_system.add_heart_effect(pos.value)
+        
+        # Set reproduction cooldown and consume energy
+        stats.reproduction_cooldown = 300  # 5 seconds at 60 fps
+        stats.energy *= 0.6  # Consume 40% energy for reproduction

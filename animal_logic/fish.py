@@ -40,6 +40,10 @@ class Fish(BaseAnimal):
         # Update energy
         traits = self.entity.get_component(ComponentType.TRAITS)
         stats.energy -= traits.metabolism * dt
+        
+        # Gain experience over time while in water
+        if tile.terrain_type in [TerrainType.DEEP_WATER, TerrainType.SHALLOW_WATER]:
+            self.gain_experience(0.1 * dt)  # Slow constant growth in water
     
     def find_nearby_fish(self):
         """Find nearby fish for schooling"""
