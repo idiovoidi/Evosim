@@ -9,7 +9,6 @@ from .base_system import BaseSystem
 class BehaviorSystem(BaseSystem):
     def __init__(self, world):
         super().__init__(world)
-        self.behaviors = {}  # Store behavior instances for each entity
     
     def update(self, dt: float):
         """Update behaviors for all entities"""
@@ -17,17 +16,9 @@ class BehaviorSystem(BaseSystem):
             if not entity.active or not entity.has_component(ComponentType.STATS):
                 continue
             
-            # Update age
-            stats = entity.get_component(ComponentType.STATS)
-            stats.age += dt
-            
-            # Get or create behavior instance for this entity
-            if entity.id not in self.behaviors:
-                self.create_behavior(entity)
-            
-            # Update behavior
-            if entity.id in self.behaviors:
-                behavior = self.behaviors[entity.id]
+            # Get behavior from world
+            behavior = self.world.get_behavior(entity)
+            if behavior:
                 behavior.update(dt)
                 
                 # Update status effects

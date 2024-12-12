@@ -29,12 +29,12 @@ class RenderingSystem(BaseSystem):
             
             appearance = entity.get_component(ComponentType.APPEARANCE)
             
-            # Animate plants swaying
+            # Animate plants swaying - make it smoother and slower
             if entity.has_component(ComponentType.STATS):
                 stats = entity.get_component(ComponentType.STATS)
                 if stats.species_type == 'plant':
-                    # Simple sway animation
-                    sway = math.sin(self.animation_time * 2 + hash(entity.id) % 10) * 0.1
+                    # Slower, gentler sway animation
+                    sway = math.sin(self.animation_time * 0.5 + hash(entity.id) % 10) * 0.05
                     appearance.rotation = sway
             
             # Animate hearts above breeding animals

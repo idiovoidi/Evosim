@@ -37,19 +37,37 @@ class World:
     def __init__(self, width=800, height=600):
         self.width = width
         self.height = height
-        self.bounds = (0, width, 0, height)
-        self._entities = []  # Private list of entities
-        self.quadtree = None  # For spatial partitioning if needed
+        
+        # Calculate map dimensions for a reasonably sized world
+        tile_size = 40  # Each tile is 40x40 pixels
+        map_tiles_x = 50  # Fixed number of tiles for width
+        map_tiles_y = 40  # Fixed number of tiles for height
+        
+        print(f"Creating map with dimensions: {map_tiles_x}x{map_tiles_y} tiles")
+        
+        # Initialize world map with fixed number of tiles
+        self.world_map = WorldMap(
+            width=map_tiles_x,
+            height=map_tiles_y,
+            tile_size=tile_size
+        )
+        
+        # Calculate actual world size in pixels
+        self.map_width = self.world_map.width * self.world_map.tile_size
+        self.map_height = self.world_map.height * self.world_map.tile_size
+        self.bounds = (0, self.map_width, 0, self.map_height)
+        
+        print(f"Map size in pixels: {self.map_width}x{self.map_height}")
+        
+        # Initialize other systems
+        self._entities = []
+        self.quadtree = None
         self.stats = {}
-        self.mouse_pos = (0, 0)  # Initialize mouse position
-        
-        # Initialize world map
-        self.world_map = WorldMap(width=100, height=100, tile_size=50)
-        
+        self.mouse_pos = (0, 0)
         self.genetic_system = EnhancedGeneticSystem(self)
         self.effect_system = EventEffectSystem(self)
-        self.behaviors = {}  # Maps entities to their behavior controllers
-        
+        self.behaviors = {}
+    
     @property
     def entities(self):
         """Public access to entities list"""
@@ -136,6 +154,17 @@ class World:
     
     def create_entity(self, emoji: str, x: float, y: float, species_type: str) -> Entity:
         """Create a new entity with all required components"""
+        # First check if the position is valid based on terrain type
+        tile = self.get_tile_at_position(x, y)
+        valid_terrains = {
+            "plant": [TerrainType.GRASSLAND, TerrainType.FOREST, TerrainType.DENSE_GRASS],
+            "herbivore": [TerrainType.GRASSLAND, TerrainType.SAVANNA, TerrainType.DENSE_GRASS],
+            "predator": [TerrainType.GRASSLAND, TerrainType.FOREST, TerrainType.SAVANNA]
+        }
+        
+        if not tile or tile.terrain_type not in valid_terrains.get(species_type, [TerrainType.GRASSLAND]):
+            return None
+        
         entity = Entity()
         
         # Add basic components
@@ -164,11 +193,6 @@ class World:
         genetics = self.genetic_system.create_initial_genetics(species_type)
         entity.add_component(ComponentType.GENETICS, genetics)
         
-        # Check if the spawned position is valid based on terrain type
-        tile = self.get_tile_at_position(x, y)
-        if tile.terrain_type not in [TerrainType.GRASSLAND, TerrainType.FOREST]:
-            return None
-        
         # Add behavior controller based on species
         if species_type == "herbivore":
             self.behaviors[entity] = Herbivore(entity, self)
@@ -182,23 +206,55 @@ class World:
     
     def spawn_initial_entities(self):
         """Spawn initial population of entities"""
-        # Spawn herbivores
-        for _ in range(INITIAL_HERBIVORES):
-            x = np.random.uniform(0, self.width * self.world_map.tile_size)
-            y = np.random.uniform(0, self.height * self.world_map.tile_size)
-            self.create_entity("🐰", x, y, "herbivore")
+        def find_valid_spawn_location(species_type):
+            max_attempts = 20  # Increased attempts
+            valid_terrains = {
+                "plant": [TerrainType.GRASSLAND, TerrainType.FOREST, TerrainType.DENSE_GRASS],
+                "herbivore": [TerrainType.GRASSLAND, TerrainType.SAVANNA, TerrainType.DENSE_GRASS],
+                "predator": [TerrainType.GRASSLAND, TerrainType.FOREST, TerrainType.SAVANNA]
+            }
+            
+            for _ in range(max_attempts):
+                # Generate position within map bounds with margin
+                margin = self.world_map.tile_size * 2  # Two tiles margin from edges
+                x = np.random.uniform(margin, self.map_width - margin)
+                y = np.random.uniform(margin, self.map_height - margin)
+                
+                # Check if position is on valid terrain
+                tile = self.world_map.get_tile_at_position(x, y)
+                if tile and tile.terrain_type in valid_terrains.get(species_type, [TerrainType.GRASSLAND]):
+                    return x, y
+            return None
+
+        def spawn_entity_in_valid_location(emoji, species_type):
+            location = find_valid_spawn_location(species_type)
+            if location:
+                x, y = location
+                entity = self.create_entity(emoji, x, y, species_type)
+                if entity:
+                    print(f"Spawned {species_type} at ({x:.1f}, {y:.1f}) on {self.world_map.get_tile_at_position(x, y).terrain_type.name}")
+                    return True
+            return False
+
+        # Spawn entities with progress tracking
+        spawn_config = [
+            ("herbivore", INITIAL_HERBIVORES, "🐰"),
+            ("predator", INITIAL_PREDATORS, "🦊"),
+            ("plant", INITIAL_PLANTS, "🌿")
+        ]
         
-        # Spawn predators
-        for _ in range(INITIAL_PREDATORS):
-            x = np.random.uniform(0, self.width * self.world_map.tile_size)
-            y = np.random.uniform(0, self.height * self.world_map.tile_size)
-            self.create_entity("🦊", x, y, "predator")
-        
-        # Spawn initial plants
-        for _ in range(INITIAL_PLANTS):
-            x = np.random.uniform(0, self.width * self.world_map.tile_size)
-            y = np.random.uniform(0, self.height * self.world_map.tile_size)
-            self.create_entity("🌿", x, y, "plant")
+        for species_type, count, emoji in spawn_config:
+            spawned = 0
+            attempts = 0
+            max_attempts = count * 2  # Allow more attempts than needed
+            
+            print(f"\nSpawning {count} {species_type}s...")
+            while spawned < count and attempts < max_attempts:
+                if spawn_entity_in_valid_location(emoji, species_type):
+                    spawned += 1
+                attempts += 1
+            
+            print(f"Successfully spawned {spawned}/{count} {species_type}s after {attempts} attempts")
     
     def get_behavior(self, entity: Entity):
         """Get the behavior controller for an entity"""
