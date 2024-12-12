@@ -1,41 +1,39 @@
-from components import ComponentType
-from systems.map_system import TerrainType
-from systems.base_system import BaseSystem
-import random
+from .base_system import BaseSystem
+from components import ComponentType, Stats, Position
 import numpy as np
 
 class PlantSystem(BaseSystem):
-    def __init__(self, ecosystem):
-        super().__init__(ecosystem)
+    def __init__(self, world):
+        super().__init__(world)
         self.growth_rate = 0.1
-        self.spread_chance = 0.01
-        self.max_plants_per_tile = 5
     
     def update(self, dt: float):
-        # Grow existing plants
-        for entity in self.ecosystem.world.get_entities_by_type(ComponentType.STATS):
+        """Update all plants"""
+        for entity in self.world.get_entities_by_type(ComponentType.STATS):
             stats = entity.get_component(ComponentType.STATS)
-            if stats.species_type == 'plant':
-                stats.energy += self.growth_rate * dt
-                if stats.energy > stats.max_energy:
-                    stats.energy = stats.max_energy
-        
-        # Spawn new plants
-        if random.random() < self.spread_chance:
-            tile_x = random.randint(0, self.ecosystem.world.world_map.width - 1)
-            tile_y = random.randint(0, self.ecosystem.world.world_map.height - 1)
             
-            # Check if the tile is suitable for a new plant
-            tile = self.ecosystem.world.world_map.tiles[tile_y][tile_x]
-            if tile.terrain_type in [TerrainType.GRASSLAND, TerrainType.FOREST] and tile.current_food > 0:
-                # Count existing plants on the tile
-                plant_count = len([e for e in self.ecosystem.world.get_entities_by_type(ComponentType.STATS) 
-                                   if e.get_component(ComponentType.STATS).species_type == 'plant' and
-                                      e.get_component(ComponentType.POSITION).value[0] // self.ecosystem.world.world_map.tile_size == tile_x and
-                                      e.get_component(ComponentType.POSITION).value[1] // self.ecosystem.world.world_map.tile_size == tile_y])
-                
-                if plant_count < self.max_plants_per_tile:
-                    # Spawn a new plant
-                    x = (tile_x + random.random()) * self.ecosystem.world.world_map.tile_size
-                    y = (tile_y + random.random()) * self.ecosystem.world.world_map.tile_size
-                    self.ecosystem.create_entity("🌿", x, y, "plant")
+            if stats.species_type != 'plant':
+                continue
+            
+            # Grow the plant based on growth rate
+            stats.energy += self.growth_rate * dt
+            
+            # Reproduce if energy is high enough
+            if stats.energy > 200:
+                self.reproduce(entity)
+                stats.energy = 100
+    
+    def reproduce(self, entity):
+        """Reproduce the plant"""
+        if not entity.has_component(ComponentType.POSITION):
+            return
+        
+        # Spawn a new plant near the parent
+        pos = entity.get_component(ComponentType.POSITION)
+        new_pos = pos.value + np.random.uniform(-50, 50, size=2)
+        
+        # Create a new plant entity
+        new_plant = self.world.create_entity("🌿", new_pos[0], new_pos[1], "plant")
+        
+        # Inherit some properties from the parent
+        new_plant.get_component(ComponentType.STATS).energy = 100

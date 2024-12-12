@@ -4,15 +4,16 @@ from animal_logic.predator import Predator
 from animal_logic.fish import Fish
 import random
 import numpy as np
+from .base_system import BaseSystem
 
-class BehaviorSystem:
-    def __init__(self, ecosystem):
-        self.ecosystem = ecosystem
+class BehaviorSystem(BaseSystem):
+    def __init__(self, world):
+        super().__init__(world)
         self.behaviors = {}  # Store behavior instances for each entity
     
-    def update(self, dt):
+    def update(self, dt: float):
         """Update behaviors for all entities"""
-        for entity in self.ecosystem.entities:
+        for entity in self.world.get_entities():
             if not entity.active or not entity.has_component(ComponentType.STATS):
                 continue
             
@@ -40,8 +41,8 @@ class BehaviorSystem:
         stats = entity.get_component(ComponentType.STATS)
         
         if stats.species_type == 'herbivore':
-            self.behaviors[entity.id] = Herbivore(entity, self.ecosystem)
+            self.behaviors[entity.id] = Herbivore(entity, self.world)
         elif stats.species_type == 'predator':
-            self.behaviors[entity.id] = Predator(entity, self.ecosystem)
+            self.behaviors[entity.id] = Predator(entity, self.world)
         elif stats.species_type == 'fish':
-            self.behaviors[entity.id] = Fish(entity, self.ecosystem) 
+            self.behaviors[entity.id] = Fish(entity, self.world) 

@@ -67,3 +67,7 @@ class EcosystemWidget(QWidget):
         """Handle painting of the ecosystem"""
         # The rendering system will handle the actual drawing
         self.rendering_system.render(self)
+    
+    def mouseMoveEvent(self, event):
+        """Handle mouse move events"""
+        self.world.set_mouse_pos((event.position().x(), event.position().y()))

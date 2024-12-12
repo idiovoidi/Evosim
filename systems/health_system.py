@@ -3,7 +3,7 @@ from components import ComponentType
 
 class HealthSystem(BaseSystem):
     def update(self, dt: float):
-        for entity in self.world.entities[:]:  # Copy list to allow removal
+        for entity in self.world.get_entities_by_type(ComponentType.STATS):
             if not entity.active:
                 continue
             

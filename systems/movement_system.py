@@ -4,7 +4,7 @@ import numpy as np
 
 class MovementSystem(BaseSystem):
     def update(self, dt: float):
-        for entity in self.world.entities:
+        for entity in self.world.get_entities_by_type(ComponentType.VELOCITY):
             if not entity.active:
                 continue
                 

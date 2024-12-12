@@ -41,6 +41,7 @@ class World:
         self._entities = []  # Private list of entities
         self.quadtree = None  # For spatial partitioning if needed
         self.stats = {}
+        self.mouse_pos = (0, 0)  # Initialize mouse position
         
         # Initialize world map
         self.world_map = WorldMap(width=100, height=100, tile_size=50)
@@ -217,3 +218,11 @@ class World:
         
         # Update world statistics
         self.update_stats()
+    
+    def get_mouse_pos(self):
+        """Get the current mouse position in world coordinates"""
+        return self.mouse_pos
+    
+    def set_mouse_pos(self, pos):
+        """Set the current mouse position in world coordinates"""
+        self.mouse_pos = pos
