@@ -3,7 +3,7 @@ import numpy as np
 import random
 from PyQt6.QtGui import QColor
 import math
-from map_system import TerrainType
+from systems.map_system import TerrainType
 
 class BuildingType(Enum):
     HOUSE = 1

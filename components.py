@@ -100,46 +100,14 @@ class Status:
         self.last_reproduction = last_reproduction
         self.state = state
         self.status_effects = status_effects or []
+        self.showing_heart = 0  # Add this attribute to track heart effect duration
 
 class Traits:
-    def __init__(self, speed, sense_radius, metabolism, size, 
-                 aggression, intelligence, memory):
-        self.speed = speed
-        self.sense_radius = sense_radius
-        self.metabolism = metabolism
-        self.size = size
-        self.aggression = aggression
-        self.intelligence = intelligence
-        self.memory = memory
-    
-    def mutate(self, mutation_rate=0.1):
-        """Return a new Traits instance with mutated values"""
-        import random
-        
-        # Create a copy of the current traits
-        mutated_traits = Traits(
-            speed=self.speed,
-            sense_radius=self.sense_radius,
-            metabolism=self.metabolism,
-            size=self.size,
-            aggression=self.aggression,
-            intelligence=self.intelligence,
-            memory=self.memory
-        )
-        
-        # Randomly mutate some traits
-        traits_to_mutate = [
-            'speed', 'sense_radius', 'metabolism', 
-            'size', 'aggression', 'intelligence', 'memory'
-        ]
-        
-        for trait in traits_to_mutate:
-            if random.random() < mutation_rate:
-                current_value = getattr(mutated_traits, trait)
-                setattr(mutated_traits, trait, 
-                        current_value * random.uniform(0.8, 1.2))
-        
-        return mutated_traits
+    def __init__(self):
+        self.metabolism = 1.0
+        self.speed = 1.0
+        self.sense_radius = 1.0
+        self.attack_strength = 1.0  # For predators
 
 class Inventory:
     def __init__(self, capacity, items=None):

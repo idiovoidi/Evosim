@@ -8,6 +8,7 @@ import os
 import json
 import numpy as np
 import math
+import deap
 
 class TerrainType(Enum):
     DEEP_WATER = auto()
@@ -156,9 +157,9 @@ class WorldMap:
     def generate_map(self):
         """Generate the world map with both noise-based and predefined features"""
         # First generate the base terrain using noise
-        elevation = self._generate_noise_map(scale=50.0)
-        moisture = self._generate_noise_map(scale=25.0, offset=1000)
-        temperature = self._generate_noise_map(scale=75.0, offset=2000)
+        elevation = self._generate_noise_map(scale=100.0)
+        moisture = self._generate_noise_map(scale=50.0, offset=1000)
+        temperature = self._generate_noise_map(scale=150.0, offset=2000)
         
         # Initialize tiles based on noise
         self.tiles = []
@@ -180,8 +181,8 @@ class WorldMap:
         # Apply predefined features on top of the generated terrain
         self.create_predefined_features()
     
-    def _generate_noise_map(self, scale=50.0, offset=0):
-        """Generate a noise map with more pronounced water features"""
+    def _generate_noise_map(self, scale=100.0, offset=0):
+        """Generate a noise map with more pronounced features"""
         noise_map = []
         for y in range(self.height):
             row = []
@@ -190,7 +191,7 @@ class WorldMap:
                 base = noise.pnoise2(
                     x/scale + offset, 
                     y/scale + offset,
-                    octaves=6,
+                    octaves=8,
                     persistence=0.5,
                     lacunarity=2.0,
                     repeatx=self.width,
@@ -198,11 +199,11 @@ class WorldMap:
                     base=42
                 )
                 
-                # River generation (more pronounced)
-                river = noise.pnoise2(
+                # Additional noise layers for more detail
+                detail_1 = noise.pnoise2(
                     x/(scale/2) + offset + 1000,
                     y/(scale/2) + offset + 1000,
-                    octaves=1,
+                    octaves=4,
                     persistence=0.5,
                     lacunarity=2.0,
                     repeatx=self.width,
@@ -210,10 +211,9 @@ class WorldMap:
                     base=43
                 )
                 
-                # Lake generation
-                lake = noise.pnoise2(
-                    x/(scale*2) + offset + 2000,
-                    y/(scale*2) + offset + 2000,
+                detail_2 = noise.pnoise2(
+                    x/(scale/4) + offset + 2000,
+                    y/(scale/4) + offset + 2000,
                     octaves=2,
                     persistence=0.5,
                     lacunarity=2.0,
@@ -222,28 +222,61 @@ class WorldMap:
                     base=44
                 )
                 
-                # Combine with emphasis on water features
-                value = (base * 0.5 + river * 0.3 + lake * 0.2)
+                # Combine noise layers
+                value = (base * 0.6 + detail_1 * 0.3 + detail_2 * 0.1)
                 row.append((value + 1) / 2)
             noise_map.append(row)
         return noise_map
     
-    def get_tile_at_position(self, x, y):
-        """Convert world coordinates to tile coordinates and return tile"""
-        tile_x = int(x / self.tile_size)
-        tile_y = int(y / self.tile_size)
+    def create_predefined_features(self):
+        """Create predefined map features like lakes, rivers, and biome clusters"""
+        # Define large water bodies
+        water_tiles = [
+            # Large lake in the center
+            (self.width // 2, self.height // 2),
+            (self.width // 2 + 1, self.height // 2),
+            (self.width // 2, self.height // 2 + 1),
+            (self.width // 2 + 1, self.height // 2 + 1),
+            # River running through the map
+            (0, self.height // 4),
+            (self.width // 4, self.height // 4),
+            (self.width // 2, self.height // 4),
+            (3 * self.width // 4, self.height // 4),
+            (self.width - 1, self.height // 4),
+        ]
         
-        # Ensure coordinates are within bounds
-        tile_x = max(0, min(tile_x, self.width - 1))
-        tile_y = max(0, min(tile_y, self.height - 1))
+        # Forest areas
+        forest_tiles = [
+            # Forest patches
+            (self.width // 8, self.height // 8),
+            (7 * self.width // 8, self.height // 8),
+            (self.width // 8, 7 * self.height // 8),
+            (7 * self.width // 8, 7 * self.height // 8),
+        ]
         
-        return self.tiles[tile_y][tile_x]
-    
-    def update(self):
-        """Update all tiles"""
-        for row in self.tiles:
-            for tile in row:
-                tile.update()
+        # Mountain ranges
+        mountain_tiles = [
+            # Central mountains
+            (self.width // 2, self.height // 4),
+            (self.width // 2 + 1, self.height // 4),
+            (self.width // 2, self.height // 4 + 1),
+            (self.width // 2 + 1, self.height // 4 + 1),
+            # Corner peaks
+            (0, 0),
+            (self.width - 1, 0),
+            (0, self.height - 1),
+            (self.width - 1, self.height - 1),
+        ]
+        
+        # Apply predefined features
+        for x, y in water_tiles:
+            self.tiles[y][x] = TerrainTile(TerrainType.DEEP_WATER, (x, y))
+        
+        for x, y in forest_tiles:
+            self.tiles[y][x] = TerrainTile(TerrainType.FOREST, (x, y))
+        
+        for x, y in mountain_tiles:
+            self.tiles[y][x] = TerrainTile(TerrainType.MOUNTAIN, (x, y))
     
     def _determine_biome(self, elevation, moisture, temperature=None):
         """Enhanced biome determination with more water"""
@@ -266,55 +299,19 @@ class WorldMap:
         
         return TerrainType.GRASSLAND
     
-    def create_predefined_features(self):
-        """Create predefined map features like lakes, rivers, and biome clusters"""
+    def get_tile_at_position(self, x, y):
+        """Convert world coordinates to tile coordinates and return tile"""
+        tile_x = int(x / self.tile_size)
+        tile_y = int(y / self.tile_size)
         
-        # Define large water bodies
-        water_tiles = [
-            # Large lake in the center
-            (14, 14), (14, 15), (15, 14), (15, 15), (13, 14), (14, 13), 
-            (16, 15), (15, 16), (13, 15), (15, 13), (16, 14), (14, 16),
-            
-            # River running through the map
-            (0, 8), (1, 8), (2, 8), (3, 9), (4, 9), (5, 10),
-            (6, 10), (7, 11), (8, 12), (9, 12), (10, 13), (11, 14),
-            (12, 15), (13, 16), (14, 17), (15, 18), (16, 18),
-            (17, 18), (18, 18), (19, 18),
-        ]
+        # Ensure coordinates are within bounds
+        tile_x = max(0, min(tile_x, self.width - 1))
+        tile_y = max(0, min(tile_y, self.height - 1))
         
-        # Forest areas
-        forest_tiles = [
-            # Forest patches
-            (5, 5), (6, 5), (5, 6), (6, 6),  # Top-left forest
-            (20, 5), (21, 5), (20, 6), (21, 6),  # Top-right forest
-            (5, 20), (6, 20), (5, 21), (6, 21),  # Bottom-left forest
-            (20, 20), (21, 20), (20, 21), (21, 21),  # Bottom-right forest
-            
-            # Forest along river
-            (1, 7), (1, 9), (2, 7), (2, 9), (3, 8), (3, 10),
-            (4, 8), (4, 10), (5, 9), (5, 11), (6, 9), (6, 11)
-        ]
-        
-        # Mountain ranges
-        mountain_tiles = [
-            # Central mountains
-            (14, 7), (15, 7), (16, 7), (15, 6), (15, 8),
-            
-            # Corner peaks
-            (0, 0), (1, 0), (0, 1),  # Top-left
-            (self.width-1, 0), (self.width-2, 0), (self.width-1, 1),  # Top-right
-            (0, self.height-1), (0, self.height-2), (1, self.height-1),  # Bottom-left
-            (self.width-1, self.height-1), (self.width-2, self.height-1), 
-            (self.width-1, self.height-2),  # Bottom-right
-        ]
-        
-        # Apply predefined features
-        for y in range(self.height):
-            for x in range(self.width):
-                pos = (x, y)
-                if pos in water_tiles:
-                    self.tiles[y][x] = TerrainTile(TerrainType.DEEP_WATER, pos)
-                elif pos in forest_tiles:
-                    self.tiles[y][x] = TerrainTile(TerrainType.FOREST, pos)
-                elif pos in mountain_tiles:
-                    self.tiles[y][x] = TerrainTile(TerrainType.MOUNTAIN, pos)
+        return self.tiles[tile_y][tile_x]
+    
+    def update(self):
+        """Update all tiles"""
+        for row in self.tiles:
+            for tile in row:
+                tile.update()

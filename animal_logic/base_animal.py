@@ -1,20 +1,28 @@
 # Base class for all animals
+from abc import ABC, abstractmethod
+from .organism import Organism
 from components import ComponentType
 import numpy as np
 import random
 import math
 
-class BaseAnimal:
+class BaseAnimal(Organism):
     def __init__(self, entity, ecosystem):
-        super().__init__()
-        self.entity = entity
-        self.ecosystem = ecosystem
-        self.experience = 0.0
-        self.max_size = 2.0  # Maximum size multiplier
-        self.growth_rate = 0.001  # Base growth rate
+        super().__init__(entity, ecosystem)
+        self.target = None
+        self.state = 'idle'
     
-    def update(self):
-        """Base update method to be overridden"""
+    def update(self, dt: float):
+        """Update base animal state"""
+        super().update(dt)  # Call Organism's update
+        
+        # Base animal behavior can go here
+        if not self.entity.active:
+            return
+    
+    @abstractmethod
+    def get_movement_vector(self, nearby_entities):
+        """Calculate movement direction based on nearby entities"""
         pass
     
     def move_towards(self, target, flee=False):

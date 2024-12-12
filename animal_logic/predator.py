@@ -2,7 +2,8 @@ from animal_logic.base_animal import BaseAnimal
 from components import ComponentType
 import random
 import numpy as np
-from map_system import TerrainType
+from systems.map_system import TerrainType
+from typing import Dict
 
 class Predator(BaseAnimal):
     def __init__(self, entity, ecosystem):
@@ -13,58 +14,23 @@ class Predator(BaseAnimal):
         self.target_last_pos = None
         self.hunt_cooldown = 0
     
-    def update(self, dt):
-        """Update predator behavior"""
-        if not self.entity.active:
-            return
-            
+    def update(self, dt: float):
+        """Update predator state"""
+        super().update(dt)
+        
+        # Get required components
         stats = self.entity.get_component(ComponentType.STATS)
-        status = self.entity.get_component(ComponentType.STATUS)
         traits = self.entity.get_component(ComponentType.TRAITS)
         
-        # Update hunger status
-        status.is_hungry = stats.energy < stats.max_energy * 0.7
+        if not traits:
+            print(f"Warning: Predator {self.entity.id} missing Traits component!")
+            return
         
-        # Increase energy consumption based on activity
+        # Base energy consumption from metabolism
         base_consumption = traits.metabolism * dt
-        if self.current_target:  # Hunting consumes more energy
-            stats.energy -= base_consumption * 2
-        else:
-            stats.energy -= base_consumption
+        stats.energy -= base_consumption
         
-        pos = self.entity.get_component(ComponentType.POSITION)
-        
-        # Update hunt cooldown
-        if self.hunt_cooldown > 0:
-            self.hunt_cooldown -= dt
-        
-        # Hunting behavior
-        if status.is_hungry or stats.energy < stats.max_energy * 0.7:
-            # Look for prey
-            if not self.current_target or not self.current_target.active:
-                self.current_target = self.find_nearest_prey()
-                if self.current_target:
-                    self.ecosystem.log_panel.log("🦊 spotted prey!")
-            
-            if self.current_target:
-                target_pos = self.current_target.get_component(ComponentType.POSITION)
-                dist = np.linalg.norm(target_pos.value - pos.value)
-                
-                if dist < 20:  # Catch distance
-                    # Successful hunt
-                    self.catch_prey(self.current_target)
-                    self.current_target = None
-                    self.hunt_cooldown = 60  # Rest after successful hunt
-                else:
-                    # Chase behavior
-                    self.chase_prey(self.current_target)
-            else:
-                # Search pattern when no prey spotted
-                self.search_for_prey()
-        else:
-            # Rest when not hungry
-            if random.random() < 0.02:
-                self.random_movement()
+        # Rest of update logic...
     
     def chase_prey(self, prey):
         """Chase prey with increased speed and prediction"""
@@ -209,3 +175,48 @@ class Predator(BaseAnimal):
         # Set reproduction cooldown and consume energy
         stats.reproduction_cooldown = 300  # 5 seconds at 60 fps
         stats.energy *= 0.6  # Consume 40% energy for reproduction
+    
+    def get_movement_vector(self, nearby_entities: Dict[str, list]) -> np.ndarray:
+        """Calculate movement direction based on nearby entities"""
+        pos = self.entity.get_component(ComponentType.POSITION)
+        vel = self.entity.get_component(ComponentType.VELOCITY)
+        traits = self.entity.get_component(ComponentType.TRAITS)
+        stats = self.entity.get_component(ComponentType.STATS)
+        status = self.entity.get_component(ComponentType.STATUS)
+        
+        movement = np.zeros(2)
+        
+        # If hunting, prioritize chasing target
+        if self.current_target and self.current_target.active:
+            target_pos = self.current_target.get_component(ComponentType.POSITION).value
+            direction = target_pos - pos.value
+            if np.linalg.norm(direction) > 0:
+                movement = direction / np.linalg.norm(direction)
+                movement *= traits.speed * 50 * self.chase_speed_multiplier
+        
+        # If hungry but no target, look for prey
+        elif status.is_hungry and nearby_entities.get("herbivores"):
+            nearest_prey = min(nearby_entities["herbivores"], 
+                             key=lambda p: np.linalg.norm(
+                                 p.get_component(ComponentType.POSITION).value - pos.value
+                             ))
+            prey_pos = nearest_prey.get_component(ComponentType.POSITION).value
+            direction = prey_pos - pos.value
+            if np.linalg.norm(direction) > 0:
+                movement = direction / np.linalg.norm(direction)
+                movement *= traits.speed * 40  # Slower when searching
+        
+        # Random movement when not hunting
+        else:
+            angle = np.random.uniform(0, 2 * np.pi)
+            movement = np.array([np.cos(angle), np.sin(angle)])
+            movement *= traits.speed * 30  # Even slower when wandering
+        
+        # Add some randomness to movement
+        movement += np.random.normal(0, 0.1, 2)
+        
+        # Normalize and return
+        if np.any(movement):
+            movement = movement / np.linalg.norm(movement)
+        
+        return movement

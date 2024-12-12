@@ -4,20 +4,18 @@ from PyQt6.QtGui import QPainter, QFont, QColor
 from PyQt6.QtCore import QRect, Qt
 
 class UISystem(BaseSystem):
-    def __init__(self, world):
-        super().__init__(world)
+    def __init__(self, ecosystem):
+        super().__init__(ecosystem)
         self.stats_rect = QRect(10, 10, 200, 100)  # Position and size of stats display
         self.icons = {
             'plant': '🌿',
             'herbivore': '🐰',
             'predator': '🦊',
-            'fish': '🐟'
         }
         self.colors = {
             'plant': QColor(50, 205, 50),     # Green
             'herbivore': QColor(30, 144, 255), # Blue
             'predator': QColor(220, 20, 60),   # Red
-            'fish': QColor(0, 191, 255)        # Deep Sky Blue
         }
     
     def update(self, dt: float):
@@ -26,10 +24,9 @@ class UISystem(BaseSystem):
             'plant': 0,
             'herbivore': 0,
             'predator': 0,
-            'fish': 0
         }
         
-        for entity in self.world.entities:
+        for entity in self.ecosystem.world.get_entities():
             if not entity.active or not entity.has_component(ComponentType.STATS):
                 continue
             

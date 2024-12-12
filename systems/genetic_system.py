@@ -1,204 +1,222 @@
+from deap import base, creator, tools
 import random
 import numpy as np
 from components import ComponentType, Genetics
+from typing import Dict, List, Tuple
 
-class GeneticSystem:
-    # Define trait ranges and their impact on appearance
+# Create fitness class and individual type for DEAP
+creator.create("FitnessMax", base.Fitness, weights=(1.0,))
+creator.create("Individual", list, fitness=creator.FitnessMax)
+
+class EnhancedGeneticSystem:
     TRAIT_DEFINITIONS = {
         'herbivore': {
+            # Physical Traits
             'body_length': {
-                'range': (0.85, 1.15),    # More conservative range
-                'mutation_step': 0.05,     # Small steps for gradual change
-                'description': 'Controls overall body length'
+                'range': (0.85, 1.15),
+                'gene_index': 0
             },
             'body_width': {
                 'range': (0.9, 1.1),
-                'mutation_step': 0.04,
-                'description': 'Controls body width'
+                'gene_index': 1
             },
             'head_size': {
                 'range': (0.9, 1.1),
-                'mutation_step': 0.03,
-                'description': 'Controls head size'
+                'gene_index': 2
             },
             'face_shape': {
                 'range': (0.9, 1.1),
-                'mutation_step': 0.03,
-                'description': 'Controls face roundness'
+                'gene_index': 3
+            },
+            'snout_length': {
+                'range': (0.8, 1.2),
+                'gene_index': 4
             },
             'ear_length': {
-                'range': (0.8, 1.2),      # Wider range for distinctive feature
-                'mutation_step': 0.05,
-                'description': 'Controls ear length'
+                'range': (0.8, 1.2),
+                'gene_index': 5
             },
             'ear_width': {
                 'range': (0.9, 1.1),
-                'mutation_step': 0.03,
-                'description': 'Controls ear width'
+                'gene_index': 6
             },
             'leg_length': {
                 'range': (0.9, 1.1),
-                'mutation_step': 0.04,
-                'description': 'Controls leg height'
+                'gene_index': 7
             },
             'fluffiness': {
                 'range': (0.8, 1.2),
-                'mutation_step': 0.05,
-                'description': 'Controls fur appearance'
-            },
-            'color_brightness': {
-                'range': (0.9, 1.1),
-                'mutation_step': 0.03,
-                'description': 'Controls color brightness'
-            },
-            'pattern_intensity': {
-                'range': (0.0, 0.3),
-                'mutation_step': 0.02,
-                'description': 'Controls pattern visibility'
-            }
-        },
-        'predator': {
-            'body_length': {
-                'range': (0.9, 1.1),
-                'mutation_step': 0.04,
-                'description': 'Controls body length'
-            },
-            'body_width': {
-                'range': (0.9, 1.1),
-                'mutation_step': 0.03,
-                'description': 'Controls body width'
-            },
-            'head_size': {
-                'range': (0.95, 1.05),    # More consistent head size
-                'mutation_step': 0.02,
-                'description': 'Controls head size'
-            },
-            'snout_length': {
-                'range': (0.85, 1.15),
-                'mutation_step': 0.04,
-                'description': 'Controls snout length'
-            },
-            'ear_length': {
-                'range': (0.9, 1.1),
-                'mutation_step': 0.03,
-                'description': 'Controls ear length'
-            },
-            'ear_width': {
-                'range': (0.9, 1.1),
-                'mutation_step': 0.03,
-                'description': 'Controls ear width'
+                'gene_index': 8
             },
             'tail_length': {
                 'range': (0.8, 1.2),
-                'mutation_step': 0.05,
-                'description': 'Controls tail length'
+                'gene_index': 9
             },
-            'tail_thickness': {
-                'range': (0.9, 1.1),
-                'mutation_step': 0.03,
-                'description': 'Controls tail thickness'
+            # Survival Traits
+            'speed': {
+                'range': (0.7, 1.3),
+                'gene_index': 10
             },
-            'color_brightness': {
+            'sense_radius': {
                 'range': (0.8, 1.2),
-                'mutation_step': 0.04,
-                'description': 'Controls color brightness'
+                'gene_index': 11
+            },
+            'metabolism': {
+                'range': (0.9, 1.1),
+                'gene_index': 12
+            },
+            # Appearance Traits
+            'color_brightness': {
+                'range': (0.9, 1.1),
+                'gene_index': 13
             },
             'pattern_intensity': {
-                'range': (0.2, 0.8),
-                'mutation_step': 0.05,
-                'description': 'Controls pattern visibility'
+                'range': (0.0, 0.3),
+                'gene_index': 14
+            }
+        },
+        'predator': {
+            # Physical Traits
+            'body_length': {
+                'range': (0.9, 1.1),
+                'gene_index': 0
+            },
+            'body_width': {
+                'range': (0.9, 1.1),
+                'gene_index': 1
+            },
+            'head_size': {
+                'range': (0.9, 1.1),
+                'gene_index': 2
+            },
+            'face_shape': {
+                'range': (0.9, 1.1),
+                'gene_index': 3
+            },
+            'snout_length': {
+                'range': (0.8, 1.2),
+                'gene_index': 4
+            },
+            'ear_length': {
+                'range': (0.8, 1.2),
+                'gene_index': 5
+            },
+            'ear_width': {
+                'range': (0.9, 1.1),
+                'gene_index': 6
+            },
+            'tail_length': {
+                'range': (0.8, 1.2),
+                'gene_index': 7
+            },
+            # Survival Traits
+            'speed': {
+                'range': (0.8, 1.4),
+                'gene_index': 8
+            },
+            'sense_radius': {
+                'range': (0.9, 1.3),
+                'gene_index': 9
+            },
+            'metabolism': {
+                'range': (0.8, 1.2),
+                'gene_index': 10
+            },
+            'attack_strength': {
+                'range': (0.8, 1.2),
+                'gene_index': 11
             }
         }
     }
 
     def __init__(self, ecosystem):
         self.ecosystem = ecosystem
+        self.toolbox = base.Toolbox()
+        self._setup_genetics()
+
+    def _setup_genetics(self):
+        """Setup DEAP genetic operators"""
+        # Register gene initialization
+        self.toolbox.register("attr_float", random.uniform, 0.5, 1.5)
+        # Update number of genes to match total traits (15 for herbivores, 12 for predators)
+        self.toolbox.register("individual", tools.initRepeat, creator.Individual,
+                            self.toolbox.attr_float, n=15)  # Use max number of genes
         
-    def create_initial_genetics(self, species_type):
-        """Create initial genetics with controlled variation"""
-        genes = {}
-        if species_type in self.TRAIT_DEFINITIONS:
-            traits = self.TRAIT_DEFINITIONS[species_type]
-            for trait_name, trait_info in traits.items():
-                min_val, max_val = trait_info['range']
-                # Use triangular distribution for more natural variation
-                mode = 1.0  # Center point is normal proportions
-                genes[trait_name] = random.triangular(min_val, max_val, mode)
+        # Register genetic operators from DEAP
+        self.toolbox.register("mate", tools.cxTwoPoint)
+        self.toolbox.register("mutate", tools.mutGaussian, mu=0, sigma=0.1, indpb=0.2)
+        self.toolbox.register("select", tools.selTournament, tournsize=3)
+        self.toolbox.register("evaluate", self._evaluate_fitness)
+
+    def create_initial_genetics(self, species_type: str) -> Genetics:
+        """Create initial genetics using DEAP"""
+        # Generate a new individual using DEAP
+        individual = self.toolbox.individual()
         
-        return Genetics(genes)
-    
-    def mix_parent_genes(self, parent1, parent2, mutation_rate=0.1):
-        """Mix genes with controlled mutations"""
+        # Ensure traits are within species-specific ranges
+        self._clamp_traits(individual, species_type)
+        
+        # Convert to genetics component
+        return self._create_genetics_component(individual, species_type)
+
+    def mix_parent_genes(self, parent1, parent2) -> Genetics:
+        """Mix genes using DEAP operators"""
         if not (parent1.has_component(ComponentType.GENETICS) and 
                 parent2.has_component(ComponentType.GENETICS)):
             return None
 
-        parent1_genes = parent1.get_component(ComponentType.GENETICS)
-        parent2_genes = parent2.get_component(ComponentType.GENETICS)
+        # Get parent genetics
+        p1_genes = parent1.get_component(ComponentType.GENETICS)
+        p2_genes = parent2.get_component(ComponentType.GENETICS)
+        species_type = parent1.get_component(ComponentType.STATS).species_type
+
+        # Convert to DEAP individuals
+        ind1 = self._genes_to_individual(p1_genes.genes)
+        ind2 = self._genes_to_individual(p2_genes.genes)
+
+        # Apply DEAP crossover
+        child1, child2 = self.toolbox.mate(ind1, ind2)
         
-        # Determine species type from parent
-        stats = parent1.get_component(ComponentType.STATS)
-        species_type = stats.species_type
-        traits = self.TRAIT_DEFINITIONS.get(species_type, {})
+        # Apply DEAP mutation
+        child1, = self.toolbox.mutate(child1)
+        
+        # Ensure traits are within valid ranges
+        self._clamp_traits(child1, species_type)
+        
+        # Convert back to genetics component
+        return self._create_genetics_component(child1, species_type)
 
-        mixed_genes = {}
-        for gene in parent1_genes.genes:
-            # Get trait definition
-            trait_info = traits.get(gene, {})
-            mutation_step = trait_info.get('mutation_step', 0.05)
-            min_val, max_val = trait_info.get('range', (0.8, 1.2))
+    def _evaluate_fitness(self, individual):
+        """Fitness function for DEAP"""
+        # Basic fitness based on trait values
+        return sum(individual),
 
-            # Mix genes
-            if random.random() < 0.7:  # 70% dominant inheritance
-                mixed_genes[gene] = parent1_genes.genes[gene]
-            else:
-                mixed_genes[gene] = parent2_genes.genes[gene]
+    def _clamp_traits(self, individual, species_type: str):
+        """Ensure traits stay within species-specific ranges"""
+        trait_defs = self.TRAIT_DEFINITIONS.get(species_type, {})
+        for trait_name, trait_info in trait_defs.items():
+            min_val, max_val = trait_info['range']
+            index = trait_info['gene_index']
+            individual[index] = np.clip(individual[index], min_val, max_val)
 
-            # Apply controlled mutation
-            if random.random() < mutation_rate:
-                # Use mutation step for controlled changes
-                mutation = random.choice([-1, 1]) * mutation_step
-                mixed_genes[gene] += mutation
-                # Clamp to valid range
-                mixed_genes[gene] = max(min_val, min(max_val, mixed_genes[gene]))
+    def _genes_to_individual(self, genes: Dict[str, float]) -> creator.Individual:
+        """Convert genetics component to DEAP individual"""
+        individual = creator.Individual([1.0] * 15)  # Use max number of genes
+        for trait_name, value in genes.items():
+            for species_traits in self.TRAIT_DEFINITIONS.values():
+                if trait_name in species_traits:
+                    index = species_traits[trait_name]['gene_index']
+                    individual[index] = value
+        return individual
 
-        return Genetics(mixed_genes)
-    
-    def calculate_trait_compatibility(self, entity1, entity2):
-        """Calculate genetic compatibility between two entities"""
-        if not (entity1.has_component(ComponentType.GENETICS) and 
-                entity2.has_component(ComponentType.GENETICS)):
-            return 0.0
+    def _create_genetics_component(self, individual: creator.Individual, 
+                                 species_type: str) -> Genetics:
+        """Convert DEAP individual to genetics component"""
+        genes = {}
+        trait_defs = self.TRAIT_DEFINITIONS.get(species_type, {})
+        
+        for trait_name, trait_info in trait_defs.items():
+            index = trait_info['gene_index']
+            genes[trait_name] = individual[index]
             
-        genes1 = entity1.get_component(ComponentType.GENETICS).genes
-        genes2 = entity2.get_component(ComponentType.GENETICS).genes
-        
-        # Calculate similarity score
-        total_diff = 0
-        num_genes = len(genes1)
-        
-        for gene in genes1:
-            if gene in genes2:
-                diff = abs(genes1[gene] - genes2[gene])
-                total_diff += diff
-        
-        # Convert to compatibility score (0 to 1)
-        avg_diff = total_diff / num_genes
-        compatibility = 1.0 - min(1.0, avg_diff)
-        
-        return compatibility
-    
-    def mutate_genes(self, genetics, mutation_rate=0.1, mutation_range=0.1):
-        """Apply random mutations to genes"""
-        mutated_genes = genetics.genes.copy()
-        
-        for gene in mutated_genes:
-            if random.random() < mutation_rate:
-                # Apply random mutation within range
-                mutation = random.uniform(1 - mutation_range, 1 + mutation_range)
-                mutated_genes[gene] *= mutation
-                
-                # Ensure values stay within reasonable bounds
-                mutated_genes[gene] = max(0.5, min(1.5, mutated_genes[gene]))
-        
-        return Genetics(mutated_genes)
+        return Genetics(genes)

@@ -1,7 +1,7 @@
 class BaseSystem:
     def __init__(self, world):
-        self.world = world
+        self.world = world  # Store world directly instead of ecosystem
     
     def update(self, dt: float):
-        """Base update method to be overridden by child systems"""
-        pass 
+        """Update the system state"""
+        pass

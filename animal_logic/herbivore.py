@@ -1,233 +1,84 @@
-from animal_logic.base_animal import BaseAnimal
-from components import ComponentType
-import random
+from typing import Dict
 import numpy as np
-from map_system import TerrainType
+from .organism import Organism
+from components import ComponentType
 
-class Herbivore(BaseAnimal):
+class Herbivore(Organism):
     def __init__(self, entity, ecosystem):
         super().__init__(entity, ecosystem)
-        self.herd_radius = 150  # Radius to consider other herbivores as part of herd
-        self.personal_space = 30  # Minimum distance between herbivores
+        self.herd_radius = 150
+        self.personal_space = 30
         
-    def update(self, dt):
-        """Update herbivore behavior"""
-        if not self.entity.active:
-            return
-            
-        stats = self.entity.get_component(ComponentType.STATS)
-        status = self.entity.get_component(ComponentType.STATUS)
-        pos = self.entity.get_component(ComponentType.POSITION)
-        
-        # Check for predators first (survival priority)
-        nearest_predator = self.find_nearest_predator()
-        if nearest_predator:
-            predator_pos = nearest_predator.get_component(ComponentType.POSITION)
-            dist_to_predator = np.linalg.norm(predator_pos.value - pos.value)
-            if dist_to_predator < 200:  # Flee if predator is close
-                self.move_towards(nearest_predator, flee=True)
-                self.ecosystem.log_panel.log("🐰 fleeing from predator!")
-                return
-        
-        # Get herd information
-        herd_mates = self.find_herd_mates()
-        
-        # Prioritize needs
-        if status.is_hungry:
-            # Look for food while staying with herd
-            nearest_food = self.find_nearest_food()
-            if nearest_food:
-                food_pos = nearest_food.get_component(ComponentType.POSITION)
-                dist_to_food = np.linalg.norm(food_pos.value - pos.value)
-                
-                if dist_to_food < 20:  # Close enough to eat
-                    self.consume_food(nearest_food)
-                else:
-                    # Move towards food while considering herd
-                    self.move_with_herd(nearest_food, herd_mates)
-            else:
-                # Stay with herd while searching
-                self.move_with_herd(None, herd_mates)
-        else:
-            # Check for reproduction
-            if self.can_reproduce(stats):
-                mate = self.find_mate(herd_mates)
-                if mate:
-                    self.move_towards(mate)
-                    if np.linalg.norm(mate.get_component(ComponentType.POSITION).value - pos.value) < 30:
-                        self.reproduce()
-            else:
-                # Normal herd behavior
-                self.move_with_herd(None, herd_mates)
-        
-        # Update energy
-        traits = self.entity.get_component(ComponentType.TRAITS)
-        stats.energy -= traits.metabolism * dt
+        # Initialize velocity if not present
+        if not entity.has_component(ComponentType.VELOCITY):
+            entity.add_component(ComponentType.VELOCITY, np.zeros(2))
     
-    def move_with_herd(self, target, herd_mates):
-        """Move while maintaining herd cohesion"""
-        if not herd_mates:
-            if target:
-                self.move_towards(target)
-            else:
-                self.random_movement()
-            return
-        
+    def get_movement_vector(self, nearby_entities: Dict[str, list]) -> np.ndarray:
+        # Get required components
         pos = self.entity.get_component(ComponentType.POSITION)
         vel = self.entity.get_component(ComponentType.VELOCITY)
+        genetics = self.entity.get_component(ComponentType.GENETICS)
+        status = self.entity.get_component(ComponentType.STATUS)
         
-        # Calculate herd center
-        herd_center = np.mean([mate.get_component(ComponentType.POSITION).value 
-                             for mate in herd_mates], axis=0)
+        # Debug print component states
+        print(f"\nHerbivore {self.entity.id} state:")
+        print(f"Position: {pos.value}")
+        print(f"Velocity: {vel.value}")
+        print(f"Genetics: {genetics.genes}")
+        print(f"Status: hungry={status.is_hungry}")
         
-        # Calculate separation force (avoid crowding)
-        separation = np.zeros(2)
-        for mate in herd_mates:
-            mate_pos = mate.get_component(ComponentType.POSITION).value
-            dist = np.linalg.norm(mate_pos - pos.value)
-            if dist < self.personal_space:
-                separation += (pos.value - mate_pos) / (dist + 1e-6)
+        movement = np.zeros(2)
         
-        # Calculate target direction
-        if target:
-            target_pos = target.get_component(ComponentType.POSITION).value
-            target_dir = (target_pos - pos.value)
-            target_dir = target_dir / (np.linalg.norm(target_dir) + 1e-6)
-        else:
-            target_dir = np.zeros(2)
+        # Get genetic traits with default values
+        sense_radius = genetics.genes.get('sense_radius', 1.0) * 50
+        speed = genetics.genes.get('speed', 1.0)
         
-        # Combine forces
-        direction = (
-            target_dir * 1.0 +  # Target seeking
-            (herd_center - pos.value) * 0.5 +  # Cohesion
-            separation * 1.0  # Separation
-        )
+        # Add random movement if no other influences
+        if not any(nearby_entities.values()):
+            movement = np.random.normal(0, 1, 2)
+            print(f"Random movement: {movement}")
         
-        # Normalize and apply movement
-        if np.linalg.norm(direction) > 0:
-            direction = direction / np.linalg.norm(direction)
-            traits = self.entity.get_component(ComponentType.TRAITS)
-            speed = traits.speed * 30
-            vel.value = direction * speed
-    
-    def find_herd_mates(self):
-        """Find nearby herbivores"""
-        pos = self.entity.get_component(ComponentType.POSITION)
-        herd_mates = []
-        
-        for entity in self.ecosystem.entities:
-            if (entity != self.entity and entity.active and 
-                entity.has_component(ComponentType.STATS)):
-                stats = entity.get_component(ComponentType.STATS)
-                if stats.species_type == 'herbivore':
-                    other_pos = entity.get_component(ComponentType.POSITION)
-                    dist = np.linalg.norm(other_pos.value - pos.value)
-                    if dist < self.herd_radius:
-                        herd_mates.append(entity)
-        
-        return herd_mates
-    
-    def find_nearest_predator(self):
-        """Find nearest predator"""
-        pos = self.entity.get_component(ComponentType.POSITION)
-        nearest_dist = float('inf')
-        nearest_predator = None
-        
-        for entity in self.ecosystem.entities:
-            if not entity.active or not entity.has_component(ComponentType.STATS):
-                continue
+        # Move towards food if hungry
+        if status.is_hungry and nearby_entities.get("plants"):
+            nearest_plant = min(nearby_entities["plants"], 
+                              key=lambda p: np.linalg.norm(
+                                  p.get_component(ComponentType.POSITION).value - pos.value
+                              ))
+            plant_pos = nearest_plant.get_component(ComponentType.POSITION)
+            dist_to_plant = np.linalg.norm(plant_pos.value - pos.value)
             
-            stats = entity.get_component(ComponentType.STATS)
-            if stats.species_type == 'predator':
-                other_pos = entity.get_component(ComponentType.POSITION)
-                dist = np.linalg.norm(other_pos.value - pos.value)
-                if dist < nearest_dist:
-                    nearest_dist = dist
-                    nearest_predator = entity
+            print(f"Distance to nearest plant: {dist_to_plant}")
+            if dist_to_plant < sense_radius:
+                food_vector = plant_pos.value - pos.value
+                movement += food_vector
+                print(f"Moving towards food: {food_vector}")
         
-        return nearest_predator
-    
-    def consume_food(self, food_entity):
-        """Consume food and gain energy"""
-        stats = self.entity.get_component(ComponentType.STATS)
-        food_stats = food_entity.get_component(ComponentType.STATS)
-        
-        gained_energy = min(50.0, food_stats.energy)
-        stats.energy += gained_energy
-        
-        # Gain experience from eating
-        self.gain_experience(5.0)  # Base experience for eating
-        
-        # Remove consumed plant
-        food_entity.destroy()
-        self.ecosystem.entities.remove(food_entity)
-        self.ecosystem.log_panel.log(f"🐰 ate food (Energy: {stats.energy:.1f}, Size: {self.entity.get_component(ComponentType.APPEARANCE).size:.1f})")
-    
-    def can_reproduce(self, stats):
-        """Check if the herbivore can reproduce"""
-        return (stats.energy > stats.max_energy * 0.8 and  # Need high energy
-                stats.reproduction_cooldown <= 0 and       # Not in cooldown
-                random.random() < 0.002)                   # Lower random chance for better balance
-    
-    def find_mate(self, herd_mates):
-        """Find a suitable mate from herd"""
-        if not herd_mates:
-            return None
-        
-        # Filter potential mates
-        potential_mates = []
-        for mate in herd_mates:
-            mate_stats = mate.get_component(ComponentType.STATS)
-            if (mate_stats.energy > mate_stats.max_energy * 0.6 and  # Healthy mate
-                mate_stats.reproduction_cooldown <= 0):              # Ready to mate
-                potential_mates.append(mate)
-        
-        # Return random mate if any found
-        return random.choice(potential_mates) if potential_mates else None
-    
-    def reproduce(self):
-        """Create a new herbivore"""
-        stats = self.entity.get_component(ComponentType.STATS)
-        pos = self.entity.get_component(ComponentType.POSITION)
-        
-        # Create offspring position near parent
-        offspring_pos = pos.value + np.random.uniform(-20, 20, 2)
-        
-        # Verify position is valid (not in water)
-        tile = self.ecosystem.world_map.get_tile_at_position(offspring_pos[0], offspring_pos[1])
-        if tile.terrain_type in [TerrainType.DEEP_WATER, TerrainType.SHALLOW_WATER]:
-            return  # Cancel reproduction if invalid position
-        
-        # Create new entity
-        new_entity = self.ecosystem.create_entity('🐰', 
-                                                offspring_pos[0], 
-                                                offspring_pos[1], 
-                                                'herbivore')
-        
-        # Rest of reproduction code...
-    
-    def find_nearest_food(self):
-        """Find nearest plant to eat"""
-        pos = self.entity.get_component(ComponentType.POSITION)
-        traits = self.entity.get_component(ComponentType.TRAITS)
-        
-        nearest_dist = float('inf')
-        nearest_food = None
-        
-        # Search for plants within sense radius
-        search_radius = traits.sense_radius * 100  # Convert to pixels
-        
-        for entity in self.ecosystem.entities:
-            if not entity.active or not entity.has_component(ComponentType.STATS):
-                continue
+        # Normalize and apply speed
+        if np.any(movement):
+            movement = movement / np.linalg.norm(movement)
+            base_speed = 30
+            movement *= base_speed * speed
             
-            stats = entity.get_component(ComponentType.STATS)
-            if stats.species_type == 'plant':
-                other_pos = entity.get_component(ComponentType.POSITION)
-                dist = np.linalg.norm(other_pos.value - pos.value)
-                
-                if dist < nearest_dist and dist < search_radius:
-                    nearest_dist = dist
-                    nearest_food = entity
+            # Update velocity with smoothing
+            vel.value = vel.value * 0.8 + movement * 0.2
+            print(f"Final velocity: {vel.value}")
         
-        return nearest_food
+        return movement
+
+    def update(self, dt: float):
+        """Update method called each frame"""
+        super().update(dt)
+        
+        # Ensure velocity component exists
+        vel = self.entity.get_component(ComponentType.VELOCITY)
+        if vel is None:
+            print(f"Warning: Herbivore {self.entity.id} missing velocity component!")
+            return
+            
+        # Get nearby entities from ecosystem directly
+        nearby_entities = self.ecosystem.get_nearby_entities(self.entity)
+        
+        # Apply movement
+        movement = self.get_movement_vector(nearby_entities)
+        if np.any(movement):
+            print(f"Applying movement: {movement}")

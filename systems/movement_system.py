@@ -14,6 +14,12 @@ class MovementSystem(BaseSystem):
             pos = entity.get_component(ComponentType.POSITION)
             vel = entity.get_component(ComponentType.VELOCITY)
             
+            # Debug print
+            if entity.has_component(ComponentType.STATS):
+                stats = entity.get_component(ComponentType.STATS)
+                if stats.species_type == 'herbivore':
+                    print(f"Herbivore {entity.id} velocity: {vel.value}, position: {pos.value}")
+            
             # Apply velocity
             if isinstance(pos.value, np.ndarray) and isinstance(vel.value, np.ndarray):
                 pos.value += vel.value * dt

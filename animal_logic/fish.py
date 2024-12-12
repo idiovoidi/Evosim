@@ -2,7 +2,7 @@ from .base_animal import BaseAnimal
 from components import ComponentType
 import numpy as np
 import random
-from map_system import TerrainType
+from systems.map_system import TerrainType
 
 class Fish(BaseAnimal):
     def update(self, dt):
