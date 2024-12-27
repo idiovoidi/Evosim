@@ -51,44 +51,64 @@ class AnimalRenderer:
     
     @staticmethod
     def draw_predator(painter, x, y, size, color, genetics=None):
-        """Draw a predator (fox)"""
-        # Convert coordinates to integers
-        x = int(x)
-        y = int(y)
-        size = int(size)
+        """Draw a predator (fox) with sharp teeth"""
+        # Save current state
+        painter.save()
         
-        # Body
-        body = QPainterPath()
-        body.addEllipse(x - size/2, y - size/2, size * 1.2, size)
+        # Move to position
+        painter.translate(x, y)
         
-        # Head
-        head = QPainterPath()
-        head.addEllipse(x + size/4, y - size/4, size/2, size/2)
+        # Base color from genetics if available
+        if genetics and 'color_brightness' in genetics.genes:
+            brightness = genetics.genes['color_brightness']
+            color = QColor(
+                min(255, int(color.red() * brightness)),
+                min(255, int(color.green() * brightness)),
+                min(255, int(color.blue() * brightness))
+            )
         
-        # Ears
-        ear_width = size * 0.15
-        ear_height = size * 0.3
-        ear_left = QPainterPath()
-        ear_left.addEllipse(x + size/4, y - size/2, ear_width, ear_height)
-        ear_right = QPainterPath()
-        ear_right.addEllipse(x + size/2, y - size/2, ear_width, ear_height)
+        # Draw body
+        body_path = QPainterPath()
+        body_path.addEllipse(-size/2, -size/2, size, size)
         
-        # Draw with gradients
-        gradient = QLinearGradient(x, y - size/2, x, y + size/2)
-        gradient.setColorAt(0, color)
-        gradient.setColorAt(1, color.darker(120))
+        # Draw head
+        head_size = size * 0.6
+        head_path = QPainterPath()
+        head_path.addEllipse(size/4, -head_size/2, head_size, head_size)
         
-        painter.fillPath(body, gradient)
-        painter.fillPath(head, gradient)
-        painter.fillPath(ear_left, gradient)
-        painter.fillPath(ear_right, gradient)
+        # Draw teeth (new)
+        teeth_color = QColor(255, 255, 255)  # White teeth
+        teeth_size = size * 0.15
+        teeth_path = QPainterPath()
+        # Upper teeth
+        teeth_path.moveTo(size/2 + head_size*0.7, -teeth_size/2)
+        teeth_path.lineTo(size/2 + head_size*0.7 + teeth_size, 0)
+        teeth_path.lineTo(size/2 + head_size*0.7, teeth_size/2)
+        # Lower teeth
+        teeth_path.moveTo(size/2 + head_size*0.7, teeth_size/2)
+        teeth_path.lineTo(size/2 + head_size*0.7 + teeth_size, head_size/2)
+        teeth_path.lineTo(size/2 + head_size*0.7, head_size)
         
-        # Eyes
-        eye_color = QColor(0, 0, 0)
-        painter.fillRect(
-            int(x + size/2), 
-            int(y - size/4), 
-            int(size/8), 
-            int(size/8), 
-            eye_color
-        ) 
+        # Draw eyes
+        eye_size = size * 0.15
+        eye_color = QColor(0, 0, 0)  # Black eyes
+        eye_path = QPainterPath()
+        eye_path.addEllipse(size/2, -head_size/4, eye_size, eye_size)
+        
+        # Fill paths
+        painter.setBrush(color)
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawPath(body_path)
+        painter.drawPath(head_path)
+        
+        # Draw teeth
+        painter.setBrush(teeth_color)
+        painter.drawPath(teeth_path)
+        
+        # Draw eyes
+        painter.setBrush(eye_color)
+        painter.drawPath(eye_path)
+        
+        # Restore state
+        painter.restore()
+ 

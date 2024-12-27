@@ -51,6 +51,10 @@ class RenderingSystem(BaseSystem):
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
         
         try:
+            # Apply view transformation
+            painter.translate(surface.view_offset_x, surface.view_offset_y)
+            painter.scale(surface.view_scale, surface.view_scale)
+            
             # Render terrain first
             if hasattr(self.world, 'world_map'):
                 self.render_terrain(painter)
@@ -58,13 +62,19 @@ class RenderingSystem(BaseSystem):
             # Then render entities
             self.render_entities(painter)
             
-            # Finally render effects
+            # Reset transformation for UI elements
+            painter.resetTransform()
+            
+            # Finally render effects and UI
             if hasattr(self.world, 'effect_system'):
                 self.render_effects(painter)
             
-            # Only render UI if it exists
             if hasattr(self.world, 'ui_system'):
                 self.world.ui_system.render(painter)
+            
+            # Draw entity inspector window (in screen space)
+            self.world.entity_inspector.render(painter)
+            
         finally:
             painter.end()
 

@@ -1,22 +1,51 @@
-import sys
-import os
-from pathlib import Path
+import asyncio
+import websockets
+import json
+from systems.world import World
 
-# Get the absolute path of the project root directory
-ROOT_DIR = Path(__file__).resolve().parent
+class Simulation:
+    def __init__(self):
+        self.world = World(width=800, height=600)
+        self.running = False
+        self.clients = set()
+    
+    async def broadcast_map(self):
+        print("Broadcasting map data...")
+        map_data = {
+            'type': 'mapData',
+            'data': self.world.world_map.get_serializable_data()
+        }
+        print(f"Map dimensions: {map_data['data']['dimensions']}")
+        
+        # Broadcast to all clients
+        if self.clients:
+            await asyncio.gather(
+                *[client.send(json.dumps(map_data)) for client in self.clients]
+            )
 
-# Add the root directory to Python path
-if str(ROOT_DIR) not in sys.path:
-    sys.path.insert(0, str(ROOT_DIR))
+simulation = Simulation()
 
-from PyQt6.QtWidgets import QApplication
-from gui.main_window import MainWindow
+async def handle_client(websocket):
+    simulation.clients.add(websocket)
+    print("Client connected")
+    
+    try:
+        async for message in websocket:
+            data = json.loads(message)
+            print(f"Received data: {data}")
+            
+            if data["type"] == "getMapData":
+                print("Received getMapData request")
+                await simulation.broadcast_map()
+            
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+    finally:
+        simulation.clients.remove(websocket)
 
-def main():
-    app = QApplication(sys.argv)
-    window = MainWindow()
-    window.show()
-    sys.exit(app.exec())
+async def main():
+    async with websockets.serve(handle_client, "localhost", 8765):
+        await asyncio.Future()  # run forever
 
 if __name__ == "__main__":
-    main()
+    asyncio.run(main()) 

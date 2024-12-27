@@ -1,28 +1,42 @@
-from .base_system import BaseSystem
+from typing import Dict, Any, List
 from components import ComponentType
+from .base_system import BaseSystem
 
 class HealthSystem(BaseSystem):
-    def update(self, dt: float):
+    def update(self, dt: float) -> Dict[str, Any]:
+        changes = []
+        deaths = []
+        
         for entity in self.world.get_entities_by_type(ComponentType.STATS):
             if not entity.active:
                 continue
             
-            if not entity.has_components(ComponentType.STATS, ComponentType.STATUS):
-                continue
-            
             stats = entity.get_component(ComponentType.STATS)
-            status = entity.get_component(ComponentType.STATUS)
             
-            # Check death conditions
-            if stats.energy <= -20:
-                self.world.kill_entity(entity)
-                continue
-            
-            # Update status
+            # Update energy
             if entity.has_component(ComponentType.TRAITS):
                 traits = entity.get_component(ComponentType.TRAITS)
                 stats.energy -= traits.metabolism * 0.1 * dt
-                
-                # Update status conditions
-                status.is_hungry = stats.energy < stats.max_energy * 0.2
-                status.is_tired = stats.energy < stats.max_energy * 0.1 
+            
+            # Check death conditions
+            if stats.energy <= -20:
+                deaths.append(entity.id)
+                continue
+            
+            # Record stat changes
+            changes.append({
+                'entity_id': entity.id,
+                'stats': {
+                    'energy': stats.energy,
+                    'health': stats.health
+                }
+            })
+        
+        # Handle deaths
+        for entity_id in deaths:
+            self.world.kill_entity(entity_id)
+        
+        return {
+            'stat_changes': changes,
+            'deaths': deaths
+        } 

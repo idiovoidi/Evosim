@@ -1,406 +1,245 @@
-from enum import Enum, auto
+from enum import Enum
 from dataclasses import dataclass
-from typing import Dict, Any, Tuple
-import random
-from PyQt6.QtGui import QColor
+from typing import Dict, List
 import noise
-import os
-import json
 import numpy as np
-import math
-import deap
 
 class TerrainType(Enum):
-    # Water bodies
-    DEEP_WATER = auto()
-    SHALLOW_WATER = auto()
-    BEACH = auto()
-    
-    # Plains and grasslands
-    GRASSLAND = auto()
-    DENSE_GRASS = auto()
-    SAVANNA = auto()
-    
-    # Forests
-    FOREST = auto()
-    DENSE_FOREST = auto()
-    RAINFOREST = auto()
-    
-    # Arid regions
-    DESERT = auto()
-    DESERT_DUNES = auto()
-    
-    # Mountains and hills
-    HILLS = auto()
-    MOUNTAIN = auto()
-    MOUNTAIN_PEAK = auto()
-    SNOW = auto()
-    
-    # Special biomes
-    SWAMP = auto()
-    MARSH = auto()
-    VOLCANIC = auto()
-    CAVE = auto()
+    DEEP_WATER = "deep_water"
+    SHALLOW_WATER = "shallow_water"
+    BEACH = "beach"
+    GRASSLAND = "grassland"
+    FOREST = "forest"
+    MOUNTAIN = "mountain"
+    SNOW = "snow"
+    DESERT = "desert"
 
 @dataclass
-class TileProperties:
-    char: str
-    color: QColor
+class TerrainProperties:
+    base_height: float
+    color: Dict[str, float]  # RGB values 0-1
     movement_cost: float
-    food_value: float
-    food_growth_rate: float
     passable: bool
     fertility: float
     humidity: float
     temperature: float
-    elevation: float
     resources: Dict[str, float]
 
-class TerrainTile:
-    TERRAIN_PROPERTIES = {
-        TerrainType.DEEP_WATER: TileProperties(
-            char="~", color=QColor(0, 105, 148),
-            movement_cost=3.0, food_value=20.0, food_growth_rate=0.5,
-            passable=False, fertility=0.1, humidity=1.0,
-            temperature=0.3, elevation=0.0,
+class TerrainData:
+    PROPERTIES = {
+        TerrainType.DEEP_WATER: TerrainProperties(
+            base_height=-2.0,
+            color={'r': 0.0, 'g': 0.4, 'b': 0.6},
+            movement_cost=3.0,
+            passable=False,
+            fertility=0.1,
+            humidity=1.0,
+            temperature=0.3,
             resources={"fish": 100.0}
         ),
-        TerrainType.SHALLOW_WATER: TileProperties(
-            char="≈", color=QColor(64, 164, 223),
-            movement_cost=2.0, food_value=15.0, food_growth_rate=0.7,
-            passable=True, fertility=0.3, humidity=0.9,
-            temperature=0.4, elevation=0.1,
-            resources={"fish": 50.0, "reeds": 20.0}
+        TerrainType.SHALLOW_WATER: TerrainProperties(
+            base_height=-0.5,
+            color={'r': 0.2, 'g': 0.6, 'b': 0.8},
+            movement_cost=2.0,
+            passable=True,
+            fertility=0.3,
+            humidity=0.9,
+            temperature=0.4,
+            resources={"fish": 50.0}
         ),
-        TerrainType.BEACH: TileProperties(
-            char=".", color=QColor(238, 214, 175),
-            movement_cost=1.2, food_value=5.0, food_growth_rate=0.3,
-            passable=True, fertility=0.2, humidity=0.6,
-            temperature=0.6, elevation=0.2,
-            resources={"shells": 30.0}
-        ),
-        TerrainType.GRASSLAND: TileProperties(
-            char="\"", color=QColor(126, 200, 80),
-            movement_cost=1.0, food_value=30.0, food_growth_rate=1.0,
-            passable=True, fertility=0.8, humidity=0.5,
-            temperature=0.5, elevation=0.3,
-            resources={"herbs": 40.0}
-        ),
-        TerrainType.DENSE_GRASS: TileProperties(
-            char="\"\"", color=QColor(106, 180, 60),
-            movement_cost=1.2, food_value=40.0, food_growth_rate=1.2,
-            passable=True, fertility=0.9, humidity=0.6,
-            temperature=0.5, elevation=0.3,
-            resources={"herbs": 60.0}
-        ),
-        TerrainType.SAVANNA: TileProperties(
-            char=",", color=QColor(200, 180, 100),
-            movement_cost=1.0, food_value=25.0, food_growth_rate=0.8,
-            passable=True, fertility=0.6, humidity=0.3,
-            temperature=0.8, elevation=0.4,
-            resources={"grass": 40.0}
-        ),
-        TerrainType.FOREST: TileProperties(
-            char="♣", color=QColor(34, 139, 34),
-            movement_cost=1.5, food_value=35.0, food_growth_rate=0.9,
-            passable=True, fertility=0.7, humidity=0.7,
-            temperature=0.5, elevation=0.4,
-            resources={"wood": 80.0, "berries": 40.0}
-        ),
-        TerrainType.DENSE_FOREST: TileProperties(
-            char="♣♣", color=QColor(24, 129, 24),
-            movement_cost=2.0, food_value=40.0, food_growth_rate=0.8,
-            passable=True, fertility=0.8, humidity=0.8,
-            temperature=0.4, elevation=0.4,
-            resources={"wood": 100.0, "berries": 60.0}
-        ),
-        TerrainType.RAINFOREST: TileProperties(
-            char="♠", color=QColor(20, 110, 20),
-            movement_cost=2.5, food_value=50.0, food_growth_rate=1.5,
-            passable=True, fertility=1.0, humidity=0.9,
-            temperature=0.7, elevation=0.4,
-            resources={"wood": 120.0, "fruits": 80.0}
-        ),
-        TerrainType.DESERT: TileProperties(
-            char="·", color=QColor(238, 232, 170),
-            movement_cost=1.3, food_value=5.0, food_growth_rate=0.2,
-            passable=True, fertility=0.1, humidity=0.1,
-            temperature=0.9, elevation=0.3,
+        TerrainType.BEACH: TerrainProperties(
+            base_height=0.0,
+            color={'r': 0.94, 'g': 0.84, 'b': 0.69},
+            movement_cost=1.2,
+            passable=True,
+            fertility=0.2,
+            humidity=0.6,
+            temperature=0.6,
             resources={"sand": 100.0}
         ),
-        TerrainType.DESERT_DUNES: TileProperties(
-            char="∩", color=QColor(218, 212, 150),
-            movement_cost=1.6, food_value=3.0, food_growth_rate=0.1,
-            passable=True, fertility=0.05, humidity=0.05,
-            temperature=1.0, elevation=0.4,
-            resources={"sand": 120.0}
+        TerrainType.GRASSLAND: TerrainProperties(
+            base_height=0.2,
+            color={'r': 0.4, 'g': 0.8, 'b': 0.3},
+            movement_cost=1.0,
+            passable=True,
+            fertility=0.8,
+            humidity=0.5,
+            temperature=0.5,
+            resources={"grass": 100.0}
         ),
-        TerrainType.HILLS: TileProperties(
-            char="⌂", color=QColor(160, 160, 160),
-            movement_cost=1.8, food_value=20.0, food_growth_rate=0.6,
-            passable=True, fertility=0.5, humidity=0.5,
-            temperature=0.4, elevation=0.6,
-            resources={"stone": 60.0}
+        TerrainType.FOREST: TerrainProperties(
+            base_height=0.4,
+            color={'r': 0.13, 'g': 0.55, 'b': 0.13},
+            movement_cost=1.5,
+            passable=True,
+            fertility=0.7,
+            humidity=0.7,
+            temperature=0.5,
+            resources={"wood": 100.0}
         ),
-        TerrainType.MOUNTAIN: TileProperties(
-            char="▲", color=QColor(140, 140, 140),
-            movement_cost=2.5, food_value=10.0, food_growth_rate=0.3,
-            passable=True, fertility=0.2, humidity=0.4,
-            temperature=0.3, elevation=0.7,
+        TerrainType.MOUNTAIN: TerrainProperties(
+            base_height=1.5,
+            color={'r': 0.55, 'g': 0.55, 'b': 0.55},
+            movement_cost=2.5,
+            passable=True,
+            fertility=0.2,
+            humidity=0.4,
+            temperature=0.3,
             resources={"stone": 100.0}
         ),
-        TerrainType.MOUNTAIN_PEAK: TileProperties(
-            char="▲▲", color=QColor(120, 120, 120),
-            movement_cost=3.0, food_value=5.0, food_growth_rate=0.2,
-            passable=True, fertility=0.1, humidity=0.3,
-            temperature=0.2, elevation=0.8,
-            resources={"stone": 120.0}
-        ),
-        TerrainType.SNOW: TileProperties(
-            char="*", color=QColor(250, 250, 250),
-            movement_cost=2.0, food_value=5.0, food_growth_rate=0.1,
-            passable=True, fertility=0.1, humidity=0.4,
-            temperature=0.1, elevation=0.7,
+        TerrainType.SNOW: TerrainProperties(
+            base_height=2.0,
+            color={'r': 0.95, 'g': 0.95, 'b': 0.95},
+            movement_cost=2.0,
+            passable=True,
+            fertility=0.1,
+            humidity=0.4,
+            temperature=0.1,
             resources={"ice": 100.0}
         ),
-        TerrainType.SWAMP: TileProperties(
-            char="≋", color=QColor(80, 110, 70),
-            movement_cost=2.5, food_value=25.0, food_growth_rate=0.7,
-            passable=True, fertility=0.6, humidity=0.9,
-            temperature=0.6, elevation=0.2,
-            resources={"reeds": 60.0}
-        ),
-        TerrainType.MARSH: TileProperties(
-            char="≋", color=QColor(100, 130, 90),
-            movement_cost=2.0, food_value=20.0, food_growth_rate=0.6,
-            passable=True, fertility=0.5, humidity=0.8,
-            temperature=0.5, elevation=0.2,
-            resources={"reeds": 40.0}
-        ),
-        TerrainType.VOLCANIC: TileProperties(
-            char="△", color=QColor(100, 40, 40),
-            movement_cost=3.0, food_value=0.0, food_growth_rate=0.0,
-            passable=False, fertility=0.0, humidity=0.1,
-            temperature=1.0, elevation=0.9,
-            resources={"obsidian": 100.0}
-        ),
-        TerrainType.CAVE: TileProperties(
-            char="○", color=QColor(80, 80, 80),
-            movement_cost=1.5, food_value=10.0, food_growth_rate=0.3,
-            passable=True, fertility=0.2, humidity=0.6,
-            temperature=0.4, elevation=0.5,
-            resources={"stone": 80.0}
+        TerrainType.DESERT: TerrainProperties(
+            base_height=0.1,
+            color={'r': 0.93, 'g': 0.91, 'b': 0.67},
+            movement_cost=1.3,
+            passable=True,
+            fertility=0.1,
+            humidity=0.1,
+            temperature=0.9,
+            resources={"sand": 100.0}
         )
     }
 
-    def __init__(self, terrain_type: TerrainType, position: tuple):
-        self.terrain_type = terrain_type
-        self.position = position
-        self.current_resources = self.TERRAIN_PROPERTIES[terrain_type].resources.copy()
-        
-        # Dynamic properties that can change
-        self.current_food = self.TERRAIN_PROPERTIES[terrain_type].food_value
-        self.is_occupied = False
-        self.occupant = None
-        self.structure = None
-        
-        # Environmental effects
-        self.is_burning = False
-        self.is_flooded = False
-        self.pollution_level = 0.0
-        
-    def update(self):
-        # Regrow food
-        if self.current_food < self.TERRAIN_PROPERTIES[self.terrain_type].food_value:
-            self.current_food += self.TERRAIN_PROPERTIES[self.terrain_type].food_growth_rate
-        
-        # Regenerate resources
-        for resource, amount in self.current_resources.items():
-            max_amount = self.TERRAIN_PROPERTIES[self.terrain_type].resources[resource]
-            if amount < max_amount:
-                self.current_resources[resource] += max_amount * 0.01
-        
-        # Handle environmental effects
-        if self.is_burning:
-            self.current_food *= 0.9
-            self.pollution_level += 0.1
-        
-        if self.is_flooded:
-            self.TERRAIN_PROPERTIES[self.terrain_type].movement_cost *= 1.5
-            self.TERRAIN_PROPERTIES[self.terrain_type].humidity = min(1.0, self.TERRAIN_PROPERTIES[self.terrain_type].humidity + 0.1)
-
 class WorldMap:
-    def __init__(self, width=50, height=40, tile_size=40):
-        self.width = width  # Number of tiles wide
-        self.height = height  # Number of tiles high
-        self.tile_size = tile_size  # Size of each tile in pixels
+    def __init__(self, width: int = 50, height: int = 40):
+        self.width = width
+        self.height = height
+        self.tile_size = 4  # Size in world units
         
-        print(f"Initializing map with {width}x{height} tiles, each {tile_size}px")
+        # Generate base terrain data
+        self.heightmap = self._generate_heightmap()
+        self.moisture = self._generate_noise_map(50.0)
+        self.temperature = self._generate_noise_map(75.0)
         
-        # Initialize with default grassland tiles
-        self.tiles = [[TerrainTile(TerrainType.GRASSLAND, (x, y)) 
-                      for x in range(width)] 
-                      for y in range(height)]
-        self.generate_terrain()
+        # Generate terrain types based on height, moisture, and temperature
+        self.terrain_types = self._generate_terrain_types()
+        
+        # Store additional tile data
+        self.tile_data = self._initialize_tile_data()
     
-    def generate_terrain(self):
-        """Generate the world map with both noise-based and predefined features"""
-        # First generate the base terrain using noise
-        elevation = self._generate_noise_map(scale=100.0)
-        moisture = self._generate_noise_map(scale=50.0, offset=1000)
-        temperature = self._generate_noise_map(scale=150.0, offset=2000)
+    def _generate_heightmap(self) -> np.ndarray:
+        """Generate heightmap using multiple octaves of noise"""
+        print("Generating heightmap...")  # Debug logging
+        heightmap = np.zeros((self.height, self.width))
         
-        # Initialize tiles based on noise
+        scales = [(100.0, 1.0), (50.0, 0.5), (25.0, 0.25)]
+        for scale, weight in scales:
+            for y in range(self.height):
+                for x in range(self.width):
+                    heightmap[y, x] += noise.pnoise2(
+                        x/scale, y/scale,
+                        octaves=6,
+                        persistence=0.5,
+                        lacunarity=2.0,
+                        repeatx=self.width,
+                        repeaty=self.height,
+                        base=42
+                    ) * weight
+        
+        # Normalize to 0-1 range
+        heightmap = (heightmap - heightmap.min()) / (heightmap.max() - heightmap.min())
+        print(f"Heightmap generated with shape {heightmap.shape}")  # Debug logging
+        return heightmap
+    
+    def _generate_noise_map(self, scale: float) -> np.ndarray:
+        """Generate a generic noise map for moisture/temperature"""
+        noise_map = np.zeros((self.height, self.width))
+        
         for y in range(self.height):
             for x in range(self.width):
-                terrain_type = self._determine_biome(
-                    elevation[y][x],
-                    moisture[y][x],
-                    temperature[y][x]
-                )
-                self.tiles[y][x] = TerrainTile(
-                    terrain_type=terrain_type,
-                    position=(x, y)
-                )
-        
-        # Apply predefined features on top of the generated terrain
-        self.create_predefined_features()
-    
-    def _generate_noise_map(self, scale=100.0, offset=0):
-        """Generate a more detailed noise map with multiple layers"""
-        def combine_noise_layers(x, y, scales):
-            value = 0
-            weight_sum = 0
-            for scale, weight in scales:
-                noise_val = noise.pnoise2(
-                    x/scale + offset,
-                    y/scale + offset,
-                    octaves=6,
+                noise_map[y, x] = noise.pnoise2(
+                    x/scale, y/scale,
+                    octaves=4,
                     persistence=0.5,
                     lacunarity=2.0,
                     repeatx=self.width,
                     repeaty=self.height,
-                    base=42 + int(scale)
+                    base=42
                 )
-                value += noise_val * weight
-                weight_sum += weight
-            return (value / weight_sum + 1) / 2
-
-        noise_map = []
-        scales = [(scale, 1.0), (scale/2, 0.5), (scale/4, 0.25)]
         
-        for y in range(self.height):
-            row = []
-            for x in range(self.width):
-                value = combine_noise_layers(x, y, scales)
-                row.append(value)
-            noise_map.append(row)
+        noise_map = (noise_map - noise_map.min()) / (noise_map.max() - noise_map.min())
         return noise_map
     
-    def create_predefined_features(self):
-        """Create predefined map features like lakes, rivers, and biome clusters"""
-        # Define large water bodies
-        water_tiles = [
-            # Large lake in the center
-            (self.width // 2, self.height // 2),
-            (self.width // 2 + 1, self.height // 2),
-            (self.width // 2, self.height // 2 + 1),
-            (self.width // 2 + 1, self.height // 2 + 1),
-            # River running through the map
-            (0, self.height // 4),
-            (self.width // 4, self.height // 4),
-            (self.width // 2, self.height // 4),
-            (3 * self.width // 4, self.height // 4),
-            (self.width - 1, self.height // 4),
-        ]
+    def _generate_terrain_types(self) -> List[List[TerrainType]]:
+        """Determine terrain type for each tile based on height, moisture, and temperature"""
+        terrain = [[TerrainType.GRASSLAND for x in range(self.width)] 
+                  for y in range(self.height)]
         
-        # Forest areas
-        forest_tiles = [
-            # Forest patches
-            (self.width // 8, self.height // 8),
-            (7 * self.width // 8, self.height // 8),
-            (self.width // 8, 7 * self.height // 8),
-            (7 * self.width // 8, 7 * self.height // 8),
-        ]
+        for y in range(self.height):
+            for x in range(self.width):
+                height = self.heightmap[y, x]
+                moisture = self.moisture[y, x]
+                temperature = self.temperature[y, x]
+                
+                # Determine terrain type based on height first
+                if height < 0.2:
+                    terrain[y][x] = TerrainType.DEEP_WATER
+                elif height < 0.3:
+                    terrain[y][x] = TerrainType.SHALLOW_WATER
+                elif height < 0.35:
+                    terrain[y][x] = TerrainType.BEACH
+                elif height > 0.8:
+                    if temperature < 0.2:
+                        terrain[y][x] = TerrainType.SNOW
+                    else:
+                        terrain[y][x] = TerrainType.MOUNTAIN
+                else:
+                    # Use moisture and temperature for middle heights
+                    if moisture > 0.6:
+                        terrain[y][x] = TerrainType.FOREST
+                    elif moisture < 0.2 and temperature > 0.7:
+                        terrain[y][x] = TerrainType.DESERT
+                    else:
+                        terrain[y][x] = TerrainType.GRASSLAND
         
-        # Mountain ranges
-        mountain_tiles = [
-            # Central mountains
-            (self.width // 2, self.height // 4),
-            (self.width // 2 + 1, self.height // 4),
-            (self.width // 2, self.height // 4 + 1),
-            (self.width // 2 + 1, self.height // 4 + 1),
-            # Corner peaks
-            (0, 0),
-            (self.width - 1, 0),
-            (0, self.height - 1),
-            (self.width - 1, self.height - 1),
-        ]
-        
-        # Apply predefined features
-        for x, y in water_tiles:
-            self.tiles[y][x] = TerrainTile(TerrainType.DEEP_WATER, (x, y))
-        
-        for x, y in forest_tiles:
-            self.tiles[y][x] = TerrainTile(TerrainType.FOREST, (x, y))
-        
-        for x, y in mountain_tiles:
-            self.tiles[y][x] = TerrainTile(TerrainType.MOUNTAIN, (x, y))
+        return terrain
     
-    def _determine_biome(self, elevation, moisture, temperature):
-        """Enhanced biome determination based on elevation, moisture, and temperature"""
-        # Water bodies
-        if elevation < 0.2:  # Reduced water coverage
-            if moisture > 0.7:
-                return TerrainType.DEEP_WATER
-            return TerrainType.SHALLOW_WATER
-        elif elevation < 0.25:
-            return TerrainType.BEACH
-
-        # Mountain regions
-        if elevation > 0.85:  # Reduced mountain coverage
-            if temperature < 0.2:
-                return TerrainType.SNOW
-            return TerrainType.MOUNTAIN_PEAK
-        elif elevation > 0.8:
-            return TerrainType.MOUNTAIN
-        elif elevation > 0.75:
-            return TerrainType.HILLS
-
-        # More common biomes
-        if moisture > 0.7:
-            if temperature > 0.7:
-                return TerrainType.RAINFOREST
-            return TerrainType.FOREST
-        elif moisture > 0.5:
-            if temperature > 0.6:
-                return TerrainType.DENSE_GRASS
-            return TerrainType.GRASSLAND
-        elif moisture > 0.3:
-            if temperature > 0.7:
-                return TerrainType.SAVANNA
-            return TerrainType.GRASSLAND
+    def _initialize_tile_data(self) -> List[Dict]:
+        """Initialize additional data for each tile"""
+        tile_data = []
         
-        # Desert regions
-        if temperature > 0.8:
-            return TerrainType.DESERT
+        for y in range(self.height):
+            for x in range(self.width):
+                terrain_type = self.terrain_types[y][x]
+                properties = TerrainData.PROPERTIES[terrain_type]
+                
+                # Calculate actual height using base height and noise
+                actual_height = (self.heightmap[y, x] * 10) + properties.base_height
+                
+                tile_data.append({
+                    'x': x,
+                    'z': y,
+                    'height': float(actual_height),
+                    'type': terrain_type.value,
+                    'properties': {
+                        'color': properties.color,
+                        'movement_cost': properties.movement_cost,
+                        'passable': properties.passable,
+                        'resources': properties.resources.copy()
+                    }
+                })
         
-        # Default to grassland
-        return TerrainType.GRASSLAND
+        return tile_data
     
-    def get_tile_at_position(self, x: float, y: float) -> TerrainTile:
-        """Convert world coordinates to tile coordinates"""
-        # Convert world coordinates to tile coordinates
-        tile_x = int(x // self.tile_size)
-        tile_y = int(y // self.tile_size)
-        
-        # Check bounds
-        if 0 <= tile_x < self.width and 0 <= tile_y < self.height:
-            return self.tiles[tile_y][tile_x]
-        return None
-    
-    def update(self):
-        """Update all tiles"""
-        for row in self.tiles:
-            for tile in row:
-                tile.update()
+    def get_serializable_data(self) -> Dict:
+        """Get map data in a format suitable for network transmission"""
+        print("Preparing map data for serialization...")  # Debug logging
+        data = {
+            'dimensions': {
+                'width': self.width,
+                'height': self.height,
+                'tileSize': self.tile_size
+            },
+            'tiles': self.tile_data
+        }
+        print(f"Map data prepared with {len(self.tile_data)} tiles")  # Debug logging
+        return data

@@ -1,239 +1,106 @@
-from enum import Enum
+from typing import Dict, Any, List
+from components import ComponentType
+from .base_system import BaseSystem
 import numpy as np
-import random
-from PyQt6.QtGui import QColor
-import math
-from systems.map_system import TerrainType
 
-class BuildingType(Enum):
-    HOUSE = 1
-    FARM = 2
-    WORKSHOP = 3
-    STORAGE = 4
-    WELL = 5
-
-class Building:
-    # Move properties to class level
-    PROPERTIES = {
-        BuildingType.HOUSE: {
-            'capacity': 4,
-            'char': '🏠',
-            'color': QColor(139, 69, 19),  # Brown
-            'build_cost': 50
-        },
-        BuildingType.FARM: {
-            'food_production': 0.1,
-            'char': '🌾',
-            'color': QColor(205, 133, 63),  # Peru
-            'build_cost': 30
-        },
-        BuildingType.WORKSHOP: {
-            'production_rate': 0.05,
-            'char': '🏭',
-            'color': QColor(169, 169, 169),  # Dark gray
-            'build_cost': 70
-        },
-        BuildingType.STORAGE: {
-            'capacity': 1000,
-            'char': '🏪',
-            'color': QColor(160, 82, 45),  # Sienna
-            'build_cost': 40
-        },
-        BuildingType.WELL: {
-            'water_production': 0.1,
-            'char': '⛲',
-            'color': QColor(70, 130, 180),  # Steel blue
-            'build_cost': 20
-        }
-    }
-
-    def __init__(self, building_type, pos):
-        self.type = building_type
-        self.pos = np.array(pos, dtype=float)
-        self.health = 100
-        self.resources = 0
-        self.occupants = []
-        self.properties = self.PROPERTIES[building_type]
-
-class Human:
-    def __init__(self, pos):
-        self.pos = np.array(pos, dtype=float)
-        self.vel = np.array([0.0, 0.0], dtype=float)
-        self.char = '👤'
-        self.color = QColor(255, 218, 185)  # Peach
-        
-        # Basic needs
-        self.health = 100
-        self.energy = 100
-        self.hunger = 0
-        self.thirst = 0
-        
-        # Resources
-        self.inventory = {
-            'food': 0,
-            'water': 0,
-            'materials': 0
-        }
-        
-        # Skills that improve with use
-        self.skills = {
-            'building': random.uniform(0.1, 0.5),
-            'farming': random.uniform(0.1, 0.5),
-            'crafting': random.uniform(0.1, 0.5),
-            'gathering': random.uniform(0.1, 0.5)
-        }
-        
-        # Current activity and home
-        self.current_activity = None
-        self.home = None
-        self.workplace = None
-        
-        self.build_cooldown = 0
-        self.showing_heart = 0
-        self.target = None
-        self.state = 'gathering'  # gathering, building, resting
+class HumanSystem(BaseSystem):
+    def __init__(self, world):
+        super().__init__(world)
+        self.selected_entity = None
+        self.mouse_pos = np.array([0, 0])
     
-    def update(self, world_map, buildings):
-        # Update basic needs
-        self.hunger += 0.1
-        self.thirst += 0.15
-        self.energy -= 0.05
+    def update(self, dt: float) -> Dict[str, Any]:
+        """Update human interaction state"""
+        if not self.selected_entity:
+            return {}
         
-        if self.build_cooldown > 0:
-            self.build_cooldown -= 1
+        # Return selected entity data
+        entity = self.world.get_entity(self.selected_entity)
+        if not entity or not entity.active:
+            self.selected_entity = None
+            return {'selected_entity': None}
         
-        if self.showing_heart > 0:
-            self.showing_heart -= 1
+        return {
+            'selected_entity': {
+                'id': entity.id,
+                'position': {
+                    'x': float(entity.get_component(ComponentType.POSITION).value[0]),
+                    'y': 0,
+                    'z': float(entity.get_component(ComponentType.POSITION).value[1])
+                },
+                'stats': self._get_entity_stats(entity)
+            }
+        }
+    
+    def handle_client_message(self, message: Dict[str, Any]) -> Dict[str, Any]:
+        """Handle client interaction messages"""
+        if message['type'] == 'select_entity':
+            return self._handle_entity_selection(message['position'])
+        elif message['type'] == 'spawn_entity':
+            return self._handle_entity_spawn(message['entity_type'], message['position'])
+        return {}
+    
+    def _handle_entity_selection(self, position: Dict[str, float]) -> Dict[str, Any]:
+        """Handle entity selection at given position"""
+        pos = np.array([position['x'], position['z']])  # z is y in 2D
         
-        # State machine for behavior
-        if self.state == 'gathering':
-            # Gather resources from surroundings
-            tile = world_map.get_tile_at_position(self.pos[0], self.pos[1])
-            if tile.terrain_type == TerrainType.FOREST:
-                self.inventory['materials'] += self.skills['gathering'] * 0.1
-                self.skills['gathering'] += 0.001
+        closest_entity = None
+        closest_dist = float('inf')
+        
+        for entity in self.world.get_entities():
+            if not entity.active:
+                continue
+                
+            entity_pos = entity.get_component(ComponentType.POSITION).value
+            dist = np.linalg.norm(pos - entity_pos)
             
-            # Switch to building if enough materials
-            if self.inventory['materials'] >= 50:
-                self.state = 'building'
-                self.target = self._find_build_location(world_map)
+            if dist < closest_dist and dist < 5:  # Selection radius
+                closest_dist = dist
+                closest_entity = entity
         
-        elif self.state == 'building':
-            if self.target is not None:
-                # Move towards building location
-                direction = self.target - self.pos
-                if np.linalg.norm(direction) > 5:
-                    direction = direction / np.linalg.norm(direction)
-                    self.vel = direction * 0.5
-                    self.pos += self.vel
-                else:
-                    # Try to build
-                    if self.build_cooldown <= 0:
-                        building_type = self._choose_building_type(buildings)
-                        new_building = self.build(building_type)
-                        if new_building:
-                            self.showing_heart = 20  # Show heart when building
-                            self.build_cooldown = 200
-                            self.state = 'gathering'
-                            self.target = None
-                            return new_building
-            else:
-                self.state = 'gathering'
+        self.selected_entity = closest_entity.id if closest_entity else None
         
-        elif self.state == 'resting':
-            self.energy += 0.1
-            if self.energy > 80:
-                self.state = 'gathering'
+        if closest_entity:
+            return {
+                'selected_entity': {
+                    'id': closest_entity.id,
+                    'stats': self._get_entity_stats(closest_entity)
+                }
+            }
+        return {'selected_entity': None}
+    
+    def _handle_entity_spawn(self, entity_type: str, position: Dict[str, float]) -> Dict[str, Any]:
+        """Handle spawning new entity at given position"""
+        pos = np.array([position['x'], position['z']])
         
-        # Check if need to rest
-        if self.energy < 20:
-            self.state = 'resting'
+        entity = self.world.create_entity(
+            "🦊" if entity_type == "predator" else "🐰",
+            pos[0], pos[1],
+            entity_type
+        )
         
-        return None
+        return {
+            'spawned_entity': {
+                'id': entity.id,
+                'type': entity_type,
+                'position': position
+            }
+        }
     
-    def _find_build_location(self, world_map):
-        """Find a suitable location to build"""
-        for _ in range(10):
-            angle = random.uniform(0, 2 * math.pi)
-            distance = random.uniform(50, 150)
-            new_pos = self.pos + np.array([
-                math.cos(angle) * distance,
-                math.sin(angle) * distance
-            ])
-            tile = world_map.get_tile_at_position(new_pos[0], new_pos[1])
-            if tile.terrain_type not in [TerrainType.WATER, TerrainType.MOUNTAIN]:
-                return new_pos
-        return None
-    
-    def _choose_building_type(self, buildings):
-        """Choose what type of building to construct based on needs"""
-        existing_types = [b.type for b in buildings]
+    def _get_entity_stats(self, entity) -> Dict[str, Any]:
+        """Get entity statistics for UI display"""
+        stats = {}
         
-        if BuildingType.HOUSE not in existing_types:
-            return BuildingType.HOUSE
-        elif BuildingType.FARM not in existing_types:
-            return BuildingType.FARM
-        elif BuildingType.WELL not in existing_types:
-            return BuildingType.WELL
-        else:
-            return random.choice([
-                BuildingType.WORKSHOP,
-                BuildingType.STORAGE,
-                BuildingType.HOUSE
-            ])
-    
-    def eat(self):
-        if self.inventory['food'] > 0:
-            self.inventory['food'] -= 1
-            self.hunger = max(0, self.hunger - 30)
-    
-    def drink(self):
-        if self.inventory['water'] > 0:
-            self.inventory['water'] -= 1
-            self.thirst = max(0, self.thirst - 30)
-    
-    def work(self, world_map, buildings):
-        if not self.workplace:
-            # Find or build a workplace
-            self.find_or_build_workplace(buildings)
-        elif self.workplace.type == BuildingType.FARM:
-            # Farm work
-            self.skills['farming'] += 0.001
-            if random.random() < self.skills['farming'] * 0.1:
-                self.inventory['food'] += 1
-        elif self.workplace.type == BuildingType.WORKSHOP:
-            # Craft items
-            self.skills['crafting'] += 0.001
-            if random.random() < self.skills['crafting'] * 0.1:
-                self.inventory['materials'] += 1
-    
-    def find_or_build_workplace(self, buildings):
-        # Look for existing buildings
-        for building in buildings:
-            if (building.type in [BuildingType.FARM, BuildingType.WORKSHOP] 
-                and len(building.occupants) < building.properties['capacity']):
-                self.workplace = building
-                building.occupants.append(self)
-                return
+        if entity.has_component(ComponentType.STATS):
+            s = entity.get_component(ComponentType.STATS)
+            stats.update({
+                'energy': s.energy,
+                'health': s.health,
+                'species': s.species_type
+            })
         
-        # If no workplace found and has materials, build one
-        if self.inventory['materials'] >= 30:
-            self.build(BuildingType.FARM if random.random() < 0.5 else BuildingType.WORKSHOP)
-    
-    def build(self, building_type):
-        # Get building properties from Building class
-        building_properties = Building.PROPERTIES[building_type]
+        if entity.has_component(ComponentType.GENETICS):
+            g = entity.get_component(ComponentType.GENETICS)
+            stats['genes'] = g.genes
         
-        if self.inventory['materials'] >= building_properties['build_cost']:
-            self.inventory['materials'] -= building_properties['build_cost']
-            new_building = Building(building_type, self.pos + np.random.uniform(-2, 2, 2))
-            self.skills['building'] += 0.1
-            return new_building
-        return None
-    
-    def move_towards(self, target_pos):
-        direction = target_pos - self.pos
-        if np.linalg.norm(direction) > 0:
-            direction = direction / np.linalg.norm(direction)
-            self.vel = direction * 0.1
-            self.pos += self.vel 
+        return stats 
