@@ -25,9 +25,9 @@ class Simulation:
 
 simulation = Simulation()
 
-async def handle_client(websocket):
+async def handle_client(websocket, path):
     simulation.clients.add(websocket)
-    print("Client connected")
+    print(f"Client connected from {path}")
     
     try:
         async for message in websocket:
@@ -38,14 +38,20 @@ async def handle_client(websocket):
                 print("Received getMapData request")
                 await simulation.broadcast_map()
             
+    except websockets.exceptions.ConnectionClosed as e:
+        print(f"Client disconnected: {e}")
     except Exception as e:
         print(f"WebSocket error: {e}")
     finally:
         simulation.clients.remove(websocket)
 
 async def main():
+    print("Starting WebSocket server on ws://localhost:8765")
     async with websockets.serve(handle_client, "localhost", 8765):
         await asyncio.Future()  # run forever
 
 if __name__ == "__main__":
-    asyncio.run(main()) 
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        print("Server stopped.") 

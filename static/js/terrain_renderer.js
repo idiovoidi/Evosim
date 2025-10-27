@@ -1,10 +1,14 @@
 class TerrainRenderer {
     constructor(scene) {
         this.scene = scene;
+        this.terrainContainer = new BABYLON.TransformNode("terrainContainer", this.scene);
     }
     
     createTerrain(mapData) {
         console.log("Creating terrain with data:", mapData);
+        
+        // Dispose of old terrain meshes
+        this.terrainContainer.getChildMeshes().forEach(mesh => mesh.dispose());
         
         const width = mapData.dimensions.width;
         const height = mapData.dimensions.height;
@@ -26,6 +30,9 @@ class TerrainRenderer {
             box.position.x = tile.x * tileSize;
             box.position.y = tile.height / 2;  // Center height
             box.position.z = tile.z * tileSize;
+            
+            // Assign to container
+            box.parent = this.terrainContainer;
             
             // Create material
             const material = new BABYLON.StandardMaterial(

@@ -75,6 +75,18 @@ class EcosystemSimulation {
     handleMapData(mapData) {
         console.log("Handling map data");
         this.terrainRenderer.createTerrain(mapData);
+
+        // Center the camera on the new terrain
+        const width = mapData.dimensions.width;
+        const height = mapData.dimensions.height;
+        const tileSize = mapData.dimensions.tileSize;
+        const centerX = (width * tileSize) / 2;
+        const centerZ = (height * tileSize) / 2;
+
+        const camera = this.scene.getCameraByName("camera");
+        if (camera) {
+            camera.setTarget(new BABYLON.Vector3(centerX, 0, centerZ));
+        }
     }
 }
 
