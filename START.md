@@ -18,7 +18,7 @@
 
 **Just click this link:**
 
-### **http://localhost:3001/**
+### **http://localhost:3000/**
 
 That's it! The simulation will load in your browser.
 
@@ -64,7 +64,7 @@ npm run preview  # Preview production build
 
 ## 🎯 What to Do
 
-1. **Open** http://localhost:3001/
+1. **Open** http://localhost:3000/
 2. **Complete** the interactive tutorial
 3. **Watch** the ecosystem evolve
 4. **Experiment** with controls
@@ -74,4 +74,4 @@ npm run preview  # Preview production build
 
 **Version:** 2.0.0 (Web-Only)  
 **Status:** ✅ Ready  
-**Server:** Running at http://localhost:3001/
+**Server:** Running at http://localhost:3000/
