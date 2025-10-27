@@ -1,0 +1,17 @@
+{
+  "name": "ecosystem-simulation",
+  "version": "2.0.0",
+  "type": "module",
+  "description": "Browser-based ecosystem simulation with genetic evolution",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "simplex-noise": "^4.0.1"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}

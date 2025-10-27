@@ -44,3 +44,12 @@ Thumbs.db
 sounds/
 *.wav
 *.mp3
+
+# Node.js / Web
+node_modules/
+package-lock.json
+yarn.lock
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.cache/

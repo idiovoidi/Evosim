@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ecosystem Simulation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        #app {
+            display: flex;
+            height: 100vh;
+        }
+        
+        #canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        canvas {
+            display: block;
+            cursor: crosshair;
+        }
+        
+        #sidebar {
+            width: 300px;
+            background: #2a2a2a;
+            padding: 20px;
+            overflow-y: auto;
+            border-left: 1px solid #444;
+        }
+        
+        h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #4CAF50;
+        }
+        
+        .stat-group {
+            margin-bottom: 20px;
+        }
+        
+        .stat {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .stat-label {
+            color: #aaa;
+        }
+        
+        .stat-value {
+            font-weight: bold;
+        }
+        
+        .controls {
+            margin-top: 20px;
+        }
+        
+        button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        button.danger {
+            background: #f44336;
+        }
+        
+        button.danger:hover {
+            background: #da190b;
+        }
+        
+        .slider-control {
+            margin: 15px 0;
+        }
+        
+        .slider-control label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+        }
+        
+        .entity-info {
+            background: #333;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+        
+        .entity-info div {
+            margin: 5px 0;
+        }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .legend-icon {
+            font-size: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div id="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        <div id="sidebar">
+            <h2>🌍 Ecosystem Simulation</h2>
+            
+            <div class="stat-group">
+                <h3 style="font-size: 14px; margin-bottom: 10px;">Population</h3>
+                <div class="stat">
+                    <span class="stat-label">🐰 Herbivores</span>
+                    <span class="stat-value" id="herbivore-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">🦊 Predators</span>
+                    <span class="stat-value" id="predator-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">🌿 Plants</span>
+                    <span class="stat-value" id="plant-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">🐟 Fish</span>
+                    <span class="stat-value" id="fish-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">🦅 Birds</span>
+                    <span class="stat-value" id="bird-count">0</span>
+                </div>
+            </div>
+            
+            <div class="stat-group">
+                <h3 style="font-size: 14px; margin-bottom: 10px;">Statistics</h3>
+                <div class="stat">
+                    <span class="stat-label">Total Entities</span>
+                    <span class="stat-value" id="total-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">FPS</span>
+                    <span class="stat-value" id="fps">60</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Time Elapsed</span>
+                    <span class="stat-value" id="time-elapsed">0s</span>
+                </div>
+            </div>
+            
+            <div class="controls">
+                <button id="pause-btn">⏸️ Pause</button>
+                <button id="reset-btn" class="danger">🔄 Reset</button>
+                
+                <div class="slider-control">
+                    <label>Speed: <span id="speed-value">1.0x</span></label>
+                    <input type="range" id="speed-slider" min="0.1" max="5" step="0.1" value="1">
+                </div>
+                
+                <div class="slider-control">
+                    <label>Zoom: <span id="zoom-value">1.0x</span></label>
+                    <input type="range" id="zoom-slider" min="0.5" max="3" step="0.1" value="1">
+                </div>
+            </div>
+            
+            <div class="entity-info" id="entity-info" style="display: none;">
+                <h3 style="font-size: 14px; margin-bottom: 5px;">Selected Entity</h3>
+                <div id="entity-details"></div>
+            </div>
+        </div>
+    </div>
+    
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
