@@ -18,6 +18,210 @@
             overflow: hidden;
         }
         
+        /* Loading Screen */
+        #loading-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        
+        #loading-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .loading-content {
+            text-align: center;
+        }
+        
+        .loading-content h2 {
+            font-size: 32px;
+            margin-bottom: 20px;
+            color: #4CAF50;
+        }
+        
+        .spinner {
+            width: 60px;
+            height: 60px;
+            border: 5px solid #333;
+            border-top: 5px solid #4CAF50;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 30px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        #loading-status {
+            color: #888;
+            font-size: 14px;
+            margin-top: 10px;
+        }
+        
+        /* Tutorial Overlay */
+        #tutorial-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 10000;
+            transition: opacity 0.3s ease;
+        }
+        
+        .tutorial-backdrop {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+        }
+        
+        .tutorial-box {
+            position: absolute;
+            background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
+            border: 2px solid #4CAF50;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 450px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .tutorial-box.center {
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        
+        .tutorial-box.left {
+            top: 50%;
+            left: 40px;
+            transform: translateY(-50%);
+        }
+        
+        .tutorial-box.right {
+            top: 50%;
+            right: 340px;
+            transform: translateY(-50%);
+        }
+        
+        .tutorial-box h3 {
+            margin-bottom: 15px;
+            color: #4CAF50;
+            font-size: 20px;
+        }
+        
+        .tutorial-box p {
+            line-height: 1.6;
+            color: #ccc;
+            margin-bottom: 20px;
+        }
+        
+        .tutorial-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .tutorial-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .tutorial-btn.primary {
+            background: #4CAF50;
+            color: white;
+        }
+        
+        .tutorial-btn.primary:hover {
+            background: #45a049;
+            transform: translateY(-1px);
+        }
+        
+        .tutorial-btn.secondary {
+            background: #444;
+            color: #ccc;
+        }
+        
+        .tutorial-btn.secondary:hover {
+            background: #555;
+        }
+        
+        .tutorial-progress {
+            text-align: center;
+            margin-top: 15px;
+            color: #666;
+            font-size: 12px;
+        }
+        
+        .tutorial-highlight {
+            box-shadow: 0 0 0 4px #4CAF50, 0 0 30px rgba(76, 175, 80, 0.6) !important;
+            border-radius: 8px;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 0 4px #4CAF50, 0 0 30px rgba(76, 175, 80, 0.6); }
+            50% { box-shadow: 0 0 0 4px #4CAF50, 0 0 40px rgba(76, 175, 80, 0.8); }
+        }
+        
+        /* Save Notification */
+        .save-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            z-index: 10002;
+            opacity: 0;
+            transform: translateX(400px);
+            transition: all 0.3s ease;
+            font-weight: 600;
+        }
+        
+        .save-notification.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        
+        .save-notification.error {
+            background: #f44336;
+        }
+        
         #app {
             display: flex;
             height: 100vh;
@@ -141,6 +345,15 @@
     </style>
 </head>
 <body>
+    <!-- Loading Screen -->
+    <div id="loading-screen">
+        <div class="loading-content">
+            <div class="spinner"></div>
+            <h2>🌍 Ecosystem Simulation</h2>
+            <p id="loading-status">Initializing...</p>
+        </div>
+    </div>
+    
     <div id="app">
         <div id="canvas-container">
             <canvas id="canvas"></canvas>
@@ -188,9 +401,17 @@
                 </div>
             </div>
             
+            <div class="stat-group">
+                <h3 style="font-size: 14px; margin-bottom: 10px;">Population History</h3>
+                <canvas id="stats-graph" width="260" height="150" style="border-radius: 4px;"></canvas>
+            </div>
+            
             <div class="controls">
                 <button id="pause-btn">⏸️ Pause</button>
                 <button id="reset-btn" class="danger">🔄 Reset</button>
+                <button id="save-btn">💾 Save</button>
+                <button id="load-btn">📂 Load</button>
+                <button id="tutorial-btn">📖 Tutorial</button>
                 
                 <div class="slider-control">
                     <label>Speed: <span id="speed-value">1.0x</span></label>

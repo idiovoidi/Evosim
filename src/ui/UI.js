@@ -1,9 +1,16 @@
 import { ComponentType } from '../core/Entity.js';
+import { StatsGraph } from './StatsGraph.js';
 
 export class UI {
     constructor(world) {
         this.world = world;
         this.startTime = Date.now();
+        
+        // Initialize stats graph
+        const graphCanvas = document.getElementById('stats-graph');
+        if (graphCanvas) {
+            this.statsGraph = new StatsGraph(graphCanvas);
+        }
     }
     
     update(fps) {
@@ -26,6 +33,12 @@ export class UI {
         const seconds = elapsed % 60;
         document.getElementById('time-elapsed').textContent = 
             `${minutes}:${seconds.toString().padStart(2, '0')}`;
+        
+        // Update stats graph
+        if (this.statsGraph) {
+            this.statsGraph.update(stats);
+            this.statsGraph.render();
+        }
         
         // Update selected entity info
         this.updateEntityInfo();

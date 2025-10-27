@@ -1,5 +1,6 @@
 import { TerrainGenerator } from './TerrainGenerator.js';
 import { EntityFactory } from './EntityFactory.js';
+import { SaveSystem } from './SaveSystem.js';
 import { BehaviorSystem } from '../systems/BehaviorSystem.js';
 import { MovementSystem } from '../systems/MovementSystem.js';
 import { HealthSystem } from '../systems/HealthSystem.js';
@@ -13,6 +14,7 @@ export class World {
         this.entities = [];
         this.terrain = new TerrainGenerator(width, height);
         this.factory = new EntityFactory(this);
+        this.saveSystem = new SaveSystem(this);
         
         // Initialize systems
         this.systems = [
