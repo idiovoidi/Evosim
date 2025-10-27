@@ -5,11 +5,28 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Run main.py",
-            "type": "python",
+            "name": "Python: Ecosystem Simulation",
+            "type": "debugpy",
             "request": "launch",
             "program": "${workspaceFolder}/main.py",
-            "console": "integratedTerminal"
+            "console": "integratedTerminal",
+            "justMyCode": true,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Python: Ecosystem Simulation (Debug Mode)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/main.py",
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}",
+                "PYTHONUNBUFFERED": "1"
+            },
+            "stopOnEntry": false
         }
     ]
 }
