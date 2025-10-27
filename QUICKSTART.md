@@ -1,191 +1,282 @@
-# Quick Start Guide
+# 🚀 Quick Start Guide
 
-## Running the Simulation
+Get your ecosystem simulation running in 2 minutes!
+
+## Prerequisites
+
+- **Node.js 16+** - [Download here](https://nodejs.org/)
+- **Modern Browser** - Chrome, Firefox, Edge, or Safari
+
+## Installation
+
+### 1. Install Dependencies
 
 ```bash
-python main.py
+npm install
 ```
 
-## Project Overview
+This installs:
+- Vite (build tool)
+- simplex-noise (terrain generation)
 
-This is an ecosystem simulation featuring:
-- **Herbivores** (🐰) that eat plants and flee from predators
-- **Predators** (🦊) that hunt herbivores
-- **Plants** (🌿) that grow and reproduce
+### 2. Start Development Server
 
-## Key Files
-
-- `main.py` - Entry point
-- `constants.py` - Tune simulation parameters here
-- `ARCHITECTURE.md` - Detailed architecture documentation
-- `REFACTORING_SUMMARY.md` - What was improved
-
-## Customizing the Simulation
-
-### Change Population Sizes
-
-Edit `constants.py`:
-```python
-INITIAL_HERBIVORES = 15  # Change this
-INITIAL_PREDATORS = 8    # Change this
-INITIAL_PLANTS = 40      # Change this
+```bash
+npm run dev
 ```
 
-### Adjust Movement Speeds
+The simulation will automatically open at `http://localhost:3000`
 
-Edit `constants.py`:
-```python
-HERBIVORE_WANDER_SPEED = 50
-HERBIVORE_CHASE_SPEED = 80
-PREDATOR_WANDER_SPEED = 60
-PREDATOR_CHASE_SPEED = 120
+**That's it!** 🎉
+
+## First Time Setup
+
+### Interactive Tutorial
+
+When you first open the simulation, an interactive tutorial will guide you through:
+
+1. **Understanding the Ecosystem**
+   - Different species and their behaviors
+   - How entities interact
+   - Genetic evolution basics
+
+2. **Using Controls**
+   - Pause/resume simulation
+   - Adjust speed and zoom
+   - Select entities for details
+
+3. **Statistics Panel**
+   - Population counts
+   - Historical graphs
+   - Ecosystem metrics
+
+4. **Save/Load System**
+   - Saving your progress
+   - Loading saved games
+   - Auto-save feature
+
+### Skip Tutorial
+
+Press `Esc` or click "Skip Tutorial" to start immediately.
+
+## Basic Controls
+
+### Essential Shortcuts
+
+```
+Space / P  →  Pause/Resume
+R          →  Reset simulation
+Ctrl+S     →  Save game
+H          →  Show tutorial
++/-        →  Adjust speed
 ```
 
-### Modify Energy Levels
+### Mouse Controls
 
-Edit `constants.py`:
-```python
-HERBIVORE_MAX_ENERGY = 200
-PREDATOR_MAX_ENERGY = 250
-PLANT_MAX_ENERGY = 100
-```
+- **Click entity** - View detailed stats
+- **Hover** - Quick preview
+- **Click background** - Deselect
 
-## Adding a New Species
+## Understanding the Simulation
 
-1. **Add species config** to `factories/entity_factory.py`:
-```python
-SPECIES_CONFIG = {
-    'my_species': {
-        'emoji': '🦌',
-        'color': QColor(180, 150, 120),
-        'max_energy': 180,
-        'initial_energy': 140,
-        'layer': 1,
-    }
-}
-```
+### Species
 
-2. **Create behavior** in `behaviors/my_species_behavior.py`:
-```python
-from .base_behavior import BaseBehavior
+| Icon | Species | Behavior |
+|------|---------|----------|
+| 🐰 | Herbivore | Eats plants, flees predators |
+| 🦊 | Predator | Hunts herbivores |
+| 🌿 | Plant | Grows and reproduces |
+| 🐟 | Fish | Swims in water |
+| 🦅 | Bird | Flies around |
 
-class MySpeciesBehavior(BaseBehavior):
-    def update(self, dt: float):
-        # Your AI logic here
-        pass
-```
+### Energy System
 
-3. **Register behavior** in `systems/world.py`:
-```python
-BEHAVIOR_CLASSES = {
-    'my_species': MySpeciesBehavior,
-}
-```
+- All entities have **energy**
+- Energy depletes over time
+- Eating restores energy
+- Low energy = death
+- High energy = reproduction
 
-4. **Define valid terrain** in `systems/world.py`:
-```python
-VALID_TERRAINS = {
-    'my_species': [TerrainType.GRASSLAND, TerrainType.FOREST],
-}
-```
+### Genetic Evolution
 
-## Controls
+Entities pass traits to offspring:
+- **Speed** - How fast they move
+- **Size** - Visual size
+- **Sense Range** - Detection distance
+- **Efficiency** - Energy consumption
 
-- **Mouse hover** - View entity information
-- **Speed control** - Use dropdown in toolbar (0.5x to 10x)
+Traits mutate slightly each generation, creating evolution!
 
-## Understanding the Code
+## Sidebar Overview
 
-### Entity-Component-System (ECS)
+### Population Stats
+Real-time count of each species
 
-**Entities** are just IDs with components attached:
-```python
-entity = Entity()
-entity.add_component(ComponentType.POSITION, Position([100, 100]))
-```
+### Statistics
+- Total entities
+- FPS (performance)
+- Time elapsed
 
-**Components** are data containers:
-```python
-class Stats:
-    def __init__(self, energy, max_energy, species_type):
-        self.energy = energy
-        self.max_energy = max_energy
-        self.species_type = species_type
-```
+### Population History Graph
+Visual representation of population changes over time
 
-**Systems** process entities with specific components:
-```python
-class MovementSystem(BaseSystem):
-    def update(self, dt):
-        for entity in self.world.get_entities_by_type(ComponentType.VELOCITY):
-            # Update position based on velocity
-```
+### Controls
+- **Pause** - Stop/start simulation
+- **Reset** - Start fresh
+- **Save** - Save current state
+- **Load** - Load saved state
+- **Tutorial** - Restart tutorial
 
-### Creating Entities
+### Sliders
+- **Speed** - 0.1x to 5x simulation speed
+- **Zoom** - 0.5x to 3x zoom level
 
-Use the factory:
-```python
-from factories.entity_factory import EntityFactory
+## Tips for Beginners
 
-entity = EntityFactory.create_entity(
-    species_type='herbivore',
-    position=(100, 200)
-)
-```
+### 1. Start Slow
+Set speed to 0.5x to observe behaviors clearly
 
-### Implementing Behaviors
+### 2. Watch Interactions
+Click entities to see their stats and understand their decisions
 
-Extend `BaseBehavior`:
-```python
-from behaviors.base_behavior import BaseBehavior
+### 3. Observe Patterns
+- Predator-prey cycles
+- Plant growth patterns
+- Genetic trait changes
 
-class MyBehavior(BaseBehavior):
-    def update(self, dt: float):
-        pos = self.get_position()
-        stats = self.get_stats()
-        
-        # Your logic here
-        if stats.energy < 50:
-            self.wander(speed=30)
-```
+### 4. Experiment
+- Try different speeds
+- Reset and compare runs
+- Save interesting states
+
+### 5. Use the Graph
+The population history shows ecosystem balance over time
+
+## Common Questions
+
+### Why do populations fluctuate?
+This is natural predator-prey dynamics! Populations cycle:
+1. Plants grow → Herbivores thrive
+2. Herbivores increase → Predators thrive
+3. Predators increase → Herbivores decline
+4. Herbivores decline → Predators decline
+5. Cycle repeats
+
+### What if a species goes extinct?
+The ecosystem will rebalance. You can reset to try again or let it evolve naturally.
+
+### How does evolution work?
+Each reproduction creates offspring with slightly mutated traits. Over time, beneficial traits become more common.
+
+### Can I save my progress?
+Yes! Click "💾 Save" or press Ctrl+S. The game auto-saves every 30 seconds.
+
+## Advanced Features
+
+### Speed Control
+- **0.1x-0.5x** - Observe details
+- **1x** - Normal speed
+- **2x-5x** - See long-term patterns
+
+### Zoom Control
+- **0.5x** - See entire ecosystem
+- **1x** - Normal view
+- **2x-3x** - Focus on specific area
+
+### Save System
+- **Manual Save** - Click save button
+- **Auto-Save** - Every 30 seconds
+- **Load** - Restore saved state
+- **Persistent** - Survives page refresh
 
 ## Troubleshooting
 
-### Simulation runs too fast/slow
-Adjust speed in the toolbar or modify `BASE_FPS` in `constants.py`
+### Simulation won't start?
 
-### Entities not spawning
-Check terrain types - entities only spawn on valid terrain
-
-### Performance issues
-- Reduce initial population in `constants.py`
-- Decrease detection ranges
-- Lower map size in `World.__init__()`
-
-## Development
-
-### Running Tests
 ```bash
-# Add tests in tests/ directory
-python -m pytest
+# Clear cache and reinstall
+rm -rf node_modules package-lock.json
+npm install
+npm run dev
 ```
 
-### Code Style
-```bash
-# Format code
-black .
+### Performance issues?
 
-# Type checking
-mypy .
+1. Close other browser tabs
+2. Reduce zoom level
+3. Lower simulation speed
+4. Check FPS in sidebar
+
+### Blank screen?
+
+1. Open DevTools (F12)
+2. Check Console for errors
+3. Refresh page (Ctrl+R)
+4. Clear browser cache
+
+### Port already in use?
+
+Vite will automatically try another port (3001, 3002, etc.)
+Check terminal output for actual URL.
+
+## Next Steps
+
+### Customize the Simulation
+
+Edit `src/core/World.js` to change:
+- Initial population counts
+- World size
+- Spawn rates
+
+### Add New Features
+
+Check out:
+- `src/entities/` - Entity behaviors
+- `src/systems/` - Game systems
+- `src/graphics/` - Rendering
+
+### Learn the Architecture
+
+Read `ARCHITECTURE.md` for detailed system design
+
+## Development Commands
+
+```bash
+# Start dev server
+npm run dev
+
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
+
+# Clean build
+rm -rf dist && npm run build
 ```
 
-### Dependencies
+## Getting Help
+
+- Check `README.md` for full documentation
+- Read `ARCHITECTURE.md` for technical details
+- Open browser DevTools (F12) for debugging
+- Check console for error messages
+
+## Have Fun! 🎮
+
+The simulation is designed to be:
+- **Educational** - Learn about ecosystems
+- **Entertaining** - Watch emergent behaviors
+- **Experimental** - Try different scenarios
+
+Enjoy watching your ecosystem evolve! 🐰🦊🌿🐟🦅
+
+---
+
+**Ready to start?**
+
 ```bash
-pip install PyQt6 numpy noise deap
+npm run dev
 ```
 
-## Resources
-
-- **ARCHITECTURE.md** - Detailed system design
-- **REFACTORING_SUMMARY.md** - Recent improvements
-- **constants.py** - All tunable parameters
+Then open `http://localhost:3000` in your browser!

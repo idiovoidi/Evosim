@@ -1,151 +1,253 @@
-# Ecosystem Simulation
+# 🌍 Ecosystem Simulation - Web Edition
 
-A Python-based ecosystem simulation featuring herbivores, predators, and plants with genetic evolution, built using Entity-Component-System (ECS) architecture and PyQt6.
+A browser-based ecosystem simulation featuring herbivores, predators, plants, fish, and birds with genetic evolution and emergent behaviors.
 
-![Python](https://img.shields.io/badge/python-3.8+-blue.svg)
-![PyQt6](https://img.shields.io/badge/PyQt6-6.0+-green.svg)
+![JavaScript](https://img.shields.io/badge/javascript-ES6+-yellow.svg)
+![Vite](https://img.shields.io/badge/vite-5.0+-646CFF.svg)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 
-## Features
+## ✨ Features
 
-- 🐰 **Herbivores** that eat plants and flee from predators
-- 🦊 **Predators** that hunt herbivores
-- 🌿 **Plants** that grow and reproduce
-- 🧬 **Genetic System** with trait inheritance and mutation
-- 🗺️ **Procedural Terrain** generation with multiple biomes
-- ⚡ **ECS Architecture** for performance and flexibility
-- 🎨 **Visual Effects** for eating, reproduction, and death
-- 📊 **Real-time Statistics** and population tracking
+- 🐰 **Herbivores** - Eat plants, flee from predators, evolve traits
+- 🦊 **Predators** - Hunt herbivores, strategic behavior
+- 🌿 **Plants** - Grow, reproduce, spread across terrain
+- 🐟 **Fish** - Swim in water areas, unique aquatic behavior
+- 🦅 **Birds** - Fly around, aerial hunting
+- 🧬 **Genetic Evolution** - Traits mutate and evolve over generations
+- 🗺️ **Procedural Terrain** - Multiple biomes with Perlin noise
+- 💾 **Save/Load System** - Persistent game state with auto-save
+- 📊 **Real-time Statistics** - Population graphs and analytics
+- 🎮 **Interactive Tutorial** - Learn as you play
 
-## Quick Start
+## 🚀 Quick Start
+
+### Prerequisites
+- Node.js 16+ installed
+- Modern web browser (Chrome, Firefox, Edge, Safari)
 
 ### Installation
 
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd ecosystem-simulation
-
-# Create virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-
 # Install dependencies
-pip install PyQt6 numpy noise deap
+npm install
+
+# Start development server
+npm run dev
 ```
 
-### Running
+The simulation will open automatically at `http://localhost:3000`
+
+### Production Build
 
 ```bash
-python main.py
+# Build for production
+npm run build
+
+# Preview production build
+npm run preview
 ```
 
-## Documentation
+## 🎮 Controls
 
-- **[QUICKSTART.md](QUICKSTART.md)** - Get started quickly
-- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design and architecture
-- **[REFACTORING_SUMMARY.md](REFACTORING_SUMMARY.md)** - Recent improvements
-- **[CHANGELOG.md](CHANGELOG.md)** - Version history
+### Mouse
+- **Click** - Select entity to view details
+- **Hover** - Preview entity information
+- **Drag** - Pan camera (if implemented)
 
-## Project Structure
+### Keyboard Shortcuts
+| Key | Action |
+|-----|--------|
+| `Space` or `P` | Pause/Resume simulation |
+| `R` | Reset simulation |
+| `Ctrl+S` | Save game |
+| `H` | Show tutorial |
+| `+` / `-` | Adjust simulation speed |
+
+### UI Controls
+- **Speed Slider** - Adjust from 0.1x to 5x speed
+- **Zoom Slider** - Zoom from 0.5x to 3x
+- **Pause Button** - Pause/resume simulation
+- **Reset Button** - Start fresh simulation
+- **Save/Load** - Manage game states
+
+## 📁 Project Structure
 
 ```
 .
-├── behaviors/              # Entity AI behaviors
-├── entities/              # Entity management
-├── factories/             # Entity creation patterns
-├── systems/               # ECS systems
-├── graphics/              # Rendering systems
-├── gui/                   # PyQt6 interface
-├── components.py          # Component definitions
-├── constants.py           # Configuration
-└── main.py               # Entry point
+├── src/
+│   ├── core/           # Core simulation logic
+│   │   ├── World.js           # Main world manager
+│   │   ├── Entity.js          # Entity base class
+│   │   ├── InputHandler.js   # Mouse/keyboard input
+│   │   └── SaveSystem.js      # Save/load functionality
+│   ├── entities/       # Entity types
+│   │   ├── Herbivore.js
+│   │   ├── Predator.js
+│   │   ├── Plant.js
+│   │   ├── Fish.js
+│   │   └── Bird.js
+│   ├── systems/        # Game systems
+│   │   ├── TerrainSystem.js   # Terrain generation
+│   │   ├── GeneticSystem.js   # Evolution mechanics
+│   │   └── PhysicsSystem.js   # Movement & collision
+│   ├── graphics/       # Rendering
+│   │   └── Renderer.js        # Canvas rendering
+│   ├── ui/             # User interface
+│   │   ├── UI.js              # Main UI controller
+│   │   ├── Tutorial.js        # Interactive tutorial
+│   │   └── StatsGraph.js      # Population graphs
+│   └── main.js         # Application entry point
+├── index.html          # Main HTML file
+├── vite.config.js      # Vite configuration
+└── package.json        # Dependencies
 ```
 
-## Customization
+## 🧬 Genetic System
 
-### Adjust Population
+Entities inherit and evolve traits:
 
-Edit `constants.py`:
-```python
-INITIAL_HERBIVORES = 15
-INITIAL_PREDATORS = 8
-INITIAL_PLANTS = 40
+- **Speed** - Movement velocity
+- **Size** - Visual size and collision
+- **Sense Range** - Detection distance
+- **Energy Efficiency** - Metabolism rate
+- **Reproduction Rate** - Breeding frequency
+
+Traits mutate during reproduction, creating evolutionary pressure and adaptation over time.
+
+## 🗺️ Terrain System
+
+Multiple biomes generated with Perlin noise:
+
+- **Grassland** - Common, supports all species
+- **Forest** - Dense vegetation, good for herbivores
+- **Water** - Fish habitat
+- **Savanna** - Open plains, predator territory
+- **Mountains** - Impassable terrain
+
+## 📊 Statistics & Analytics
+
+Real-time tracking of:
+- Population counts per species
+- Birth and death rates
+- Average genetic traits
+- Ecosystem balance metrics
+- Historical population graphs
+
+## 🎨 Customization
+
+### Adjust Initial Population
+
+Edit `src/core/World.js`:
+```javascript
+const CONFIG = {
+    INITIAL_HERBIVORES: 15,
+    INITIAL_PREDATORS: 8,
+    INITIAL_PLANTS: 40,
+    INITIAL_FISH: 10,
+    INITIAL_BIRDS: 5
+};
 ```
 
 ### Modify Behavior
 
-Edit `constants.py`:
-```python
-HERBIVORE_CHASE_SPEED = 80
-PREDATOR_HUNT_RANGE = 400
+Edit entity files in `src/entities/`:
+```javascript
+// Example: Make herbivores faster
+this.speed = 100; // Default: 80
+this.fleeRange = 200; // Default: 150
 ```
 
-### Add New Species
+### Change Terrain
 
-See [QUICKSTART.md](QUICKSTART.md#adding-a-new-species) for detailed instructions.
+Edit `src/systems/TerrainSystem.js`:
+```javascript
+// Adjust terrain generation
+this.scale = 0.05; // Larger = bigger biomes
+this.octaves = 4;  // More = more detail
+```
 
-## Architecture
+## 🔧 Development
 
-This project uses **Entity-Component-System (ECS)** architecture:
+### Hot Module Replacement
+Vite provides instant updates during development. Edit any file and see changes immediately.
 
-- **Entities**: Containers with unique IDs
-- **Components**: Data structures (Position, Velocity, Stats, etc.)
-- **Systems**: Logic that operates on entities with specific components
+### Debug Mode
+Open browser DevTools (F12) to:
+- View console logs
+- Inspect entity states
+- Monitor performance
+- Debug issues
 
-### Key Systems
+### Performance Profiling
+```javascript
+// In browser console
+performance.mark('start');
+// ... simulation runs ...
+performance.mark('end');
+performance.measure('simulation', 'start', 'end');
+```
 
-- `BehaviorSystem` - AI decision making
-- `MovementSystem` - Physics and movement
-- `HealthSystem` - Energy and death
-- `PlantSystem` - Growth and reproduction
-- `RenderingSystem` - Visual display
+## 🚢 Deployment
 
-## Controls
+### Static Hosting (Recommended)
 
-- **Mouse Hover** - View entity details
-- **Speed Control** - Adjust simulation speed (0.5x - 10x)
-
-## Development
-
-### Code Style
+Build and deploy to any static host:
 
 ```bash
-# Format code
-black .
-
-# Type checking
-mypy .
+npm run build
+# Upload 'dist' folder to:
+# - Netlify
+# - Vercel
+# - GitHub Pages
+# - AWS S3
+# - Any static host
 ```
 
-### Testing
+### GitHub Pages
 
 ```bash
-python -m pytest
+# Build
+npm run build
+
+# Deploy to gh-pages branch
+# (Use gh-pages package or manual deployment)
 ```
 
-### Adding Features
+### Docker
 
-1. Create new behavior in `behaviors/`
-2. Add species config to `factories/entity_factory.py`
-3. Register in `systems/world.py`
-4. Update constants in `constants.py`
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+RUN npm run build
+EXPOSE 3000
+CMD ["npm", "run", "preview"]
+```
 
-## Performance
+## 🎯 Roadmap
 
-- Fixed 60 FPS timestep
-- Efficient spatial queries
-- Optimized component lookups
-- Configurable population limits
+### Planned Features
+- [ ] Multiplayer/shared simulations
+- [ ] Custom species creator
+- [ ] Advanced statistics dashboard
+- [ ] Seasonal weather system
+- [ ] Day/night cycle
+- [ ] Sound effects and music
+- [ ] Mobile touch controls
+- [ ] VR/AR support
 
-## Dependencies
+### Performance Improvements
+- [ ] Spatial partitioning (quadtree)
+- [ ] Web Workers for physics
+- [ ] WebGL rendering
+- [ ] Entity pooling
+- [ ] LOD system
 
-- **PyQt6** - GUI framework
-- **NumPy** - Numerical operations
-- **noise** - Procedural terrain generation
-- **DEAP** - Genetic algorithms
+## 🤝 Contributing
 
-## Contributing
+Contributions welcome! Please:
 
 1. Fork the repository
 2. Create a feature branch
@@ -153,53 +255,35 @@ python -m pytest
 4. Add tests if applicable
 5. Submit a pull request
 
-## License
+## 📝 License
 
 MIT License - See LICENSE file for details
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
-- Built with Entity-Component-System architecture
+- Built with Vite for blazing fast development
+- Terrain generation using simplex-noise
 - Inspired by natural ecosystem dynamics
-- Uses DEAP for genetic algorithms
-- Terrain generation with Perlin noise
+- Entity-Component-System architecture
 
-## Roadmap
+## 📚 Documentation
 
-### Planned Features
-- [ ] Quadtree spatial partitioning
-- [ ] Save/load simulation state
-- [ ] Statistics graphs and charts
-- [ ] More species types
-- [ ] Seasonal changes
-- [ ] Weather systems
-- [ ] Behavior trees for complex AI
+- **[ARCHITECTURE.md](ARCHITECTURE.md)** - System design details
+- **[QUICKSTART.md](QUICKSTART.md)** - Detailed getting started guide
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history
 
-### Future Ideas
-- [ ] 3D visualization
-- [ ] Machine learning behaviors
-- [ ] Multiplayer/networked simulation
-- [ ] Mobile version
+## 🐛 Known Issues
 
-## Support
+Check the [Issues](https://github.com/yourusername/ecosystem-simulation/issues) page for current bugs and feature requests.
 
-For questions, issues, or suggestions:
-- Open an issue on GitHub
-- Check documentation in `/docs`
-- Review ARCHITECTURE.md for technical details
+## 💬 Support
 
-## Recent Updates
-
-See [CHANGELOG.md](CHANGELOG.md) for detailed version history.
-
-### Latest Refactoring
-- ✅ Factory pattern for entity creation
-- ✅ Unified behavior system
-- ✅ Constants management
-- ✅ Improved error handling
-- ✅ Comprehensive documentation
-- ✅ Type hints and validation
+- Open an issue for bugs
+- Discussions for questions
+- Pull requests for contributions
 
 ---
 
-**Made with ❤️ using Python and PyQt6**
+**Made with ❤️ using JavaScript and Vite**
+
+Start your ecosystem: `npm run dev` 🚀

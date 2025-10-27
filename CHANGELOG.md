@@ -1,133 +1,125 @@
 # Changelog
 
-## [Refactored] - 2024
+All notable changes to the Ecosystem Simulation project.
+
+## [2.0.0] - 2024-10-28
+
+### 🎉 Major Release - Web-Only Version
+
+Complete rewrite focusing exclusively on the web platform.
 
 ### Added
-- **Factory Pattern**: `factories/entity_factory.py` for centralized entity creation
-- **Unified Behaviors**: New `behaviors/` directory with clean behavior implementations
-  - `BaseBehavior` - Abstract base with common functionality
-  - `HerbivoreBehavior` - Herbivore AI logic
-  - `PredatorBehavior` - Predator AI logic
-  - `PlantBehavior` - Plant growth logic
-- **Constants Module**: `constants.py` with all game configuration
-- **Utility Functions**: `utils.py` with common math operations
-- **Documentation**:
-  - `ARCHITECTURE.md` - System design overview
-  - `REFACTORING_SUMMARY.md` - Detailed refactoring notes
-  - `QUICKSTART.md` - Getting started guide
-  - `CHANGELOG.md` - This file
-- **Git Configuration**: `.gitignore` for Python projects
-- **Type Hints**: Comprehensive type annotations in Entity class
-- **Error Handling**: Try-catch blocks in system update loops
+- 🌐 **Pure Web Application** - Runs entirely in browser
+- 🎮 **Interactive Tutorial** - Step-by-step guide for new users
+- 💾 **Save/Load System** - Persistent game state with auto-save
+- 📊 **Population Graphs** - Real-time historical data visualization
+- 🐟 **Fish Species** - New aquatic entities
+- 🦅 **Bird Species** - New aerial entities
+- ⚡ **Vite Build System** - Fast development and optimized builds
+- 🎨 **Modern UI** - Clean, responsive interface
+- ⌨️ **Keyboard Shortcuts** - Quick access to all features
+- 🔍 **Entity Inspector** - Click entities to view detailed stats
+- 📱 **Responsive Design** - Works on different screen sizes
 
 ### Changed
-- **World Class**: Refactored to use EntityFactory and new behavior system
-- **BehaviorSystem**: Improved error handling and status updates
-- **HealthSystem**: 
-  - Uses constants for thresholds
-  - Proper death handling with visual effects
-  - Age and cooldown management
-- **MovementSystem**: 
-  - Removed debug prints
-  - Cleaner boundary collision handling
-  - Better code organization
-- **PlantSystem**:
-  - Uses constants for growth rates
-  - Better reproduction logic with bounds checking
-- **EcosystemWidget**: Simplified initialization and system management
-- **Entity Class**: Added comprehensive docstrings and type hints
-- **Systems __init__.py**: Exports all system classes for cleaner imports
+- 🏗️ **Complete Architecture Rewrite** - Modern JavaScript ES6+
+- 🎯 **Simplified Codebase** - Removed Python/PyQt6 dependencies
+- 📦 **Minimal Dependencies** - Only Vite and simplex-noise
+- 🚀 **Improved Performance** - Optimized rendering and updates
+- 🎨 **Enhanced Graphics** - Better visual effects and animations
+- 📚 **Updated Documentation** - Web-focused guides
 
-### Deprecated
-- `config.py` - Use `constants.py` instead (kept for backwards compatibility)
-- `animal_logic/` directory - Use `behaviors/` instead (kept for backwards compatibility)
-- Direct entity creation in World - Use EntityFactory instead
+### Removed
+- ❌ **Python/PyQt6 Version** - Removed desktop application
+- ❌ **Python Dependencies** - No longer needed
+- ❌ **Complex Build Process** - Simplified to Vite only
+- ❌ **Legacy Code** - Cleaned up old implementations
 
-### Improved
-- **Code Organization**: Clear separation of concerns
-- **Maintainability**: Easier to find and modify code
-- **Extensibility**: Simple to add new species and behaviors
-- **Readability**: Better naming, documentation, and structure
-- **Performance**: Removed debug code, more efficient loops
-- **Testing**: Isolated components easier to test
+### Technical Details
 
-### Technical Debt Addressed
-- Eliminated duplicate behavior base classes
-- Removed magic numbers throughout codebase
-- Consolidated entity creation logic
-- Standardized error handling patterns
-- Improved type safety with hints
+**New Architecture:**
+- Entity-Component pattern
+- Modular system design
+- Event-driven updates
+- Canvas-based rendering
 
-### Breaking Changes
-None - All changes are backwards compatible
+**Performance:**
+- 60 FPS target
+- Efficient collision detection
+- Optimized rendering pipeline
+- Spatial partitioning
 
-### Migration Notes
-- Old code continues to work
-- New code should use:
-  - `EntityFactory.create_entity()` instead of `World.create_entity()`
-  - `from behaviors import HerbivoreBehavior` instead of `from animal_logic.herbivore import Herbivore`
-  - `from constants import *` instead of `from config import *`
+**Browser Support:**
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
 
-### Files Added
-```
-factories/
-  __init__.py
-  entity_factory.py
-behaviors/
-  __init__.py
-  base_behavior.py
-  herbivore_behavior.py
-  predator_behavior.py
-  plant_behavior.py
-constants.py
-utils.py
-ARCHITECTURE.md
-REFACTORING_SUMMARY.md
-QUICKSTART.md
-CHANGELOG.md
-.gitignore
-```
+## [1.0.0] - Previous Version
 
-### Files Modified
-```
-systems/world.py
-systems/behavior_system.py
-systems/health_system.py
-systems/movement_system.py
-systems/plant_system.py
-systems/__init__.py
-gui/ecosystem_widget.py
-entities/entity.py
-config.py
-```
+### Features (Legacy Python Version)
+- Desktop application using PyQt6
+- Entity-Component-System architecture
+- Genetic evolution system
+- Procedural terrain generation
+- Herbivores, predators, and plants
+- Real-time statistics
 
-### Statistics
-- **New Files**: 14
-- **Modified Files**: 9
-- **Lines Added**: ~1,500
-- **Lines Removed**: ~300
-- **Net Change**: +1,200 lines (mostly documentation and new features)
-- **Code Quality**: Significantly improved
-- **Maintainability**: Much easier to work with
+---
 
-## Future Roadmap
+## Migration Guide
 
-### Short Term
-- [ ] Add unit tests for behaviors
-- [ ] Add integration tests for systems
-- [ ] Performance profiling
-- [ ] Remove deprecated `animal_logic/` directory
+### From 1.x to 2.0
 
-### Medium Term
-- [ ] Implement quadtree for spatial queries
-- [ ] Add behavior tree system
-- [ ] Save/load simulation state
-- [ ] Statistics and visualization graphs
-- [ ] Configuration file support (JSON/YAML)
+**Breaking Changes:**
+- Python version completely removed
+- New web-based architecture
+- Different save file format
+- Updated API and structure
 
-### Long Term
-- [ ] Multiplayer/networked simulation
-- [ ] 3D visualization option
-- [ ] Machine learning for evolved behaviors
-- [ ] Seasonal changes and weather systems
-- [ ] More complex ecosystem interactions
+**How to Migrate:**
+
+1. **Install Node.js** (if not already installed)
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+3. **Start development server:**
+   ```bash
+   npm run dev
+   ```
+
+**Note:** Old Python save files are not compatible with the new version.
+
+---
+
+## Roadmap
+
+### Version 2.1 (Planned)
+- [ ] Mobile touch controls
+- [ ] Sound effects
+- [ ] More biome types
+- [ ] Advanced statistics dashboard
+- [ ] Custom species creator
+
+### Version 2.2 (Planned)
+- [ ] Multiplayer support
+- [ ] Shared simulations
+- [ ] Leaderboards
+- [ ] Achievement system
+
+### Version 3.0 (Future)
+- [ ] WebGL rendering
+- [ ] 3D visualization
+- [ ] VR/AR support
+- [ ] Machine learning behaviors
+
+---
+
+## Contributing
+
+See [README.md](README.md) for contribution guidelines.
+
+## License
+
+MIT License - See LICENSE file for details.
