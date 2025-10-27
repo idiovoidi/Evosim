@@ -16,6 +16,12 @@ class MovementSystem(BaseSystem):
             if not entity.has_components(ComponentType.POSITION, ComponentType.VELOCITY):
                 continue
             
+            # Skip plants - they should be stationary
+            if entity.has_component(ComponentType.STATS):
+                stats = entity.get_component(ComponentType.STATS)
+                if stats.species_type == 'plant':
+                    continue
+            
             pos = entity.get_component(ComponentType.POSITION)
             vel = entity.get_component(ComponentType.VELOCITY)
             
