@@ -1,63 +1,60 @@
+"""Main ecosystem widget for rendering and updating the simulation"""
 from PyQt6.QtWidgets import QWidget
 from PyQt6.QtCore import QTimer
+
 from systems.movement_system import MovementSystem
 from systems.health_system import HealthSystem
 from graphics.rendering_system import RenderingSystem
 from systems.ui_system import UISystem
 from systems.behavior_system import BehaviorSystem
 from systems.plant_system import PlantSystem
-from systems.map_system import WorldMap, TerrainType
 from systems.world import World
-import random
-import numpy as np
-from PyQt6.QtGui import QColor
-from components import (ComponentType, Position, Velocity, Stats, Status, 
-                       Appearance, Memory, Traits, Collision, Genetics)
-from entities.entity import Entity
-from systems.event_effect_system import EventEffectSystem
-from systems.genetic_system import EnhancedGeneticSystem
+from constants import BASE_TIMER_INTERVAL, BASE_FRAME_TIME
+
 
 class EcosystemWidget(QWidget):
+    """Main widget for the ecosystem simulation"""
+    
     def __init__(self, parent=None):
         super().__init__(parent)
         
         # Create world
         self.world = World(width=100, height=100)
         
-        # Initialize systems with world
-        self.movement_system = MovementSystem(self.world)
-        self.health_system = HealthSystem(self.world)
-        self.behavior_system = BehaviorSystem(self.world)
-        self.ui_system = UISystem(self.world)
-        self.rendering_system = RenderingSystem(self.world)
-        self.plant_system = PlantSystem(self.world)
-        
+        # Initialize systems in update order
         self.systems = [
-            self.movement_system,
-            self.health_system,
-            self.behavior_system,
-            self.plant_system,
-            self.ui_system,
-            self.rendering_system
+            BehaviorSystem(self.world),
+            MovementSystem(self.world),
+            HealthSystem(self.world),
+            PlantSystem(self.world),
+            UISystem(self.world),
+            RenderingSystem(self.world)
         ]
+        
+        # Keep references to specific systems for external access
+        self.rendering_system = self.systems[-1]
+        self.ui_system = self.systems[-2]
         
         # Setup update timer
         self.timer = QTimer()
         self.timer.timeout.connect(self.update_simulation)
-        self.timer.start(16)
+        self.timer.start(BASE_TIMER_INTERVAL)
         
         # Spawn initial entities
         self.world.spawn_initial_entities()
-        
+    
     def update_simulation(self):
         """Update all simulation systems"""
-        dt = 1/60  # Fixed timestep
+        dt = BASE_FRAME_TIME
         
-        # Update all systems
+        # Update all systems in order
         for system in self.systems:
-            system.update(dt)
-            
-        # Update world
+            try:
+                system.update(dt)
+            except Exception as e:
+                print(f"Error updating system {system.__class__.__name__}: {e}")
+        
+        # Update world state
         self.world.update(dt)
         
         # Request repaint
@@ -65,7 +62,6 @@ class EcosystemWidget(QWidget):
     
     def paintEvent(self, event):
         """Handle painting of the ecosystem"""
-        # The rendering system will handle the actual drawing
         self.rendering_system.render(self)
     
     def mouseMoveEvent(self, event):

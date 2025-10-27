@@ -1,55 +1,45 @@
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import numpy as np
-from components import ComponentType, Stats, Position, Velocity, Status, Appearance, Genetics
+
+from components import ComponentType
 from entities.entity import Entity
 from .map_system import WorldMap, TerrainType
 from .genetic_system import EnhancedGeneticSystem
-from animal_logic.herbivore import Herbivore
-from animal_logic.predator import Predator
 from systems.event_effect_system import EventEffectSystem
-from config import INITIAL_HERBIVORES, INITIAL_PREDATORS, INITIAL_PLANTS
-from PyQt6.QtGui import QColor
+from constants import (
+    INITIAL_HERBIVORES, INITIAL_PREDATORS, INITIAL_PLANTS,
+    DEFAULT_MAP_TILES_X, DEFAULT_MAP_TILES_Y, DEFAULT_TILE_SIZE
+)
+from factories.entity_factory import EntityFactory
+from behaviors import HerbivoreBehavior, PredatorBehavior, PlantBehavior
 
 class World:
-    # Define species-specific colors
-    SPECIES_COLORS = {
-        'herbivore': QColor(150, 200, 150),  # Light green
-        'predator': QColor(200, 150, 150),   # Light red
-        'plant': QColor(100, 150, 100)       # Dark green
+    """Main world class managing entities, map, and simulation state"""
+    
+    # Valid terrain types for each species
+    VALID_TERRAINS = {
+        "plant": [TerrainType.GRASSLAND, TerrainType.FOREST, TerrainType.DENSE_GRASS],
+        "herbivore": [TerrainType.GRASSLAND, TerrainType.SAVANNA, TerrainType.DENSE_GRASS],
+        "predator": [TerrainType.GRASSLAND, TerrainType.FOREST, TerrainType.SAVANNA]
     }
     
-    # Define species-specific stats
-    SPECIES_STATS = {
-        'herbivore': {
-            'max_energy': 200,
-            'initial_energy': 150,
-        },
-        'predator': {
-            'max_energy': 250,
-            'initial_energy': 200,
-        },
-        'plant': {
-            'max_energy': 100,
-            'initial_energy': 100,
-        }
+    # Behavior classes for each species
+    BEHAVIOR_CLASSES = {
+        'herbivore': HerbivoreBehavior,
+        'predator': PredatorBehavior,
+        'plant': PlantBehavior
     }
     
-    def __init__(self, width=800, height=600):
+    def __init__(self, width: int = 800, height: int = 600):
         self.width = width
         self.height = height
         
-        # Calculate map dimensions for a reasonably sized world
-        tile_size = 40  # Each tile is 40x40 pixels
-        map_tiles_x = 50  # Fixed number of tiles for width
-        map_tiles_y = 40  # Fixed number of tiles for height
-        
-        print(f"Creating map with dimensions: {map_tiles_x}x{map_tiles_y} tiles")
-        
-        # Initialize world map with fixed number of tiles
+        # Initialize world map
+        print(f"Creating map with dimensions: {DEFAULT_MAP_TILES_X}x{DEFAULT_MAP_TILES_Y} tiles")
         self.world_map = WorldMap(
-            width=map_tiles_x,
-            height=map_tiles_y,
-            tile_size=tile_size
+            width=DEFAULT_MAP_TILES_X,
+            height=DEFAULT_MAP_TILES_Y,
+            tile_size=DEFAULT_TILE_SIZE
         )
         
         # Calculate actual world size in pixels
@@ -59,14 +49,18 @@ class World:
         
         print(f"Map size in pixels: {self.map_width}x{self.map_height}")
         
-        # Initialize other systems
-        self._entities = []
-        self.quadtree = None
-        self.stats = {}
-        self.mouse_pos = (0, 0)
+        # Initialize entity management
+        self._entities: List[Entity] = []
+        self.behaviors = {}
+        
+        # Initialize subsystems
         self.genetic_system = EnhancedGeneticSystem(self)
         self.effect_system = EventEffectSystem(self)
-        self.behaviors = {}
+        
+        # World state
+        self.stats = {}
+        self.mouse_pos = (0, 0)
+        self.quadtree = None
     
     @property
     def entities(self):
@@ -152,57 +146,44 @@ class World:
         return (0 <= position[0] <= self.bounds[1] and 
                 0 <= position[1] <= self.bounds[1])
     
-    def create_entity(self, emoji: str, x: float, y: float, species_type: str) -> Entity:
-        """Create a new entity with all required components"""
-        # First check if the position is valid based on terrain type
-        tile = self.get_tile_at_position(x, y)
-        valid_terrains = {
-            "plant": [TerrainType.GRASSLAND, TerrainType.FOREST, TerrainType.DENSE_GRASS],
-            "herbivore": [TerrainType.GRASSLAND, TerrainType.SAVANNA, TerrainType.DENSE_GRASS],
-            "predator": [TerrainType.GRASSLAND, TerrainType.FOREST, TerrainType.SAVANNA]
-        }
+    def create_entity(self, emoji: str, x: float, y: float, species_type: str) -> Optional[Entity]:
+        """
+        Create a new entity with all required components
         
-        if not tile or tile.terrain_type not in valid_terrains.get(species_type, [TerrainType.GRASSLAND]):
+        Args:
+            emoji: Display character (unused, kept for compatibility)
+            x: X world coordinate
+            y: Y world coordinate
+            species_type: Type of species to create
+            
+        Returns:
+            Created entity or None if position is invalid
+        """
+        # Validate position based on terrain type
+        if not self._is_valid_spawn_position(x, y, species_type):
             return None
         
-        entity = Entity()
+        # Create entity using factory
+        entity = EntityFactory.create_entity(species_type, (x, y))
         
-        # Add basic components
-        entity.add_component(ComponentType.POSITION, Position(np.array([x, y], dtype=float)))
-        entity.add_component(ComponentType.VELOCITY, Velocity(np.zeros(2)))
-        entity.add_component(ComponentType.STATUS, Status())
-        
-        # Create appearance with species-specific color
-        color = self.SPECIES_COLORS.get(species_type, QColor(200, 200, 200))
-        appearance = Appearance(emoji, color)
-        appearance.size = 1.0
-        appearance.layer = 1 if species_type != 'plant' else 0
-        entity.add_component(ComponentType.APPEARANCE, appearance)
-        
-        # Add species-specific stats with initial energy
-        species_stats = self.SPECIES_STATS.get(species_type, {
-            'max_energy': 100,
-            'initial_energy': 100
-        })
-        stats = Stats(energy=species_stats['initial_energy'])
-        stats.species_type = species_type
-        stats.max_energy = species_stats['max_energy']
-        entity.add_component(ComponentType.STATS, stats)
-        
-        # Add genetics
-        genetics = self.genetic_system.create_initial_genetics(species_type)
-        entity.add_component(ComponentType.GENETICS, genetics)
-        
-        # Add behavior controller based on species
-        if species_type == "herbivore":
-            self.behaviors[entity] = Herbivore(entity, self)
-        elif species_type == "predator":
-            self.behaviors[entity] = Predator(entity, self)
+        # Create and attach behavior
+        behavior_class = self.BEHAVIOR_CLASSES.get(species_type)
+        if behavior_class:
+            self.behaviors[entity] = behavior_class(entity, self)
         
         # Add to world
         self.add_entity(entity)
         
         return entity
+    
+    def _is_valid_spawn_position(self, x: float, y: float, species_type: str) -> bool:
+        """Check if a position is valid for spawning a species"""
+        tile = self.get_tile_at_position(x, y)
+        if not tile:
+            return False
+        
+        valid_terrains = self.VALID_TERRAINS.get(species_type, [TerrainType.GRASSLAND])
+        return tile.terrain_type in valid_terrains
     
     def spawn_initial_entities(self):
         """Spawn initial population of entities"""

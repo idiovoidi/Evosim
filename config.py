@@ -1,13 +1,17 @@
-# Initial spawn counts
-INITIAL_HERBIVORES = 15
-INITIAL_PREDATORS = 8
-INITIAL_PLANTS = 40
+# DEPRECATED: This file is kept for backwards compatibility
+# Please use constants.py instead
 
-# Add some constants for gameplay balance
-HERBIVORE_REPRODUCTION_THRESHOLD = 180
-PREDATOR_REPRODUCTION_THRESHOLD = 200
-PLANT_REPRODUCTION_THRESHOLD = 150
+from constants import *
 
-HERBIVORE_MAX_ENERGY = 200
-PREDATOR_MAX_ENERGY = 250
-PLANT_MAX_ENERGY = 100 
+# Re-export all constants for backwards compatibility
+__all__ = [
+    'INITIAL_HERBIVORES',
+    'INITIAL_PREDATORS',
+    'INITIAL_PLANTS',
+    'HERBIVORE_REPRODUCTION_THRESHOLD',
+    'PREDATOR_REPRODUCTION_THRESHOLD',
+    'PLANT_REPRODUCTION_THRESHOLD',
+    'HERBIVORE_MAX_ENERGY',
+    'PREDATOR_MAX_ENERGY',
+    'PLANT_MAX_ENERGY',
+] 

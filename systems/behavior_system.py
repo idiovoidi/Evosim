@@ -1,12 +1,11 @@
+"""System for updating entity behaviors"""
 from components import ComponentType
-from animal_logic.herbivore import Herbivore
-from animal_logic.predator import Predator
-from animal_logic.fish import Fish
-import random
-import numpy as np
 from .base_system import BaseSystem
 
+
 class BehaviorSystem(BaseSystem):
+    """Manages and updates all entity behaviors"""
+    
     def __init__(self, world):
         super().__init__(world)
     
@@ -19,21 +18,24 @@ class BehaviorSystem(BaseSystem):
             # Get behavior from world
             behavior = self.world.get_behavior(entity)
             if behavior:
-                behavior.update(dt)
+                try:
+                    behavior.update(dt)
+                except Exception as e:
+                    print(f"Error updating behavior for entity {entity.id}: {e}")
+                    continue
                 
                 # Update status effects
                 if entity.has_component(ComponentType.STATUS):
-                    status = entity.get_component(ComponentType.STATUS)
-                    stats = entity.get_component(ComponentType.STATS)
-                    status.is_hungry = stats.energy < stats.max_energy * 0.3
-    
-    def create_behavior(self, entity):
-        """Create appropriate behavior based on entity type"""
+                    self._update_status(entity) 
+ 
+   
+    def _update_status(self, entity):
+        """Update entity status based on stats"""
+        status = entity.get_component(ComponentType.STATUS)
         stats = entity.get_component(ComponentType.STATS)
         
-        if stats.species_type == 'herbivore':
-            self.behaviors[entity.id] = Herbivore(entity, self.world)
-        elif stats.species_type == 'predator':
-            self.behaviors[entity.id] = Predator(entity, self.world)
-        elif stats.species_type == 'fish':
-            self.behaviors[entity.id] = Fish(entity, self.world) 
+        # Update hunger status
+        status.is_hungry = stats.energy < stats.max_energy * 0.3
+        
+        # Update other status conditions as needed
+        status.is_tired = stats.energy < stats.max_energy * 0.1
