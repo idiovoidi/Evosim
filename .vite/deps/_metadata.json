@@ -1,0 +1,15 @@
+{
+  "hash": "130d72db",
+  "configHash": "24dca257",
+  "lockfileHash": "e3b0c442",
+  "browserHash": "ece89458",
+  "optimized": {
+    "simplex-noise": {
+      "src": "../../node_modules/simplex-noise/dist/esm/simplex-noise.js",
+      "file": "simplex-noise.js",
+      "fileHash": "4286376f",
+      "needsInterop": false
+    }
+  },
+  "chunks": {}
+}
