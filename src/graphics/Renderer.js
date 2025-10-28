@@ -1,5 +1,7 @@
 import { ComponentType } from "../core/Entity.js";
 import { VisualIndicatorSystem } from "./VisualIndicatorSystem.js";
+import { DebugRenderer } from "./DebugRenderer.js";
+import { HeatmapRenderer } from "./HeatmapRenderer.js";
 
 export class Renderer {
   constructor(ctx, world) {
@@ -21,10 +23,26 @@ export class Renderer {
     
     // Initialize visual indicator system
     this.visualIndicators = new VisualIndicatorSystem(this);
+    
+    // Initialize debug renderer
+    this.debugRenderer = new DebugRenderer(world, this);
+    
+    // Initialize heatmap renderer
+    this.heatmapRenderer = new HeatmapRenderer(world);
   }
 
   setZoom(zoom) {
     this.camera.zoom = zoom;
+  }
+
+  /**
+   * Handle world resize events
+   * @param {number} width - New world width
+   * @param {number} height - New world height
+   */
+  resize(width, height) {
+    // Resize heatmap renderer
+    this.heatmapRenderer.resize(width, height);
   }
 
   /**
@@ -149,6 +167,9 @@ export class Renderer {
     // Render terrain
     this.renderTerrain();
 
+    // Render heatmap overlay (after terrain, before entities)
+    this.heatmapRenderer.render(ctx);
+
     // Sort entities by layer
     const entities = this.world
       .getActiveEntities()
@@ -167,6 +188,9 @@ export class Renderer {
 
     // Render effects
     this.renderEffects(entities);
+
+    // Render debug visualizations (before restoring camera transform)
+    this.debugRenderer.render(ctx);
 
     ctx.restore();
     

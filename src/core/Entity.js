@@ -97,7 +97,7 @@ export class Appearance {
 }
 
 export class Stats {
-    constructor(species, energy, maxEnergy) {
+    constructor(species, energy, maxEnergy, generation = 1) {
         this.species = species;
         this.energy = energy;
         this.maxEnergy = maxEnergy;
@@ -105,6 +105,7 @@ export class Stats {
         this.maxHealth = 100;
         this.age = 0;
         this.reproductionCooldown = 0;
+        this.generation = generation;
     }
 }
 
@@ -114,6 +115,35 @@ export class Status {
         this.target = null;
         this.lastReproduction = 0;
         this.showingHeart = 0;
+        this.actionLog = []; // Array to store recent actions
+    }
+    
+    /**
+     * Log an action to the entity's history
+     * @param {string} action - The action type (ate, fled, hunted, reproduced, died)
+     * @param {number} timestamp - The simulation time when the action occurred
+     * @param {Object} details - Additional details about the action
+     */
+    logAction(action, timestamp, details = {}) {
+        this.actionLog.push({
+            action,
+            timestamp,
+            details
+        });
+        
+        // Keep only the last 10 actions to prevent memory bloat
+        if (this.actionLog.length > 10) {
+            this.actionLog.shift();
+        }
+    }
+    
+    /**
+     * Get the most recent actions (default: last 5)
+     * @param {number} count - Number of recent actions to retrieve
+     * @returns {Array} Array of recent actions
+     */
+    getRecentActions(count = 5) {
+        return this.actionLog.slice(-count);
     }
 }
 

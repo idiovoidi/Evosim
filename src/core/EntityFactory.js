@@ -43,7 +43,7 @@ export class EntityFactory {
         };
     }
     
-    createEntity(species, x, y, genetics = null) {
+    createEntity(species, x, y, genetics = null, generation = 1) {
         const config = this.speciesConfig[species];
         if (!config) {
             throw new Error(`Unknown species: ${species}`);
@@ -63,7 +63,7 @@ export class EntityFactory {
         
         // Stats
         entity.addComponent(ComponentType.STATS, 
-            new Stats(species, config.initialEnergy, config.maxEnergy));
+            new Stats(species, config.initialEnergy, config.maxEnergy, generation));
         
         // Status
         entity.addComponent(ComponentType.STATUS, new Status());
@@ -80,6 +80,7 @@ export class EntityFactory {
     
     reproduce(parent1, parent2) {
         const stats1 = parent1.getComponent(ComponentType.STATS);
+        const stats2 = parent2.getComponent(ComponentType.STATS);
         const pos1 = parent1.getComponent(ComponentType.POSITION);
         const genetics1 = parent1.getComponent(ComponentType.GENETICS);
         const genetics2 = parent2.getComponent(ComponentType.GENETICS);
@@ -87,12 +88,15 @@ export class EntityFactory {
         // Create offspring genetics
         const offspringGenetics = genetics1.crossover(genetics2, 0.1);
         
+        // Calculate offspring generation (max of parents + 1)
+        const offspringGeneration = Math.max(stats1.generation, stats2.generation) + 1;
+        
         // Spawn near parent
         const offsetX = (Math.random() - 0.5) * 50;
         const offsetY = (Math.random() - 0.5) * 50;
         const x = Math.max(0, Math.min(this.world.width, pos1.x + offsetX));
         const y = Math.max(0, Math.min(this.world.height, pos1.y + offsetY));
         
-        return this.createEntity(stats1.species, x, y, offspringGenetics);
+        return this.createEntity(stats1.species, x, y, offspringGenetics, offspringGeneration);
     }
 }

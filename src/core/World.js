@@ -9,6 +9,8 @@ import { HealthSystem } from '../systems/HealthSystem.js';
 import { ReproductionSystem } from '../systems/ReproductionSystem.js';
 import { ComponentType } from './Entity.js';
 import { PerformanceMonitor } from '../ui/PerformanceMonitor.js';
+import { AdaptiveQualityManager } from '../utils/AdaptiveQualityManager.js';
+import { EcosystemEventDetector } from '../systems/EcosystemEventDetector.js';
 
 export class World {
     constructor(width, height) {
@@ -32,6 +34,19 @@ export class World {
         
         // Initialize performance monitor
         this.performanceMonitor = new PerformanceMonitor();
+        
+        // Initialize adaptive quality manager (will be set up after renderer is created)
+        this.adaptiveQualityManager = null;
+        
+        // Initialize ecosystem event detector (will be set up after notification manager is created)
+        this.ecosystemEventDetector = null;
+        
+        // Quality settings (set by AdaptiveQualityManager)
+        this.qualitySettings = null;
+        
+        // Reduced update frequency flag (set by AdaptiveQualityManager)
+        this.reducedUpdateFrequency = false;
+        this.updateSkipCounter = 0;
         
         // Initialize systems
         this.systems = [
@@ -223,9 +238,23 @@ export class World {
         
         // Update all systems with timing
         this.performanceMonitor.beginSection('update');
-        for (const system of this.systems) {
-            system.update(dt);
+        
+        // Check if we should skip updates due to reduced update frequency
+        let shouldUpdate = true;
+        if (this.reducedUpdateFrequency) {
+            // Update every other frame when FPS is low
+            this.updateSkipCounter++;
+            if (this.updateSkipCounter % 2 === 0) {
+                shouldUpdate = false;
+            }
         }
+        
+        if (shouldUpdate) {
+            for (const system of this.systems) {
+                system.update(dt);
+            }
+        }
+        
         this.performanceMonitor.endSection('update');
         
         // Remove dead entities
@@ -257,6 +286,16 @@ export class World {
             fish: stats.fish,
             bird: stats.birds
         });
+        
+        // Update adaptive quality manager if available
+        if (this.adaptiveQualityManager) {
+            this.adaptiveQualityManager.update(this.performanceMonitor.fps);
+        }
+        
+        // Update ecosystem event detector if available
+        if (this.ecosystemEventDetector) {
+            this.ecosystemEventDetector.update(dt);
+        }
     }
     
     reset() {
@@ -272,6 +311,11 @@ export class World {
         // Clear and re-allocate pools
         this.pool.clear();
         this.pool.preAllocate();
+        
+        // Reset ecosystem event detector if available
+        if (this.ecosystemEventDetector) {
+            this.ecosystemEventDetector.reset();
+        }
     }
     
     getStats() {

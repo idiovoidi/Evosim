@@ -51,6 +51,7 @@ export class ReproductionSystem {
     asexualReproduction(parent) {
         const stats = parent.getComponent(ComponentType.STATS);
         const pos = parent.getComponent(ComponentType.POSITION);
+        const status = parent.getComponent(ComponentType.STATUS);
         
         // Cost energy
         stats.energy -= 50;
@@ -62,11 +63,20 @@ export class ReproductionSystem {
         const x = Math.max(0, Math.min(this.world.width, pos.x + offsetX));
         const y = Math.max(0, Math.min(this.world.height, pos.y + offsetY));
         
-        const offspring = this.world.pool.acquire(stats.species, x, y);
+        // Offspring inherits parent's generation + 1
+        const offspringGeneration = (stats.generation || 1) + 1;
+        const offspring = this.world.pool.acquire(stats.species, x, y, null, offspringGeneration);
         this.world.addEntity(offspring);
         
+        // Log reproduction action
+        status.logAction('reproduced', stats.age, {
+            type: 'asexual',
+            offspringId: offspring.id,
+            energyCost: 50,
+            position: { x: Math.round(pos.x), y: Math.round(pos.y) }
+        });
+        
         // Show heart effect
-        const status = parent.getComponent(ComponentType.STATUS);
         status.showingHeart = 2;
     }
     
@@ -88,15 +98,32 @@ export class ReproductionSystem {
         // Create offspring genetics with crossover
         const offspringGenetics = genetics1.crossover(genetics2, 0.1);
         
+        // Calculate offspring generation (max of parents + 1)
+        const offspringGeneration = Math.max(stats1.generation || 1, stats2.generation || 1) + 1;
+        
         // Spawn near parent
         const offsetX = (Math.random() - 0.5) * 50;
         const offsetY = (Math.random() - 0.5) * 50;
         const x = Math.max(0, Math.min(this.world.width, pos1.x + offsetX));
         const y = Math.max(0, Math.min(this.world.height, pos1.y + offsetY));
         
-        // Acquire offspring from pool with genetics
-        const offspring = this.world.pool.acquire(stats1.species, x, y, offspringGenetics);
+        // Acquire offspring from pool with genetics and generation
+        const offspring = this.world.pool.acquire(stats1.species, x, y, offspringGenetics, offspringGeneration);
         this.world.addEntity(offspring);
+        
+        // Log reproduction action for both parents
+        const reproductionDetails = {
+            type: 'sexual',
+            offspringId: offspring.id,
+            mateId: parent2.id,
+            energyCost: 50,
+            position: { x: Math.round(pos1.x), y: Math.round(pos1.y) }
+        };
+        status1.logAction('reproduced', stats1.age, reproductionDetails);
+        status2.logAction('reproduced', stats2.age, {
+            ...reproductionDetails,
+            mateId: parent1.id
+        });
         
         // Show heart effects
         status1.showingHeart = 2;

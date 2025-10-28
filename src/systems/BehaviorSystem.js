@@ -54,6 +54,15 @@ class HerbivoreBehavior {
             const dy = pos.y - threatPos.y;
             const dist = Math.sqrt(dx * dx + dy * dy);
             
+            // Log fleeing action (only if state changed to avoid spam)
+            if (status.state !== 'fleeing') {
+                status.logAction('fled', stats.age, {
+                    threat: 'predator',
+                    distance: Math.round(dist),
+                    position: { x: Math.round(pos.x), y: Math.round(pos.y) }
+                });
+            }
+            
             vel.dx = (dx / dist) * 3 * traits.speed;
             vel.dy = (dy / dist) * 3 * traits.speed;
             status.state = 'fleeing';
@@ -79,6 +88,13 @@ class HerbivoreBehavior {
                 const energyGain = Math.min(30, plantStats.energy);
                 stats.energy = Math.min(stats.maxEnergy, stats.energy + energyGain);
                 plantStats.energy -= energyGain;
+                
+                // Log the eating action
+                status.logAction('ate', stats.age, {
+                    target: 'plant',
+                    energyGained: energyGain,
+                    position: { x: Math.round(pos.x), y: Math.round(pos.y) }
+                });
                 
                 if (plantStats.energy <= 0) {
                     this.world.pool.release(food.entity);
@@ -141,7 +157,16 @@ class PredatorBehavior {
                 const targetStats = target.entity.getComponent(ComponentType.STATS);
                 const damage = 50 * traits.attackStrength;
                 targetStats.energy -= damage;
-                stats.energy = Math.min(stats.maxEnergy, stats.energy + damage * 0.8);
+                const energyGained = damage * 0.8;
+                stats.energy = Math.min(stats.maxEnergy, stats.energy + energyGained);
+                
+                // Log the hunting/eating action
+                status.logAction('hunted', stats.age, {
+                    target: 'herbivore',
+                    energyGained: Math.round(energyGained),
+                    damage: Math.round(damage),
+                    position: { x: Math.round(pos.x), y: Math.round(pos.y) }
+                });
                 
                 if (targetStats.energy <= 0) {
                     this.world.pool.release(target.entity);
@@ -297,9 +322,19 @@ class BirdBehavior {
             if (dist < 30) {
                 // Attack
                 const targetStats = target.entity.getComponent(ComponentType.STATS);
+                const targetSpecies = targetStats.species;
                 const damage = 40 * traits.attackStrength;
                 targetStats.energy -= damage;
-                stats.energy = Math.min(stats.maxEnergy, stats.energy + damage * 0.7);
+                const energyGained = damage * 0.7;
+                stats.energy = Math.min(stats.maxEnergy, stats.energy + energyGained);
+                
+                // Log the hunting action
+                status.logAction('hunted', stats.age, {
+                    target: targetSpecies,
+                    energyGained: Math.round(energyGained),
+                    damage: Math.round(damage),
+                    position: { x: Math.round(pos.x), y: Math.round(pos.y) }
+                });
                 
                 if (targetStats.energy <= 0) {
                     this.world.pool.release(target.entity);

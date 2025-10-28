@@ -85,9 +85,10 @@ export class EntityPool {
      * @param {number} x - X position
      * @param {number} y - Y position
      * @param {Genetics} genetics - Optional genetics component
+     * @param {number} generation - Generation number (default 1)
      * @returns {Entity} The acquired entity
      */
-    acquire(species, x, y, genetics = null) {
+    acquire(species, x, y, genetics = null, generation = 1) {
         const pool = this.pools[species];
         if (!pool) {
             throw new Error(`Unknown species: ${species}`);
@@ -98,10 +99,10 @@ export class EntityPool {
         // Try to reuse an inactive entity
         if (pool.inactive.length > 0) {
             entity = pool.inactive.pop();
-            this.resetEntity(entity, species, x, y, genetics);
+            this.resetEntity(entity, species, x, y, genetics, generation);
         } else {
             // Create new entity if pool is empty
-            entity = this.createNewEntity(species, x, y, genetics);
+            entity = this.createNewEntity(species, x, y, genetics, generation);
             console.warn(`[EntityPool] Pool depleted for ${species}, creating new entity`);
         }
         
@@ -167,9 +168,10 @@ export class EntityPool {
      * @param {number} x - X position
      * @param {number} y - Y position
      * @param {Genetics} genetics - Optional genetics component
+     * @param {number} generation - Generation number (default 1)
      * @returns {Entity} The new entity
      */
-    createNewEntity(species, x, y, genetics = null) {
+    createNewEntity(species, x, y, genetics = null, generation = 1) {
         const config = this.speciesConfig[species];
         if (!config) {
             throw new Error(`Unknown species: ${species}`);
@@ -189,7 +191,7 @@ export class EntityPool {
         
         // Stats
         entity.addComponent(ComponentType.STATS, 
-            new Stats(species, config.initialEnergy, config.maxEnergy));
+            new Stats(species, config.initialEnergy, config.maxEnergy, generation));
         
         // Status
         entity.addComponent(ComponentType.STATUS, new Status());
@@ -211,8 +213,9 @@ export class EntityPool {
      * @param {number} x - X position
      * @param {number} y - Y position
      * @param {Genetics} genetics - Optional genetics component
+     * @param {number} generation - Generation number (default 1)
      */
-    resetEntity(entity, species, x, y, genetics = null) {
+    resetEntity(entity, species, x, y, genetics = null, generation = 1) {
         const config = this.speciesConfig[species];
         
         // Reset active state
@@ -246,6 +249,7 @@ export class EntityPool {
         stats.maxHealth = 100;
         stats.age = 0;
         stats.reproductionCooldown = 0;
+        stats.generation = generation;
         
         // Reset Status
         const status = entity.getComponent(ComponentType.STATUS);

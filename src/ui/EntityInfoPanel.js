@@ -1,0 +1,376 @@
+import { ComponentType } from "../core/Entity.js";
+
+/**
+ * Enhanced entity information panel with detailed stats and visual trait bars
+ */
+export class EntityInfoPanel {
+  constructor(world) {
+    this.world = world;
+    this.panel = document.getElementById("entity-info");
+    this.detailsDiv = document.getElementById("entity-details");
+
+    // Behavior state descriptions
+    this.behaviorDescriptions = {
+      idle: "Resting and conserving energy",
+      wandering: "Exploring the environment",
+      seeking_food: "Searching for food sources",
+      eating: "Consuming food to restore energy",
+      fleeing: "Escaping from a predator",
+      hunting: "Pursuing prey",
+      reproducing: "Creating offspring",
+      migrating: "Moving to a new area",
+      drinking: "Replenishing water",
+      sleeping: "Recovering energy",
+    };
+  }
+
+  /**
+   * Update the entity info panel display
+   */
+  update() {
+    const entity = this.world.selectedEntity;
+
+    if (!entity || !entity.active) {
+      this.panel.style.display = "none";
+      this.world.selectedEntity = null;
+      return;
+    }
+
+    this.panel.style.display = "block";
+
+    const stats = entity.getComponent(ComponentType.STATS);
+    const pos = entity.getComponent(ComponentType.POSITION);
+    const vel = entity.getComponent(ComponentType.VELOCITY);
+    const status = entity.getComponent(ComponentType.STATUS);
+    const traits = entity.getComponent(ComponentType.TRAITS);
+    const genetics = entity.getComponent(ComponentType.GENETICS);
+
+    // Build the enhanced info panel HTML
+    let html = this.buildBasicInfo(stats, pos, vel, status);
+
+    if (traits && genetics) {
+      html += this.buildTraitBars(traits);
+    }
+
+    // Add action history section
+    html += this.buildActionHistory(status);
+
+    this.detailsDiv.innerHTML = html;
+  }
+
+  /**
+   * Build basic entity information section
+   */
+  buildBasicInfo(stats, pos, vel, status) {
+    const speed = Math.sqrt(vel.dx * vel.dx + vel.dy * vel.dy);
+    const energyPercent = (stats.energy / stats.maxEnergy) * 100;
+    const behaviorDesc =
+      this.behaviorDescriptions[status.state] || "Unknown behavior";
+
+    // Get generation from stats
+    const generation = stats.generation || 1;
+
+    return `
+            <div style="margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="font-size: 16px;">${this.getSpeciesEmoji(
+                      stats.species
+                    )} ${this.capitalize(stats.species)}</strong>
+                    <span style="color: #888; font-size: 11px;">Gen ${generation}</span>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                    <span style="color: #aaa; font-size: 12px;">Energy</span>
+                    <span style="font-size: 12px; font-weight: bold; color: ${this.getEnergyColor(
+                      energyPercent
+                    )};">
+                        ${Math.round(stats.energy)}/${stats.maxEnergy}
+                    </span>
+                </div>
+                <div style="background: #1a1a1a; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="
+                        width: ${energyPercent}%; 
+                        height: 100%; 
+                        background: ${this.getEnergyGradient(energyPercent)};
+                        transition: width 0.3s ease;
+                    "></div>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 15px; padding: 10px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid ${this.getStateColor(
+              status.state
+            )};">
+                <div style="font-size: 11px; color: #888; margin-bottom: 3px;">CURRENT STATE</div>
+                <div style="font-weight: bold; font-size: 13px; margin-bottom: 3px;">${this.capitalize(
+                  status.state.replace("_", " ")
+                )}</div>
+                <div style="font-size: 11px; color: #aaa; font-style: italic;">${behaviorDesc}</div>
+            </div>
+            
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 15px; font-size: 12px;">
+                <div>
+                    <div style="color: #888;">Age</div>
+                    <div style="font-weight: bold;">${Math.round(
+                      stats.age
+                    )}s</div>
+                </div>
+                <div>
+                    <div style="color: #888;">Speed</div>
+                    <div style="font-weight: bold;">${speed.toFixed(1)}</div>
+                </div>
+                <div>
+                    <div style="color: #888;">Position</div>
+                    <div style="font-weight: bold; font-size: 10px;">(${Math.round(
+                      pos.x
+                    )}, ${Math.round(pos.y)})</div>
+                </div>
+                <div>
+                    <div style="color: #888;">Generation</div>
+                    <div style="font-weight: bold;">${generation}</div>
+                </div>
+            </div>
+        `;
+  }
+
+  /**
+   * Build visual trait bars section
+   */
+  buildTraitBars(traits) {
+    const traitData = [
+      { name: "Speed", value: traits.speed, icon: "⚡", color: "#FFD700" },
+      {
+        name: "Metabolism",
+        value: traits.metabolism,
+        icon: "🔥",
+        color: "#FF6B6B",
+      },
+      {
+        name: "Sense Range",
+        value: traits.senseRadius,
+        icon: "👁️",
+        color: "#4ECDC4",
+      },
+      { name: "Size", value: traits.size, icon: "📏", color: "#95E1D3" },
+      {
+        name: "Attack",
+        value: traits.attackStrength,
+        icon: "⚔️",
+        color: "#F38181",
+      },
+    ];
+
+    let html = `
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
+                <div style="font-size: 12px; color: #888; margin-bottom: 10px; font-weight: bold;">GENETIC TRAITS</div>
+        `;
+
+    for (const trait of traitData) {
+      const percentage = Math.round(trait.value * 100);
+      const barWidth = Math.min(percentage, 150); // Cap at 150% for display
+
+      html += `
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-size: 11px; color: #aaa;">
+                            <span style="margin-right: 4px;">${
+                              trait.icon
+                            }</span>${trait.name}
+                        </span>
+                        <span style="font-size: 11px; font-weight: bold; color: ${
+                          trait.color
+                        };">${percentage}%</span>
+                    </div>
+                    <div style="background: #1a1a1a; height: 6px; border-radius: 3px; overflow: hidden; position: relative;">
+                        <div style="
+                            width: ${barWidth}%; 
+                            height: 100%; 
+                            background: linear-gradient(90deg, ${
+                              trait.color
+                            }88, ${trait.color});
+                            transition: width 0.3s ease;
+                            box-shadow: 0 0 8px ${trait.color}44;
+                        "></div>
+                        ${
+                          percentage > 100
+                            ? `<div style="position: absolute; left: 100%; top: 0; width: 2px; height: 100%; background: #666;"></div>`
+                            : ""
+                        }
+                    </div>
+                </div>
+            `;
+    }
+
+    html += `</div>`;
+    return html;
+  }
+
+  /**
+   * Get species emoji
+   */
+  getSpeciesEmoji(species) {
+    const emojis = {
+      herbivore: "🐰",
+      predator: "🦊",
+      plant: "🌿",
+      fish: "🐟",
+      bird: "🦅",
+    };
+    return emojis[species] || "❓";
+  }
+
+  /**
+   * Get energy bar color based on percentage
+   */
+  getEnergyColor(percent) {
+    if (percent > 70) return "#4CAF50";
+    if (percent > 40) return "#FFC107";
+    if (percent > 20) return "#FF9800";
+    return "#F44336";
+  }
+
+  /**
+   * Get energy gradient for bar
+   */
+  getEnergyGradient(percent) {
+    if (percent > 70) return "linear-gradient(90deg, #4CAF50, #66BB6A)";
+    if (percent > 40) return "linear-gradient(90deg, #FFC107, #FFD54F)";
+    if (percent > 20) return "linear-gradient(90deg, #FF9800, #FFB74D)";
+    return "linear-gradient(90deg, #F44336, #EF5350)";
+  }
+
+  /**
+   * Get state indicator color
+   */
+  getStateColor(state) {
+    const colors = {
+      idle: "#888",
+      wandering: "#4ECDC4",
+      seeking_food: "#FFD700",
+      eating: "#4CAF50",
+      fleeing: "#F44336",
+      hunting: "#FF6B6B",
+      reproducing: "#FF69B4",
+      migrating: "#9C27B0",
+      drinking: "#2196F3",
+      sleeping: "#607D8B",
+    };
+    return colors[state] || "#888";
+  }
+
+  /**
+   * Build action history section
+   */
+  buildActionHistory(status) {
+    const recentActions = status.getRecentActions(5);
+
+    if (recentActions.length === 0) {
+      return `
+        <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
+          <div style="font-size: 12px; color: #888; margin-bottom: 10px; font-weight: bold;">ACTION HISTORY</div>
+          <div style="font-size: 11px; color: #666; font-style: italic;">No actions recorded yet</div>
+        </div>
+      `;
+    }
+
+    let html = `
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
+        <div style="font-size: 12px; color: #888; margin-bottom: 10px; font-weight: bold;">ACTION HISTORY</div>
+        <div style="display: flex; flex-direction: column; gap: 8px;">
+    `;
+
+    // Display actions in reverse order (most recent first)
+    for (let i = recentActions.length - 1; i >= 0; i--) {
+      const action = recentActions[i];
+      const actionInfo = this.formatAction(action);
+
+      html += `
+        <div style="
+          padding: 8px;
+          background: #1a1a1a;
+          border-radius: 4px;
+          border-left: 3px solid ${actionInfo.color};
+          font-size: 11px;
+        ">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 3px;">
+            <span style="font-weight: bold; color: ${actionInfo.color};">
+              ${actionInfo.icon} ${actionInfo.label}
+            </span>
+            <span style="color: #666; font-size: 10px;">${Math.round(
+              action.timestamp
+            )}s</span>
+          </div>
+          <div style="color: #aaa; font-size: 10px;">
+            ${actionInfo.description}
+          </div>
+        </div>
+      `;
+    }
+
+    html += `
+        </div>
+      </div>
+    `;
+
+    return html;
+  }
+
+  /**
+   * Format action data for display
+   */
+  formatAction(action) {
+    const { action: type, details } = action;
+
+    switch (type) {
+      case "ate":
+        return {
+          icon: "🍽️",
+          label: "Ate Food",
+          color: "#4CAF50",
+          description: `Consumed ${details.target}, gained ${details.energyGained} energy`,
+        };
+
+      case "fled":
+        return {
+          icon: "😰",
+          label: "Fled from Danger",
+          color: "#F44336",
+          description: `Escaped from ${details.threat} at distance ${details.distance}`,
+        };
+
+      case "hunted":
+        return {
+          icon: "🎯",
+          label: "Hunted Prey",
+          color: "#FF6B6B",
+          description: `Attacked ${details.target}, gained ${details.energyGained} energy`,
+        };
+
+      case "reproduced":
+        const reproType =
+          details.type === "asexual" ? "asexually" : "with mate";
+        return {
+          icon: "💕",
+          label: "Reproduced",
+          color: "#FF69B4",
+          description: `Reproduced ${reproType}, offspring ID: ${details.offspringId}`,
+        };
+
+      default:
+        return {
+          icon: "❓",
+          label: "Unknown Action",
+          color: "#888",
+          description: "Unknown action type",
+        };
+    }
+  }
+
+  /**
+   * Capitalize first letter of string
+   */
+  capitalize(str) {
+    return str.charAt(0).toUpperCase() + str.slice(1);
+  }
+}

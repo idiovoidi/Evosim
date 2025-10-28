@@ -135,7 +135,6 @@ This task list provides a step-by-step implementation plan for adding performanc
 
 - [x] 14. Add motion trails for fast-moving entities
 
-
   - Track last 10 positions for each entity
   - Render fading trail behind entities moving above threshold speed
   - Color-code trails by species
@@ -148,18 +147,16 @@ This task list provides a step-by-step implementation plan for adding performanc
 
 - [x] 15. Implement relationship visualization
 
-
-
-
   - Draw red dashed line from predator to targeted prey
   - Draw yellow danger circle around predators when herbivore is selected
 
   - Draw green sense range circle when entity is selected
   - Update relationship lines each frame based on current targets
   - _Requirements: 6.1, 6.2, 6.3_
+
 -
 
-- [-] 16. Add interaction highlighting
+- [x] 16. Add interaction highlighting
 
 
   - Highlight nearby entities when hovering over an entity
@@ -170,14 +167,21 @@ This task list provides a step-by-step implementation plan for adding performanc
 ---
 
 ## Phase 6: Enhanced Information Display
+-
 
-- [ ] 17. Create enhanced EntityInfoPanel
+- [x] 17. Create enhanced EntityInfoPanel
+
+
+
 
   - Expand entity info panel with more detailed information
   - Add visual trait bars for genetic traits
   - Display current behavior state with description
   - Show age and generation number
   - _Requirements: 7.1, 7.2, 7.3, 7.4_
+
+
+
 
 - [ ] 18. Implement action history logging
 
@@ -194,9 +198,16 @@ This task list provides a step-by-step implementation plan for adding performanc
   - Highlight family members when entity is selected
   - _Requirements: 6.4_
 
+
+
+
 ---
 
 ## Phase 7: Debug Tools
+
+
+
+
 
 - [ ] 20. Create DebugRenderer class
 
@@ -205,17 +216,27 @@ This task list provides a step-by-step implementation plan for adding performanc
   - Add keyboard shortcuts for different debug views
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
-- [ ] 21. Implement debug visualization modes
+- [x] 21. Implement debug visualization modes
+
+
+
 
   - Quadtree view: Show spatial partitioning grid structure
   - Collision view: Show entity boundaries and sense ranges as circles
   - Behavior view: Color-code entities by current behavior state
   - Velocity view: Show velocity vectors as arrows from entities
+
+
+
+
   - _Requirements: 8.1, 8.2, 8.3, 8.4, 8.5_
 
 ---
 
 ## Phase 8: Adaptive Quality System
+
+
+
 
 - [ ] 22. Create AdaptiveQualityManager class
 
@@ -225,19 +246,32 @@ This task list provides a step-by-step implementation plan for adding performanc
   - Store quality settings and apply to renderer
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
+
+
+
 - [ ] 23. Implement automatic quality adjustment
 
   - Monitor FPS and adjust quality when below thresholds
   - Reduce particle effects when FPS < 45
+
+
+
+
   - Disable visual indicators when FPS < 30
   - Reduce entity update frequency when FPS < 20
   - Gradually restore quality when FPS recovers
   - _Requirements: 9.1, 9.2, 9.3, 9.4_
 
+
+
+
 - [ ] 24. Add quality change notifications
 
   - Display notification when quality is automatically reduced
   - Show current quality level in UI
+
+
+
   - Allow manual quality override in settings
   - _Requirements: 9.5_
 
@@ -247,11 +281,15 @@ This task list provides a step-by-step implementation plan for adding performanc
 
 - [ ] 25. Create HeatmapRenderer class
 
+
+
+
   - Divide world into grid cells
   - Count entities in each cell
   - Render color gradient based on density
   - Update heatmap every second
   - _Requirements: 12.1, 12.2_
+
 
 - [ ] 26. Implement heatmap species filtering
 

@@ -3,6 +3,8 @@ import { Renderer } from './graphics/Renderer.js';
 import { InputHandler } from './core/InputHandler.js';
 import { UI } from './ui/UI.js';
 import { Tutorial } from './ui/Tutorial.js';
+import { AdaptiveQualityManager } from './utils/AdaptiveQualityManager.js';
+import { EcosystemEventDetector } from './systems/EcosystemEventDetector.js';
 
 class EcosystemSimulation {
     constructor() {
@@ -23,6 +25,27 @@ class EcosystemSimulation {
         this.input = new InputHandler(this.canvas, this.world);
         this.ui = new UI(this.world);
         this.tutorial = new Tutorial();
+        
+        // Initialize adaptive quality manager after world and renderer are created
+        this.world.adaptiveQualityManager = new AdaptiveQualityManager(this.world, this.renderer);
+        console.log('✅ AdaptiveQualityManager initialized');
+        console.log('   - Press Q to cycle quality levels manually');
+        console.log('   - Press A to toggle automatic quality adjustment');
+        
+        // Set up quality change notification
+        this.world.adaptiveQualityManager.onQualityChange = (newQuality, oldQuality, manual) => {
+            console.log(`🎨 Quality ${manual ? 'manually' : 'automatically'} adjusted: ${oldQuality} → ${newQuality}`);
+            
+            // Show notification to user
+            if (this.ui && this.ui.notificationManager) {
+                this.ui.notificationManager.notifyQualityChange(newQuality, oldQuality, manual);
+            }
+        };
+        
+        // Initialize ecosystem event detector after UI is created
+        this.world.ecosystemEventDetector = new EcosystemEventDetector(this.world, this.ui.notificationManager);
+        console.log('✅ EcosystemEventDetector initialized');
+        console.log('   - Monitoring for extinctions, milestones, and ecosystem imbalances');
         
         // Simulation state
         this.isPaused = false;
@@ -64,6 +87,10 @@ class EcosystemSimulation {
         // Start simulation
         this.start();
         
+        // Initialize UI button states
+        this.updateHeatmapButton();
+        this.updateHeatmapSpeciesButtons();
+        
         // Hide loading screen
         setTimeout(() => {
             document.getElementById('loading-screen').classList.add('hidden');
@@ -87,6 +114,10 @@ class EcosystemSimulation {
         
         if (this.world) {
             this.world.resize(this.canvas.width, this.canvas.height);
+        }
+        
+        if (this.renderer) {
+            this.renderer.resize(this.canvas.width, this.canvas.height);
         }
     }
     
@@ -141,6 +172,52 @@ class EcosystemSimulation {
             this.renderer.setZoom(zoom);
             document.getElementById('zoom-value').textContent = `${zoom.toFixed(1)}x`;
         });
+        
+        // Quality control buttons
+        document.getElementById('quality-low').addEventListener('click', () => {
+            this.setQualityLevel('LOW');
+        });
+        
+        document.getElementById('quality-medium').addEventListener('click', () => {
+            this.setQualityLevel('MEDIUM');
+        });
+        
+        document.getElementById('quality-high').addEventListener('click', () => {
+            this.setQualityLevel('HIGH');
+        });
+        
+        document.getElementById('quality-auto').addEventListener('click', () => {
+            this.toggleAutoQuality();
+        });
+        
+        // Heatmap controls
+        document.getElementById('heatmap-toggle').addEventListener('click', () => {
+            this.toggleHeatmap();
+        });
+        
+        document.getElementById('heatmap-all').addEventListener('click', () => {
+            this.setHeatmapSpecies('all');
+        });
+        
+        document.getElementById('heatmap-herbivore').addEventListener('click', () => {
+            this.setHeatmapSpecies('herbivore');
+        });
+        
+        document.getElementById('heatmap-predator').addEventListener('click', () => {
+            this.setHeatmapSpecies('predator');
+        });
+        
+        document.getElementById('heatmap-plant').addEventListener('click', () => {
+            this.setHeatmapSpecies('plant');
+        });
+        
+        document.getElementById('heatmap-fish').addEventListener('click', () => {
+            this.setHeatmapSpecies('fish');
+        });
+        
+        document.getElementById('heatmap-bird').addEventListener('click', () => {
+            this.setHeatmapSpecies('bird');
+        });
     }
     
     setupKeyboardShortcuts() {
@@ -175,7 +252,13 @@ class EcosystemSimulation {
                     break;
                 case 'h':
                     e.preventDefault();
-                    this.tutorial.restart();
+                    if (e.shiftKey) {
+                        // Shift+H: Cycle through heatmap species
+                        this.cycleHeatmapSpecies();
+                    } else {
+                        // H: Toggle heatmap
+                        this.toggleHeatmap();
+                    }
                     break;
                 case '+':
                 case '=':
@@ -186,6 +269,24 @@ class EcosystemSimulation {
                 case '_':
                     e.preventDefault();
                     this.adjustSpeed(-0.5);
+                    break;
+                case 'q':
+                    e.preventDefault();
+                    // Cycle through quality levels manually
+                    this.cycleQualityLevel();
+                    break;
+                case 'a':
+                    e.preventDefault();
+                    // Toggle automatic quality adjustment
+                    if (this.world.adaptiveQualityManager) {
+                        if (this.world.adaptiveQualityManager.isManualOverride()) {
+                            this.world.adaptiveQualityManager.resetToAuto();
+                            console.log('🎨 Automatic quality adjustment enabled');
+                        } else {
+                            this.world.adaptiveQualityManager.setManualOverride(true);
+                            console.log('🎨 Automatic quality adjustment disabled');
+                        }
+                    }
                     break;
             }
         });
@@ -201,6 +302,129 @@ class EcosystemSimulation {
         this.speed = Math.max(0.1, Math.min(5, this.speed + delta));
         document.getElementById('speed-slider').value = this.speed;
         document.getElementById('speed-value').textContent = `${this.speed.toFixed(1)}x`;
+    }
+    
+    cycleQualityLevel() {
+        if (!this.world.adaptiveQualityManager) return;
+        
+        const qualityOrder = ['LOW', 'MEDIUM', 'HIGH'];
+        const currentQuality = this.world.adaptiveQualityManager.getQualityLevel();
+        const currentIndex = qualityOrder.indexOf(currentQuality);
+        const nextIndex = (currentIndex + 1) % qualityOrder.length;
+        const nextQuality = qualityOrder[nextIndex];
+        
+        this.world.adaptiveQualityManager.setQualityLevel(nextQuality, true);
+        console.log(`🎨 Quality manually set to: ${nextQuality}`);
+    }
+    
+    setQualityLevel(level) {
+        if (!this.world.adaptiveQualityManager) return;
+        
+        this.world.adaptiveQualityManager.setQualityLevel(level, true);
+        console.log(`🎨 Quality manually set to: ${level}`);
+    }
+    
+    toggleAutoQuality() {
+        if (!this.world.adaptiveQualityManager) return;
+        
+        if (this.world.adaptiveQualityManager.isManualOverride()) {
+            this.world.adaptiveQualityManager.resetToAuto();
+            console.log('🎨 Automatic quality adjustment enabled');
+        } else {
+            this.world.adaptiveQualityManager.setManualOverride(true);
+            console.log('🎨 Automatic quality adjustment disabled');
+        }
+    }
+    
+    toggleHeatmap() {
+        if (!this.renderer.heatmapRenderer) return;
+        
+        const isEnabled = this.renderer.heatmapRenderer.isEnabled();
+        this.renderer.heatmapRenderer.setEnabled(!isEnabled);
+        
+        console.log(`🗺️ Heatmap ${!isEnabled ? 'enabled' : 'disabled'}`);
+        
+        // Update UI button state
+        this.updateHeatmapButton();
+    }
+    
+    cycleHeatmapSpecies() {
+        if (!this.renderer.heatmapRenderer || !this.renderer.heatmapRenderer.isEnabled()) return;
+        
+        const speciesOrder = ['all', 'herbivore', 'predator', 'plant', 'fish', 'bird'];
+        const currentSpecies = this.renderer.heatmapRenderer.getSpecies();
+        const currentIndex = speciesOrder.indexOf(currentSpecies);
+        const nextIndex = (currentIndex + 1) % speciesOrder.length;
+        const nextSpecies = speciesOrder[nextIndex];
+        
+        this.renderer.heatmapRenderer.setSpecies(nextSpecies);
+        
+        const displayName = nextSpecies === 'all' ? 'All Species' : 
+            nextSpecies.charAt(0).toUpperCase() + nextSpecies.slice(1);
+        console.log(`🗺️ Heatmap species: ${displayName}`);
+        
+        // Update UI button state
+        this.updateHeatmapSpeciesButtons();
+    }
+    
+    setHeatmapSpecies(species) {
+        if (!this.renderer.heatmapRenderer) return;
+        
+        this.renderer.heatmapRenderer.setSpecies(species);
+        
+        const displayName = species === 'all' ? 'All Species' : 
+            species.charAt(0).toUpperCase() + species.slice(1);
+        console.log(`🗺️ Heatmap species: ${displayName}`);
+        
+        // Update UI button state
+        this.updateHeatmapSpeciesButtons();
+    }
+    
+    updateHeatmapButton() {
+        const heatmapBtn = document.getElementById('heatmap-toggle');
+        if (!heatmapBtn || !this.renderer.heatmapRenderer) return;
+        
+        const isEnabled = this.renderer.heatmapRenderer.isEnabled();
+        if (isEnabled) {
+            heatmapBtn.style.background = '#4caf50';
+            heatmapBtn.textContent = '🗺️ Heatmap: ON';
+        } else {
+            heatmapBtn.style.background = '#666';
+            heatmapBtn.textContent = '🗺️ Heatmap: OFF';
+        }
+        
+        // Show/hide species filter buttons
+        const speciesControls = document.getElementById('heatmap-species-controls');
+        if (speciesControls) {
+            speciesControls.style.display = isEnabled ? 'block' : 'none';
+        }
+    }
+    
+    updateHeatmapSpeciesButtons() {
+        if (!this.renderer.heatmapRenderer) return;
+        
+        const currentSpecies = this.renderer.heatmapRenderer.getSpecies();
+        
+        const buttons = {
+            'all': document.getElementById('heatmap-all'),
+            'herbivore': document.getElementById('heatmap-herbivore'),
+            'predator': document.getElementById('heatmap-predator'),
+            'plant': document.getElementById('heatmap-plant'),
+            'fish': document.getElementById('heatmap-fish'),
+            'bird': document.getElementById('heatmap-bird')
+        };
+        
+        for (const [species, button] of Object.entries(buttons)) {
+            if (button) {
+                if (species === currentSpecies) {
+                    button.style.background = '#4caf50';
+                    button.style.fontWeight = 'bold';
+                } else {
+                    button.style.background = '#666';
+                    button.style.fontWeight = 'normal';
+                }
+            }
+        }
     }
     
     start() {

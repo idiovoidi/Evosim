@@ -1,5 +1,6 @@
-import { ComponentType } from '../core/Entity.js';
 import { StatsGraph } from './StatsGraph.js';
+import { EntityInfoPanel } from './EntityInfoPanel.js';
+import { NotificationManager } from './NotificationManager.js';
 
 export class UI {
     constructor(world) {
@@ -11,6 +12,12 @@ export class UI {
         if (graphCanvas) {
             this.statsGraph = new StatsGraph(graphCanvas);
         }
+        
+        // Initialize enhanced entity info panel
+        this.entityInfoPanel = new EntityInfoPanel(world);
+        
+        // Initialize notification manager
+        this.notificationManager = new NotificationManager();
     }
     
     update(fps) {
@@ -34,57 +41,83 @@ export class UI {
         document.getElementById('time-elapsed').textContent = 
             `${minutes}:${seconds.toString().padStart(2, '0')}`;
         
+        // Update quality level display
+        if (this.world.adaptiveQualityManager) {
+            const qualityLevel = this.world.adaptiveQualityManager.getQualityLevel();
+            const qualityElement = document.getElementById('quality-level');
+            if (qualityElement) {
+                qualityElement.textContent = qualityLevel;
+                
+                // Color code based on quality level
+                qualityElement.style.color = 
+                    qualityLevel === 'HIGH' ? '#4caf50' :
+                    qualityLevel === 'MEDIUM' ? '#ff9800' :
+                    '#f44336';
+            }
+            
+            // Update quality button states
+            this.updateQualityButtons();
+        }
+        
         // Update stats graph
         if (this.statsGraph) {
             this.statsGraph.update(stats);
             this.statsGraph.render();
         }
         
-        // Update selected entity info
-        this.updateEntityInfo();
+        // Update selected entity info using enhanced panel
+        this.entityInfoPanel.update();
+        
+        // Update notification manager
+        if (this.notificationManager) {
+            this.notificationManager.update(0.016); // Approximate dt
+        }
     }
     
-    updateEntityInfo() {
-        const entity = this.world.selectedEntity;
-        const infoPanel = document.getElementById('entity-info');
-        const detailsDiv = document.getElementById('entity-details');
+    /**
+     * Update quality button states to reflect current quality
+     */
+    updateQualityButtons() {
+        if (!this.world.adaptiveQualityManager) return;
         
-        if (!entity || !entity.active) {
-            infoPanel.style.display = 'none';
-            this.world.selectedEntity = null;
-            return;
+        const currentQuality = this.world.adaptiveQualityManager.getQualityLevel();
+        const isAuto = !this.world.adaptiveQualityManager.isManualOverride();
+        
+        // Update quality preset buttons
+        const buttons = {
+            'LOW': document.getElementById('quality-low'),
+            'MEDIUM': document.getElementById('quality-medium'),
+            'HIGH': document.getElementById('quality-high')
+        };
+        
+        for (const [quality, button] of Object.entries(buttons)) {
+            if (button) {
+                if (quality === currentQuality && !isAuto) {
+                    button.style.background = '#4caf50';
+                } else {
+                    button.style.background = '#666';
+                }
+            }
         }
         
-        infoPanel.style.display = 'block';
-        
-        const stats = entity.getComponent(ComponentType.STATS);
-        const pos = entity.getComponent(ComponentType.POSITION);
-        const vel = entity.getComponent(ComponentType.VELOCITY);
-        const status = entity.getComponent(ComponentType.STATUS);
-        const traits = entity.getComponent(ComponentType.TRAITS);
-        const genetics = entity.getComponent(ComponentType.GENETICS);
-        
-        let html = `
-            <div><strong>Species:</strong> ${stats.species}</div>
-            <div><strong>Energy:</strong> ${Math.round(stats.energy)}/${stats.maxEnergy}</div>
-            <div><strong>Age:</strong> ${Math.round(stats.age)}s</div>
-            <div><strong>State:</strong> ${status.state}</div>
-            <div><strong>Position:</strong> (${Math.round(pos.x)}, ${Math.round(pos.y)})</div>
-            <div><strong>Speed:</strong> ${Math.round(Math.sqrt(vel.dx*vel.dx + vel.dy*vel.dy) * 10) / 10}</div>
-        `;
-        
-        if (traits) {
-            html += `
-                <div style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #444;">
-                    <strong>Traits:</strong>
-                </div>
-                <div>Speed: ${(traits.speed * 100).toFixed(0)}%</div>
-                <div>Metabolism: ${(traits.metabolism * 100).toFixed(0)}%</div>
-                <div>Sense: ${(traits.senseRadius * 100).toFixed(0)}%</div>
-                <div>Size: ${(traits.size * 100).toFixed(0)}%</div>
-            `;
+        // Update auto button
+        const autoButton = document.getElementById('quality-auto');
+        if (autoButton) {
+            if (isAuto) {
+                autoButton.style.background = '#4caf50';
+                autoButton.textContent = '🔄 Auto Quality: ON';
+            } else {
+                autoButton.style.background = '#666';
+                autoButton.textContent = '🔄 Auto Quality: OFF';
+            }
         }
-        
-        detailsDiv.innerHTML = html;
+    }
+    
+    /**
+     * Get the notification manager instance
+     * @returns {NotificationManager} Notification manager
+     */
+    getNotificationManager() {
+        return this.notificationManager;
     }
 }
