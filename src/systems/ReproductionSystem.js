@@ -6,7 +6,7 @@ export class ReproductionSystem {
         this.reproductionThresholds = {
             herbivore: 180,
             predator: 200,
-            plant: 90,
+            plant: 140,
             fish: 130,
             bird: 150
         };
@@ -53,8 +53,8 @@ export class ReproductionSystem {
         const pos = parent.getComponent(ComponentType.POSITION);
         
         // Cost energy
-        stats.energy -= 30;
-        stats.reproductionCooldown = 5;
+        stats.energy -= 50;
+        stats.reproductionCooldown = 8;
         
         // Create offspring
         const offsetX = (Math.random() - 0.5) * 60;
@@ -62,7 +62,7 @@ export class ReproductionSystem {
         const x = Math.max(0, Math.min(this.world.width, pos.x + offsetX));
         const y = Math.max(0, Math.min(this.world.height, pos.y + offsetY));
         
-        const offspring = this.world.factory.createEntity(stats.species, x, y);
+        const offspring = this.world.pool.acquire(stats.species, x, y);
         this.world.addEntity(offspring);
         
         // Show heart effect
@@ -73,8 +73,11 @@ export class ReproductionSystem {
     sexualReproduction(parent1, parent2) {
         const stats1 = parent1.getComponent(ComponentType.STATS);
         const stats2 = parent2.getComponent(ComponentType.STATS);
+        const pos1 = parent1.getComponent(ComponentType.POSITION);
         const status1 = parent1.getComponent(ComponentType.STATUS);
         const status2 = parent2.getComponent(ComponentType.STATUS);
+        const genetics1 = parent1.getComponent(ComponentType.GENETICS);
+        const genetics2 = parent2.getComponent(ComponentType.GENETICS);
         
         // Cost energy
         stats1.energy -= 50;
@@ -82,8 +85,17 @@ export class ReproductionSystem {
         stats1.reproductionCooldown = 10;
         stats2.reproductionCooldown = 10;
         
-        // Create offspring with genetic crossover
-        const offspring = this.world.factory.reproduce(parent1, parent2);
+        // Create offspring genetics with crossover
+        const offspringGenetics = genetics1.crossover(genetics2, 0.1);
+        
+        // Spawn near parent
+        const offsetX = (Math.random() - 0.5) * 50;
+        const offsetY = (Math.random() - 0.5) * 50;
+        const x = Math.max(0, Math.min(this.world.width, pos1.x + offsetX));
+        const y = Math.max(0, Math.min(this.world.height, pos1.y + offsetY));
+        
+        // Acquire offspring from pool with genetics
+        const offspring = this.world.pool.acquire(stats1.species, x, y, offspringGenetics);
         this.world.addEntity(offspring);
         
         // Show heart effects

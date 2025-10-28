@@ -21,7 +21,7 @@ export class HealthSystem {
             
             // Die if out of energy
             if (stats.energy <= 0) {
-                entity.active = false;
+                this.world.pool.release(entity);
             }
             
             // Update reproduction cooldown

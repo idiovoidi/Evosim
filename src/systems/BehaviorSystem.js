@@ -81,7 +81,7 @@ class HerbivoreBehavior {
                 plantStats.energy -= energyGain;
                 
                 if (plantStats.energy <= 0) {
-                    food.entity.active = false;
+                    this.world.pool.release(food.entity);
                 }
                 
                 vel.dx *= 0.5;
@@ -144,7 +144,7 @@ class PredatorBehavior {
                 stats.energy = Math.min(stats.maxEnergy, stats.energy + damage * 0.8);
                 
                 if (targetStats.energy <= 0) {
-                    target.entity.active = false;
+                    this.world.pool.release(target.entity);
                 }
                 
                 vel.dx *= 0.3;
@@ -184,10 +184,10 @@ class PlantBehavior {
         const terrain = this.world.getTerrainAt(pos.x, pos.y);
         
         // Grow based on terrain
-        let growthRate = 0.05;
-        if (terrain === 'grass') growthRate = 0.08;
-        if (terrain === 'forest') growthRate = 0.1;
-        if (terrain === 'water') growthRate = 0.02;
+        let growthRate = 0.02;
+        if (terrain === 'grass') growthRate = 0.03;
+        if (terrain === 'forest') growthRate = 0.04;
+        if (terrain === 'water') growthRate = 0.01;
         
         stats.energy = Math.min(stats.maxEnergy, stats.energy + growthRate);
     }
@@ -302,7 +302,7 @@ class BirdBehavior {
                 stats.energy = Math.min(stats.maxEnergy, stats.energy + damage * 0.7);
                 
                 if (targetStats.energy <= 0) {
-                    target.entity.active = false;
+                    this.world.pool.release(target.entity);
                 }
                 
                 status.state = 'attacking';

@@ -1,4 +1,4 @@
-import { ComponentType } from './Entity.js';
+import { ComponentType, Genetics } from './Entity.js';
 
 export class SaveSystem {
     constructor(world) {
@@ -146,10 +146,14 @@ export class SaveSystem {
             const { components } = data;
             
             if (components.stats && components.position) {
-                const genetics = components.genetics ? 
-                    { genes: components.genetics.genes } : null;
+                // Create genetics object if saved
+                let genetics = null;
+                if (components.genetics) {
+                    genetics = new Genetics();
+                    genetics.genes = components.genetics.genes;
+                }
                 
-                const entity = this.world.factory.createEntity(
+                const entity = this.world.pool.acquire(
                     components.stats.species,
                     components.position.x,
                     components.position.y,

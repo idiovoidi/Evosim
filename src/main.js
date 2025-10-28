@@ -32,6 +32,10 @@ class EcosystemSimulation {
         this.frameCount = 0;
         this.fpsTime = 0;
         
+        // Performance monitoring for batching
+        this.batchingLogInterval = 5.0; // Log every 5 seconds
+        this.batchingLogTimer = 0;
+        
         this.updateLoadingStatus('Setting up controls...');
         
         // Setup controls
@@ -146,9 +150,13 @@ class EcosystemSimulation {
             
             switch(e.key.toLowerCase()) {
                 case ' ':
-                case 'p':
                     e.preventDefault();
                     this.togglePause();
+                    break;
+                case 'p':
+                    e.preventDefault();
+                    // Toggle detailed performance view
+                    this.renderer.showDetailedPerformance = !this.renderer.showDetailedPerformance;
                     break;
                 case 'r':
                     if (e.ctrlKey || e.metaKey) return; // Don't interfere with browser refresh
@@ -226,6 +234,19 @@ class EcosystemSimulation {
         
         // Update UI
         this.ui.update(this.fps);
+        
+        // Log batching statistics periodically
+        this.batchingLogTimer += deltaTime;
+        if (this.batchingLogTimer >= this.batchingLogInterval) {
+            this.batchingLogTimer = 0;
+            const stats = this.renderer.getBatchingStats();
+            console.log('🎨 Render Batching Stats:', {
+                'Visible Entities': stats.visibleEntities,
+                'Draw Calls': stats.drawCalls,
+                'Draw Call Reduction': stats.reduction,
+                'FPS': this.fps
+            });
+        }
     }
 }
 
