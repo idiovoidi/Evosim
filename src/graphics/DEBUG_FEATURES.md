@@ -1,14 +1,17 @@
 # Debug Renderer Features
 
 ## Overview
+
 The DebugRenderer provides developer visualization tools for troubleshooting and performance optimization in the ecosystem simulation.
 
 ## Keyboard Shortcuts
 
 ### Main Toggle
+
 - **D** - Toggle debug mode ON/OFF
 
 ### Debug Views (when debug mode is enabled)
+
 - **Q** - Toggle QuadTree view (spatial partitioning grid)
 - **C** - Toggle Collision view (entity boundaries and sense ranges)
 - **B** - Toggle Behavior view (color-coded by behavior state)
@@ -17,18 +20,21 @@ The DebugRenderer provides developer visualization tools for troubleshooting and
 ## Debug Views
 
 ### QuadTree View (Q)
+
 - Visualizes the spatial partitioning structure
 - Shows grid boundaries with color-coded depth levels
 - Displays entity count in each node
 - Helps optimize spatial queries and understand entity distribution
 
 ### Collision View (C)
+
 - Shows yellow circles around entities (collision boundaries)
 - Displays cyan circles for sense ranges
 - Helps debug entity detection and interaction ranges
 - Useful for tuning gameplay parameters
 
 ### Behavior View (B)
+
 - Color-codes entities based on their current behavior state
 - Shows state labels below entities
 - Colors:
@@ -42,6 +48,7 @@ The DebugRenderer provides developer visualization tools for troubleshooting and
   - Dark Gray: dead
 
 ### Velocity View (V)
+
 - Displays velocity vectors as arrows from entity positions
 - Arrow length indicates speed
 - Arrow color indicates speed (green = slow, red = fast)

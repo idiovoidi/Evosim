@@ -17,8 +17,8 @@ export class Renderer {
     this.lastDrawCallCount = 0; // Track draw calls for performance monitoring
     this.lastEntityCount = 0; // Track entity count for draw call comparison
     this.batchingEnabled = true; // Allow toggling batching for comparison
-    this.lodDistance = 500; // Distance threshold for LOD (configurable)
-    this.lodEnabled = true; // Allow toggling LOD for comparison
+    this.lodDistance = 2000; // Distance threshold for LOD (configurable)
+    this.lodEnabled = false; // LOD disabled by default for full detail
     this.showDetailedPerformance = false; // Toggle for detailed performance view
     
     // Initialize visual indicator system

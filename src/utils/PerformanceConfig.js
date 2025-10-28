@@ -63,7 +63,7 @@ export const RENDERING_CONFIG = {
     lodDistance: 500,
     
     // Enable LOD system
-    lodEnabled: true,
+    lodEnabled: false,
     
     // Enable render batching (group similar entities to reduce draw calls)
     batchingEnabled: true,
@@ -100,7 +100,7 @@ export const QUALITY_PRESETS = {
         shadows: false,
         detailedTerrain: true,
         maxEntitiesRendered: 1000,
-        lodEnabled: true,
+        lodEnabled: false,
         lodDistance: 500,
         cullingMargin: 50,
         batchingEnabled: true,
@@ -115,7 +115,7 @@ export const QUALITY_PRESETS = {
         shadows: false,
         detailedTerrain: true,
         maxEntitiesRendered: 500,
-        lodEnabled: true,
+        lodEnabled: false,
         lodDistance: 400,
         cullingMargin: 30,
         batchingEnabled: true,
@@ -130,7 +130,7 @@ export const QUALITY_PRESETS = {
         shadows: false,
         detailedTerrain: false,
         maxEntitiesRendered: 300,
-        lodEnabled: true,
+        lodEnabled: false,
         lodDistance: 300,
         cullingMargin: 20,
         batchingEnabled: true,

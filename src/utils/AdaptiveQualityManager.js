@@ -20,7 +20,7 @@ export const QUALITY_PRESETS = {
         shadows: false, // Not yet implemented
         detailedTerrain: true,
         maxEntitiesRendered: 1000,
-        lodEnabled: true,
+        lodEnabled: false,
         lodDistance: 500,
         cullingMargin: 50
     },
@@ -32,7 +32,7 @@ export const QUALITY_PRESETS = {
         shadows: false,
         detailedTerrain: true,
         maxEntitiesRendered: 500,
-        lodEnabled: true,
+        lodEnabled: false,
         lodDistance: 400,
         cullingMargin: 30
     },
@@ -44,7 +44,7 @@ export const QUALITY_PRESETS = {
         shadows: false,
         detailedTerrain: false,
         maxEntitiesRendered: 300,
-        lodEnabled: true,
+        lodEnabled: false,
         lodDistance: 300,
         cullingMargin: 20
     }
@@ -299,6 +299,8 @@ export class AdaptiveQualityManager {
             this.renderer.setLODEnabled(settings.lodEnabled);
             this.renderer.setLODDistance(settings.lodDistance);
             this.renderer.cullingMargin = settings.cullingMargin;
+            
+            console.log(`[AdaptiveQualityManager] Applied LOD settings: enabled=${settings.lodEnabled}, distance=${settings.lodDistance}`);
             
             // Visual indicator system
             if (this.renderer.visualIndicators) {
