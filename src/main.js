@@ -1,6 +1,6 @@
 import { World } from './core/World.js';
 import { Renderer } from './graphics/Renderer.js';
-import { InputHandler } from './core/InputHandler.js';
+import { InputHandlerManager } from './core/InputHandlerManager.js';
 import { UI } from './ui/UI.js';
 import { Tutorial } from './ui/Tutorial.js';
 import { AdaptiveQualityManager } from './utils/AdaptiveQualityManager.js';
@@ -22,7 +22,7 @@ class EcosystemSimulation {
         // Initialize systems
         this.world = new World(this.canvas.width, this.canvas.height);
         this.renderer = new Renderer(this.ctx, this.world);
-        this.input = new InputHandler(this.canvas, this.world);
+        this.input = new InputHandlerManager(this.canvas, this.world, this.renderer);
         this.ui = new UI(this.world);
         this.tutorial = new Tutorial();
         
@@ -169,7 +169,7 @@ class EcosystemSimulation {
         const zoomSlider = document.getElementById('zoom-slider');
         zoomSlider.addEventListener('input', (e) => {
             const zoom = parseFloat(e.target.value);
-            this.renderer.setZoom(zoom);
+            this.renderer.camera.zoom = zoom;
             document.getElementById('zoom-value').textContent = `${zoom.toFixed(1)}x`;
         });
         
@@ -287,6 +287,12 @@ class EcosystemSimulation {
                             console.log('🎨 Automatic quality adjustment disabled');
                         }
                     }
+                    break;
+                case 'c':
+                    e.preventDefault();
+                    // Reset camera position and zoom
+                    this.input.resetCamera();
+                    console.log('📷 Camera reset to default position');
                     break;
             }
         });

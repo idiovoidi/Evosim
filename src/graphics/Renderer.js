@@ -20,13 +20,13 @@ export class Renderer {
     this.lodDistance = 2000; // Distance threshold for LOD (configurable)
     this.lodEnabled = false; // LOD disabled by default for full detail
     this.showDetailedPerformance = false; // Toggle for detailed performance view
-    
+
     // Initialize visual indicator system
     this.visualIndicators = new VisualIndicatorSystem(this);
-    
+
     // Initialize debug renderer
     this.debugRenderer = new DebugRenderer(world, this);
-    
+
     // Initialize heatmap renderer
     this.heatmapRenderer = new HeatmapRenderer(world);
   }
@@ -79,15 +79,17 @@ export class Renderer {
    */
   getDistanceFromCamera(position) {
     const canvas = this.ctx.canvas;
-    
+
     // Calculate camera center in world space
-    const cameraCenterX = (-this.camera.x + canvas.width / 2) / this.camera.zoom;
-    const cameraCenterY = (-this.camera.y + canvas.height / 2) / this.camera.zoom;
-    
+    const cameraCenterX =
+      (-this.camera.x + canvas.width / 2) / this.camera.zoom;
+    const cameraCenterY =
+      (-this.camera.y + canvas.height / 2) / this.camera.zoom;
+
     // Calculate distance
     const dx = position.x - cameraCenterX;
     const dy = position.y - cameraCenterY;
-    
+
     return Math.sqrt(dx * dx + dy * dy);
   }
 
@@ -99,17 +101,17 @@ export class Renderer {
    */
   getEntityColor(entity) {
     const appearance = entity.getComponent(ComponentType.APPEARANCE);
-    
+
     // Map emojis to colors for distant rendering
     const colorMap = {
-      '🐰': '#C8A882', // Herbivore - tan/brown
-      '🦊': '#FF6B35', // Predator - orange/red
-      '🌿': '#4CAF50', // Plant - green
-      '🐟': '#2196F3', // Fish - blue
-      '🦅': '#8B4513', // Bird - brown
+      "🐰": "#C8A882", // Herbivore - tan/brown
+      "🦊": "#FF6B35", // Predator - orange/red
+      "🌿": "#4CAF50", // Plant - green
+      "🐟": "#2196F3", // Fish - blue
+      "🦅": "#8B4513", // Bird - brown
     };
-    
-    return colorMap[appearance.emoji] || '#888888'; // Default gray
+
+    return colorMap[appearance.emoji] || "#888888"; // Default gray
   }
 
   /**
@@ -145,7 +147,7 @@ export class Renderer {
     const canvas = ctx.canvas;
 
     // Begin render timing
-    this.world.performanceMonitor.beginSection('render');
+    this.world.performanceMonitor.beginSection("render");
 
     // Reset culled entity count for this frame
     this.culledEntityCount = 0;
@@ -193,15 +195,18 @@ export class Renderer {
     this.debugRenderer.render(ctx);
 
     ctx.restore();
-    
+
     // End render timing
-    this.world.performanceMonitor.endSection('render');
-    
+    this.world.performanceMonitor.endSection("render");
+
     // End frame timing
     this.world.performanceMonitor.endFrame();
-    
+
     // Render performance overlay (after camera transform is restored)
-    this.world.performanceMonitor.render(ctx, this.showDetailedPerformance || false);
+    this.world.performanceMonitor.render(
+      ctx,
+      this.showDetailedPerformance || false
+    );
   }
 
   renderTerrain() {
@@ -261,11 +266,11 @@ export class Renderer {
       if (this.lodEnabled && distance > this.lodDistance) {
         // Distant entity - render as simple colored rectangle
         const color = this.getEntityColor(entity);
-        
+
         if (!distantBatches.has(color)) {
           distantBatches.set(color, []);
         }
-        
+
         distantBatches.get(color).push({ pos, size });
       } else {
         // Close entity - render with full detail
@@ -290,11 +295,11 @@ export class Renderer {
     // Render distant entities as simple colored rectangles (batched by color)
     for (const [color, positions] of distantBatches.entries()) {
       ctx.fillStyle = color;
-      
+
       for (const { pos } of positions) {
         ctx.fillRect(pos.x - 2, pos.y - 2, 4, 4);
       }
-      
+
       drawCallCount++;
     }
 
