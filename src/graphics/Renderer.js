@@ -422,21 +422,45 @@ export class Renderer {
    */
   renderWavesPattern(ctx, x, y, size, biome, time) {
     const animSpeed = biome.animationSpeed || 0;
-    const waveCount = 3;
-
-    ctx.strokeStyle = biome.secondaryColor;
-    ctx.lineWidth = 1;
-    ctx.globalAlpha = 0.4;
+    const waveCount = 4; // Increased from 3 for more depth
 
     for (let i = 0; i < waveCount; i++) {
       // Calculate wave radius with animation
       // Animation speed is controlled by biome.animationSpeed property
       const offset = animSpeed > 0 
-        ? ((time * animSpeed * 10 + i * 10) % size)
+        ? ((time * animSpeed * 10 + i * 8) % (size * 1.2))
         : i * (size / waveCount);
 
+      // Fade ripples as they expand
+      const progress = offset / (size * 1.2);
+      const fadeAlpha = Math.max(0, 1 - progress) * 0.5;
+      
+      // Vary line width - thinner as ripples expand
+      const lineWidth = Math.max(0.5, 2 - progress * 1.5);
+      
+      // Add subtle color variation between ripples
+      const colorMix = i % 2 === 0 ? biome.secondaryColor : biome.color;
+      
+      ctx.strokeStyle = colorMix;
+      ctx.lineWidth = lineWidth;
+      ctx.globalAlpha = fadeAlpha;
+
+      // Add slight distortion for more organic feel
+      const centerX = x + size / 2;
+      const centerY = y + size / 2;
+      const distortion = Math.sin(time * animSpeed * 5 + i) * 0.5;
+
       ctx.beginPath();
-      ctx.arc(x + size / 2, y + size / 2, offset, 0, Math.PI * 2);
+      // Draw slightly elliptical ripples for more natural look
+      ctx.ellipse(
+        centerX + distortion, 
+        centerY, 
+        offset, 
+        offset * (1 + distortion * 0.1), 
+        0, 
+        0, 
+        Math.PI * 2
+      );
       ctx.stroke();
     }
 
