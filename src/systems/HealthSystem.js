@@ -76,9 +76,9 @@ export class HealthSystem {
     
     getBaseMetabolism(species) {
         const rates = {
-            herbivore: 0.15,
-            predator: 0.12,
-            plant: -0.05, // Plants gain energy
+            herbivore: 0.10,  // Reduced from 0.15 - herbivores need less energy to survive
+            predator: 0.14,   // Increased from 0.12 - predators should need to hunt more
+            plant: -0.05,     // Plants gain energy
             fish: 0.1,
             bird: 0.18
         };

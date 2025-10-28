@@ -9,15 +9,15 @@ export class EntityFactory {
             herbivore: {
                 emoji: '🐰',
                 color: '#96c896',
-                maxEnergy: 200,
-                initialEnergy: 150,
+                maxEnergy: 220,  // Increased from 200 - more energy buffer
+                initialEnergy: 170, // Increased from 150
                 layer: 2
             },
             predator: {
                 emoji: '🦊',
                 color: '#c89696',
-                maxEnergy: 250,
-                initialEnergy: 200,
+                maxEnergy: 240,  // Reduced from 250 - less energy buffer
+                initialEnergy: 180, // Reduced from 200
                 layer: 2
             },
             plant: {

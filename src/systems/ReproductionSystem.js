@@ -4,8 +4,8 @@ export class ReproductionSystem {
     constructor(world) {
         this.world = world;
         this.reproductionThresholds = {
-            herbivore: 180,
-            predator: 200,
+            herbivore: 160,  // Reduced from 180 - easier to reproduce
+            predator: 210,   // Increased from 200 - harder to reproduce
             plant: 140,
             fish: 130,
             bird: 150

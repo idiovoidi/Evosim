@@ -82,8 +82,8 @@ class HerbivoreBehavior {
                 });
             }
             
-            vel.dx = (dx / dist) * 3 * traits.speed;
-            vel.dy = (dy / dist) * 3 * traits.speed;
+            vel.dx = (dx / dist) * 3.5 * traits.speed; // Increased from 3 - faster fleeing
+            vel.dy = (dy / dist) * 3.5 * traits.speed;
             status.state = 'fleeing';
             return;
         }
@@ -104,7 +104,7 @@ class HerbivoreBehavior {
             if (dist < 20) {
                 // Eat the plant
                 const plantStats = food.entity.getComponent(ComponentType.STATS);
-                const energyGain = Math.min(30, plantStats.energy);
+                const energyGain = Math.min(45, plantStats.energy); // Increased from 30
                 stats.energy = Math.min(stats.maxEnergy, stats.energy + energyGain);
                 plantStats.energy -= energyGain;
                 
@@ -196,9 +196,9 @@ class PredatorBehavior {
             if (dist < 25) {
                 // Attack
                 const targetStats = target.entity.getComponent(ComponentType.STATS);
-                const damage = 50 * traits.attackStrength;
+                const damage = 45 * traits.attackStrength; // Reduced from 50
                 targetStats.energy -= damage;
-                const energyGained = damage * 0.8;
+                const energyGained = damage * 0.7; // Reduced from 0.8 to 0.7
                 stats.energy = Math.min(stats.maxEnergy, stats.energy + energyGained);
                 
                 // Log the hunting/eating action
@@ -217,8 +217,8 @@ class PredatorBehavior {
                 vel.dy *= 0.3;
                 status.state = 'attacking';
             } else {
-                vel.dx = (dx / dist) * 3.5 * traits.speed;
-                vel.dy = (dy / dist) * 3.5 * traits.speed;
+                vel.dx = (dx / dist) * 3.2 * traits.speed; // Reduced from 3.5 - slower hunting
+                vel.dy = (dy / dist) * 3.2 * traits.speed;
                 status.state = 'hunting';
             }
             return;
@@ -385,7 +385,8 @@ class BirdBehavior {
                 // Attack
                 const targetStats = target.entity.getComponent(ComponentType.STATS);
                 const targetSpecies = targetStats.species;
-                const damage = 40 * traits.attackStrength;
+                // Birds deal less damage to herbivores, more to fish
+                const damage = (targetSpecies === 'herbivore' ? 30 : 40) * traits.attackStrength;
                 targetStats.energy -= damage;
                 const energyGained = damage * 0.7;
                 stats.energy = Math.min(stats.maxEnergy, stats.energy + energyGained);
