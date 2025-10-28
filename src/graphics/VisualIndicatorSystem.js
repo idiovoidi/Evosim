@@ -103,6 +103,38 @@ export class VisualIndicatorSystem {
             
             const history = this.positionHistory.get(entity.id);
             
+            // Check for significant direction change
+            if (history.length >= 2) {
+                const prev = history[history.length - 1];
+                const prevPrev = history[history.length - 2];
+                
+                // Calculate previous direction vector
+                const prevDx = prev.x - prevPrev.x;
+                const prevDy = prev.y - prevPrev.y;
+                const prevSpeed = Math.sqrt(prevDx * prevDx + prevDy * prevDy);
+                
+                // Calculate current direction vector
+                const currDx = pos.x - prev.x;
+                const currDy = pos.y - prev.y;
+                const currSpeed = Math.sqrt(currDx * currDx + currDy * currDy);
+                
+                // Normalize and calculate dot product to detect direction change
+                if (prevSpeed > 0.1 && currSpeed > 0.1) {
+                    const prevNormX = prevDx / prevSpeed;
+                    const prevNormY = prevDy / prevSpeed;
+                    const currNormX = currDx / currSpeed;
+                    const currNormY = currDy / currSpeed;
+                    
+                    const dotProduct = prevNormX * currNormX + prevNormY * currNormY;
+                    
+                    // If dot product < 0.5, direction changed by more than 60 degrees
+                    // Clear trail to avoid confusing visual artifacts
+                    if (dotProduct < 0.5) {
+                        history.length = 0; // Clear the trail
+                    }
+                }
+            }
+            
             // Add current position
             history.push({ x: pos.x, y: pos.y, time: Date.now() });
             
@@ -170,8 +202,10 @@ export class VisualIndicatorSystem {
         // Determine which indicator to show based on state and energy
         let indicatorType = null;
         
-        // Priority: hungry > state-based indicators
-        if (stats.energy < stats.maxEnergy * 0.3) {
+        // Priority: reproducing > hungry > state-based indicators
+        if (status.showingHeart > 0) {
+            indicatorType = 'reproducing';
+        } else if (stats.energy < stats.maxEnergy * 0.3) {
             indicatorType = 'hungry';
         } else if (status.state && this.indicatorConfig[status.state]) {
             indicatorType = status.state;

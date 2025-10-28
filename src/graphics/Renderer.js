@@ -449,15 +449,8 @@ export class Renderer {
       const status = entity.getComponent(ComponentType.STATUS);
       if (!status || status.showingHeart <= 0) continue;
 
-      const pos = entity.getComponent(ComponentType.POSITION);
-
-      // Draw heart effect
-      ctx.font = "20px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText("💕", pos.x, pos.y - 30);
-
-      status.showingHeart -= 0.016; // Decrease over time
+      // Decrease heart effect timer over time
+      status.showingHeart -= 0.016;
     }
   }
 

@@ -96,7 +96,6 @@ This task list provides a step-by-step implementation plan for adding performanc
 
 - [x] 10. Add performance display overlay
 
-
   - Create performance UI overlay in top-right corner
   - Display FPS with color coding (green/yellow/red)
   - Show frame time in milliseconds
@@ -114,9 +113,7 @@ This task list provides a step-by-step implementation plan for adding performanc
 
 ## Phase 4: Visual Clarity - State Indicators
 
-- [-] 12. Create VisualIndicatorSystem class
-
-
+- [x] 12. Create VisualIndicatorSystem class
 
   - Implement indicator rendering system
   - Add methods to show/hide indicators based on entity state
@@ -124,7 +121,9 @@ This task list provides a step-by-step implementation plan for adding performanc
   - Implement fading animations for indicators
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 13. Implement entity state indicators
+-
+
+- [x] 13. Implement entity state indicators
 
   - Add hungry indicator (🍖) when energy < 30%
   - Add fleeing indicator (😰) when state is 'fleeing'
@@ -134,7 +133,8 @@ This task list provides a step-by-step implementation plan for adding performanc
   - Position indicators above entities with proper offset
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 14. Add motion trails for fast-moving entities
+- [x] 14. Add motion trails for fast-moving entities
+
 
   - Track last 10 positions for each entity
   - Render fading trail behind entities moving above threshold speed
@@ -146,10 +146,12 @@ This task list provides a step-by-step implementation plan for adding performanc
 
 ## Phase 5: Visual Clarity - Relationships
 
-- [ ] 15. Implement relationship visualization
+- [-] 15. Implement relationship visualization
+
 
   - Draw red dashed line from predator to targeted prey
   - Draw yellow danger circle around predators when herbivore is selected
+
   - Draw green sense range circle when entity is selected
   - Update relationship lines each frame based on current targets
   - _Requirements: 6.1, 6.2, 6.3_
