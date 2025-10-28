@@ -168,6 +168,9 @@ export class VisualIndicatorSystem {
         // Render relationship lines
         this.renderRelationships(ctx, entities);
         
+        // Render interaction highlights for hovered entity
+        this.renderInteractionHighlights(ctx, entities);
+        
         // Render state indicators for each entity
         for (const entity of entities) {
             this.renderIndicators(ctx, entity);
@@ -538,5 +541,140 @@ export class VisualIndicatorSystem {
             age: 0,
             maxAge: duration
         });
+    }
+    
+    /**
+     * Render interaction highlights for hovered or selected entity
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {Array} entities - Array of all entities
+     */
+    renderInteractionHighlights(ctx, entities) {
+        // Use hovered entity if available, otherwise use selected entity
+        const targetEntity = this.world.hoveredEntity || this.world.selectedEntity;
+        
+        if (!targetEntity || !targetEntity.hasComponents(ComponentType.POSITION, ComponentType.STATS, ComponentType.TRAITS)) {
+            return;
+        }
+        
+        const targetPos = targetEntity.getComponent(ComponentType.POSITION);
+        const targetStats = targetEntity.getComponent(ComponentType.STATS);
+        const targetTraits = targetEntity.getComponent(ComponentType.TRAITS);
+        
+        // Get sense radius for the target entity
+        const senseRadius = this.getSenseRadius(targetStats.species, targetTraits);
+        
+        // Find nearby entities within sense range
+        const nearby = this.world.getNearbyEntities(targetPos, senseRadius);
+        
+        // Highlight each nearby entity based on interaction type
+        for (const nearbyData of nearby) {
+            const nearbyEntity = nearbyData.entity;
+            
+            // Skip self
+            if (nearbyEntity === targetEntity) continue;
+            
+            // Skip entities without required components
+            if (!nearbyEntity.hasComponents(ComponentType.POSITION, ComponentType.STATS)) continue;
+            
+            const nearbyPos = nearbyEntity.getComponent(ComponentType.POSITION);
+            const nearbyStats = nearbyEntity.getComponent(ComponentType.STATS);
+            
+            // Determine interaction type
+            const interactionType = this.getInteractionType(targetStats, nearbyStats);
+            
+            if (interactionType) {
+                this.renderEntityHighlight(ctx, nearbyPos, interactionType);
+            }
+        }
+    }
+    
+    /**
+     * Determine the interaction type between two entities
+     * @param {Object} entityStats - Stats component of the first entity
+     * @param {Object} targetStats - Stats component of the second entity
+     * @returns {string|null} - Interaction type: 'food', 'threat', 'mate', or null
+     */
+    getInteractionType(entityStats, targetStats) {
+        const entitySpecies = entityStats.species;
+        const targetSpecies = targetStats.species;
+        
+        // Food interactions
+        if (entitySpecies === 'herbivore' && targetSpecies === 'plant') {
+            return 'food';
+        }
+        if (entitySpecies === 'predator' && targetSpecies === 'herbivore') {
+            return 'food';
+        }
+        if (entitySpecies === 'bird' && (targetSpecies === 'fish' || targetSpecies === 'herbivore')) {
+            return 'food';
+        }
+        if (entitySpecies === 'fish' && targetSpecies === 'plant') {
+            return 'food';
+        }
+        
+        // Threat interactions
+        if (entitySpecies === 'herbivore' && targetSpecies === 'predator') {
+            return 'threat';
+        }
+        if (entitySpecies === 'fish' && targetSpecies === 'bird') {
+            return 'threat';
+        }
+        if (entitySpecies === 'herbivore' && targetSpecies === 'bird') {
+            return 'threat';
+        }
+        
+        // Mate interactions (same species)
+        if (entitySpecies === targetSpecies && targetSpecies !== 'plant') {
+            return 'mate';
+        }
+        
+        return null;
+    }
+    
+    /**
+     * Render a highlight around an entity based on interaction type
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {Object} position - Entity position {x, y}
+     * @param {string} interactionType - Type of interaction: 'food', 'threat', 'mate'
+     */
+    renderEntityHighlight(ctx, position, interactionType) {
+        // Color coding for interaction types
+        const colors = {
+            food: '#4CAF50',      // Green for food
+            threat: '#FF5252',    // Red for threats
+            mate: '#FF69B4'       // Pink for potential mates
+        };
+        
+        const color = colors[interactionType] || '#FFFFFF';
+        const radius = 20; // Highlight radius
+        
+        ctx.save();
+        
+        // Draw outer glow
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.globalAlpha = 0.6;
+        
+        ctx.beginPath();
+        ctx.arc(position.x, position.y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Draw inner glow
+        ctx.globalAlpha = 0.3;
+        ctx.lineWidth = 2;
+        
+        ctx.beginPath();
+        ctx.arc(position.x, position.y, radius - 3, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        // Draw filled circle with low alpha
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.1;
+        
+        ctx.beginPath();
+        ctx.arc(position.x, position.y, radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.restore();
     }
 }

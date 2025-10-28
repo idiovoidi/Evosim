@@ -146,7 +146,9 @@ This task list provides a step-by-step implementation plan for adding performanc
 
 ## Phase 5: Visual Clarity - Relationships
 
-- [-] 15. Implement relationship visualization
+- [x] 15. Implement relationship visualization
+
+
 
 
   - Draw red dashed line from predator to targeted prey
@@ -155,8 +157,10 @@ This task list provides a step-by-step implementation plan for adding performanc
   - Draw green sense range circle when entity is selected
   - Update relationship lines each frame based on current targets
   - _Requirements: 6.1, 6.2, 6.3_
+-
 
-- [ ] 16. Add interaction highlighting
+- [-] 16. Add interaction highlighting
+
 
   - Highlight nearby entities when hovering over an entity
   - Show which entities can interact with selected entity

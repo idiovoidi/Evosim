@@ -45,6 +45,7 @@ export class World {
         this.time = 0;
         this.mousePos = { x: 0, y: 0 };
         this.selectedEntity = null;
+        this.hoveredEntity = null;
         
         // QuadTree rebuild tracking
         this.lastRebuildTime = 0;
