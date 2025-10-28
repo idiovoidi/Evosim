@@ -353,7 +353,7 @@
         font-size: 20px;
       }
     </style>
-    <script type="module" crossorigin src="/assets/index-DmEEQDPN.js"></script>
+    <script type="module" crossorigin src="/assets/index-I4DayYIH.js"></script>
   </head>
   <body>
     <!-- Loading Screen -->
@@ -471,6 +471,28 @@
             <button id="quality-auto" style="padding: 8px; font-size: 12px; background: #4caf50;">
               🔄 Auto Quality: ON
             </button>
+          </div>
+
+          <div class="heatmap-controls" style="margin-top: 15px;">
+            <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 13px;">
+              Population Heatmap (H)
+            </label>
+            <button id="heatmap-toggle" style="padding: 8px; font-size: 12px; background: #666; margin-bottom: 8px;">
+              🗺️ Heatmap: OFF
+            </button>
+            <div id="heatmap-species-controls" style="display: none;">
+              <label style="display: block; margin-bottom: 5px; color: #888; font-size: 11px;">
+                Species Filter (Shift+H)
+              </label>
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px;">
+                <button id="heatmap-all" style="padding: 6px; font-size: 11px; background: #4caf50; font-weight: bold;">All</button>
+                <button id="heatmap-herbivore" style="padding: 6px; font-size: 11px; background: #666;">🐰 Herb</button>
+                <button id="heatmap-predator" style="padding: 6px; font-size: 11px; background: #666;">🦊 Pred</button>
+                <button id="heatmap-plant" style="padding: 6px; font-size: 11px; background: #666;">🌿 Plant</button>
+                <button id="heatmap-fish" style="padding: 6px; font-size: 11px; background: #666;">🐟 Fish</button>
+                <button id="heatmap-bird" style="padding: 6px; font-size: 11px; background: #666;">🦅 Bird</button>
+              </div>
+            </div>
           </div>
         </div>
 

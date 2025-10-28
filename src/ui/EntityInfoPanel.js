@@ -48,6 +48,13 @@ export class EntityInfoPanel {
     // Build the enhanced info panel HTML
     let html = this.buildBasicInfo(stats, pos, vel, status);
 
+    // Add biome information section
+    const biome = entity.getComponent(ComponentType.BIOME);
+    const habitat = entity.getComponent(ComponentType.HABITAT);
+    if (biome) {
+      html += this.buildBiomeInfo(biome, habitat, pos);
+    }
+
     if (traits && genetics) {
       html += this.buildTraitBars(traits);
     }
@@ -132,6 +139,194 @@ export class EntityInfoPanel {
                 </div>
             </div>
         `;
+  }
+
+  /**
+   * Build biome information section
+   */
+  buildBiomeInfo(biome, habitat, pos) {
+    // Get current biome from world
+    const currentBiome = this.world.biomeGenerator.getBiomeAt(pos.x, pos.y);
+    
+    if (!currentBiome) {
+      return '';
+    }
+
+    const preference = habitat ? habitat.getPreference(currentBiome.id) : 1.0;
+    const isPreferred = habitat ? habitat.isPreferred(currentBiome.id) : false;
+    const isAvoided = habitat ? habitat.isAvoided(currentBiome.id) : false;
+    
+    // Determine preference status and color
+    let preferenceStatus = 'Neutral';
+    let preferenceColor = '#888';
+    let preferenceIcon = '○';
+    
+    if (isPreferred) {
+      preferenceStatus = 'Preferred';
+      preferenceColor = '#4CAF50';
+      preferenceIcon = '●';
+    } else if (isAvoided) {
+      preferenceStatus = 'Avoided';
+      preferenceColor = '#F44336';
+      preferenceIcon = '●';
+    }
+    
+    // Format time in biome
+    const timeInBiome = Math.round(biome.timeInBiome);
+    const timeDisplay = timeInBiome < 60 
+      ? `${timeInBiome}s` 
+      : `${Math.floor(timeInBiome / 60)}m ${timeInBiome % 60}s`;
+
+    // Get modifier values
+    const movementMod = biome.biomeEffects.movementMultiplier;
+    const energyMod = biome.biomeEffects.energyMultiplier;
+    const visibilityMod = biome.biomeEffects.visibilityMultiplier;
+    const concealmentBonus = biome.biomeEffects.concealmentBonus;
+
+    let html = `
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
+        <div style="font-size: 12px; color: #888; margin-bottom: 10px; font-weight: bold;">BIOME INFORMATION</div>
+        
+        <!-- Current Biome -->
+        <div style="margin-bottom: 12px; padding: 10px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid ${currentBiome.color};">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div>
+              <div style="font-size: 11px; color: #888; margin-bottom: 2px;">CURRENT BIOME</div>
+              <div style="font-weight: bold; font-size: 14px; color: ${currentBiome.color};">${currentBiome.name}</div>
+            </div>
+            <div style="
+              width: 24px; 
+              height: 24px; 
+              background: ${currentBiome.color}; 
+              border-radius: 4px;
+              border: 2px solid #333;
+            "></div>
+          </div>
+          
+          <!-- Habitat Preference -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a2a2a;">
+            <span style="font-size: 11px; color: #aaa;">Habitat Preference</span>
+            <span style="font-size: 11px; font-weight: bold; color: ${preferenceColor};">
+              ${preferenceIcon} ${preferenceStatus} (${preference.toFixed(1)}x)
+            </span>
+          </div>
+          
+          <!-- Time in Biome -->
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 4px;">
+            <span style="font-size: 11px; color: #aaa;">Time in Biome</span>
+            <span style="font-size: 11px; font-weight: bold; color: #888;">${timeDisplay}</span>
+          </div>
+        </div>
+        
+        <!-- Active Biome Effects -->
+        <div style="margin-bottom: 10px;">
+          <div style="font-size: 11px; color: #888; margin-bottom: 6px;">ACTIVE EFFECTS</div>
+    `;
+
+    // Movement modifier
+    const movementColor = this.getModifierColor(movementMod);
+    const movementIcon = this.getModifierIcon(movementMod);
+    html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 6px; background: #1a1a1a; border-radius: 3px;">
+            <span style="font-size: 11px; color: #aaa;">
+              <span style="margin-right: 4px;">⚡</span>Movement Speed
+            </span>
+            <span style="font-size: 11px; font-weight: bold; color: ${movementColor};">
+              ${movementIcon} ${this.formatModifier(movementMod)}
+            </span>
+          </div>
+    `;
+
+    // Energy modifier
+    const energyColor = this.getModifierColor(energyMod, true); // Inverse for energy (lower is better)
+    const energyIcon = this.getModifierIcon(energyMod, true);
+    html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 6px; background: #1a1a1a; border-radius: 3px;">
+            <span style="font-size: 11px; color: #aaa;">
+              <span style="margin-right: 4px;">🔥</span>Energy Drain
+            </span>
+            <span style="font-size: 11px; font-weight: bold; color: ${energyColor};">
+              ${energyIcon} ${this.formatModifier(energyMod)}
+            </span>
+          </div>
+    `;
+
+    // Visibility modifier
+    const visibilityColor = this.getModifierColor(visibilityMod);
+    const visibilityIcon = this.getModifierIcon(visibilityMod);
+    html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 6px; background: #1a1a1a; border-radius: 3px;">
+            <span style="font-size: 11px; color: #aaa;">
+              <span style="margin-right: 4px;">👁️</span>Visibility Range
+            </span>
+            <span style="font-size: 11px; font-weight: bold; color: ${visibilityColor};">
+              ${visibilityIcon} ${this.formatModifier(visibilityMod)}
+            </span>
+          </div>
+    `;
+
+    // Concealment bonus (only show if non-zero)
+    if (concealmentBonus > 0) {
+      html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; padding: 6px; background: #1a1a1a; border-radius: 3px;">
+            <span style="font-size: 11px; color: #aaa;">
+              <span style="margin-right: 4px;">🌿</span>Concealment
+            </span>
+            <span style="font-size: 11px; font-weight: bold; color: #4CAF50;">
+              ↑ +${Math.round(concealmentBonus * 100)}%
+            </span>
+          </div>
+      `;
+    }
+
+    html += `
+        </div>
+      </div>
+    `;
+
+    return html;
+  }
+
+  /**
+   * Get color for modifier value
+   */
+  getModifierColor(value, inverse = false) {
+    const threshold = 1.0;
+    const isPositive = inverse ? value < threshold : value > threshold;
+    const isNegative = inverse ? value > threshold : value < threshold;
+    
+    if (isPositive) {
+      // Better than normal
+      if (Math.abs(value - threshold) > 0.3) return '#4CAF50'; // Strong positive
+      return '#66BB6A'; // Mild positive
+    } else if (isNegative) {
+      // Worse than normal
+      if (Math.abs(value - threshold) > 0.3) return '#F44336'; // Strong negative
+      return '#FF9800'; // Mild negative
+    }
+    return '#888'; // Neutral
+  }
+
+  /**
+   * Get icon for modifier value
+   */
+  getModifierIcon(value, inverse = false) {
+    const threshold = 1.0;
+    const isPositive = inverse ? value < threshold : value > threshold;
+    const isNegative = inverse ? value > threshold : value < threshold;
+    
+    if (isPositive) return '↑';
+    if (isNegative) return '↓';
+    return '→';
+  }
+
+  /**
+   * Format modifier value for display
+   */
+  formatModifier(value) {
+    const percent = Math.round(value * 100);
+    if (percent === 100) return '100%';
+    return `${percent}%`;
   }
 
   /**

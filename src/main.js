@@ -26,6 +26,9 @@ class EcosystemSimulation {
         this.ui = new UI(this.world);
         this.tutorial = new Tutorial();
         
+        // Set renderer reference in UI for biome tooltip
+        this.ui.setRenderer(this.renderer);
+        
         // Initialize adaptive quality manager after world and renderer are created
         this.world.adaptiveQualityManager = new AdaptiveQualityManager(this.world, this.renderer);
         console.log('✅ AdaptiveQualityManager initialized');
@@ -462,8 +465,8 @@ class EcosystemSimulation {
         // Render
         this.renderer.render();
         
-        // Update UI
-        this.ui.update(this.fps);
+        // Update UI (pass deltaTime for smooth animations)
+        this.ui.update(this.fps, deltaTime);
         
         // Log batching statistics periodically
         this.batchingLogTimer += deltaTime;

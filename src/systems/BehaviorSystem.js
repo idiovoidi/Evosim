@@ -37,14 +37,33 @@ class HerbivoreBehavior {
         const stats = entity.getComponent(ComponentType.STATS);
         const traits = entity.getComponent(ComponentType.TRAITS);
         const status = entity.getComponent(ComponentType.STATUS);
+        const biomeComp = entity.getComponent(ComponentType.BIOME);
         
-        const senseRadius = 200 * traits.senseRadius;
+        // Apply biome visibility modifier to sense radius
+        const visibilityMod = biomeComp ? biomeComp.biomeEffects.visibilityMultiplier : 1.0;
+        const senseRadius = 200 * traits.senseRadius * visibilityMod;
         const nearby = this.world.getNearbyEntities(pos, senseRadius);
         
-        // Find threats (predators)
-        const predators = nearby.filter(n => 
-            n.entity.getComponent(ComponentType.STATS)?.species === 'predator'
-        );
+        // Find threats (predators) - apply concealment bonus to reduce detection
+        const predators = nearby.filter(n => {
+            const predatorEntity = n.entity;
+            if (predatorEntity.getComponent(ComponentType.STATS)?.species !== 'predator') {
+                return false;
+            }
+            
+            // Apply concealment bonus - reduces chance of being detected
+            const concealmentBonus = biomeComp ? biomeComp.biomeEffects.concealmentBonus : 0.0;
+            if (concealmentBonus > 0) {
+                // Higher concealment = lower detection probability
+                // concealmentBonus ranges from 0.0 to 0.6 (forest/mountain)
+                const detectionChance = 1.0 - concealmentBonus;
+                if (Math.random() > detectionChance) {
+                    return false; // Successfully concealed from this predator
+                }
+            }
+            
+            return true;
+        });
         
         if (predators.length > 0) {
             // Flee from nearest predator
@@ -136,13 +155,35 @@ class PredatorBehavior {
         const traits = entity.getComponent(ComponentType.TRAITS);
         const status = entity.getComponent(ComponentType.STATUS);
         
-        const senseRadius = 300 * traits.senseRadius;
+        // Apply biome visibility modifier to detection range
+        // Open biomes (savanna) increase range, dense biomes (forest) decrease it
+        const biomeComp = entity.getComponent(ComponentType.BIOME);
+        const visibilityMod = biomeComp ? biomeComp.biomeEffects.visibilityMultiplier : 1.0;
+        const senseRadius = 300 * traits.senseRadius * visibilityMod;
         const nearby = this.world.getNearbyEntities(pos, senseRadius);
         
-        // Find prey (herbivores)
-        const prey = nearby.filter(n => 
-            n.entity.getComponent(ComponentType.STATS)?.species === 'herbivore'
-        );
+        // Find prey (herbivores) - prey may be concealed by their biome
+        const prey = nearby.filter(n => {
+            const preyEntity = n.entity;
+            if (preyEntity.getComponent(ComponentType.STATS)?.species !== 'herbivore') {
+                return false;
+            }
+            
+            // Check if prey is concealed by their current biome
+            const preyBiome = preyEntity.getComponent(ComponentType.BIOME);
+            if (preyBiome) {
+                const concealmentBonus = preyBiome.biomeEffects.concealmentBonus;
+                if (concealmentBonus > 0) {
+                    // Prey has concealment - reduce detection probability
+                    const detectionChance = 1.0 - concealmentBonus;
+                    if (Math.random() > detectionChance) {
+                        return false; // Prey successfully hidden
+                    }
+                }
+            }
+            
+            return true;
+        });
         
         if (stats.energy < stats.maxEnergy * 0.8 && prey.length > 0) {
             // Hunt nearest prey
@@ -303,13 +344,34 @@ class BirdBehavior {
         const traits = entity.getComponent(ComponentType.TRAITS);
         const status = entity.getComponent(ComponentType.STATUS);
         
-        const senseRadius = 250 * traits.senseRadius;
+        // Apply biome visibility modifier to detection range
+        const biomeComp = entity.getComponent(ComponentType.BIOME);
+        const visibilityMod = biomeComp ? biomeComp.biomeEffects.visibilityMultiplier : 1.0;
+        const senseRadius = 250 * traits.senseRadius * visibilityMod;
         const nearby = this.world.getNearbyEntities(pos, senseRadius);
         
-        // Hunt fish or small herbivores
+        // Hunt fish or small herbivores - prey may be concealed
         const prey = nearby.filter(n => {
-            const species = n.entity.getComponent(ComponentType.STATS)?.species;
-            return species === 'fish' || species === 'herbivore';
+            const preyEntity = n.entity;
+            const species = preyEntity.getComponent(ComponentType.STATS)?.species;
+            if (species !== 'fish' && species !== 'herbivore') {
+                return false;
+            }
+            
+            // Check if prey is concealed by their current biome
+            const preyBiome = preyEntity.getComponent(ComponentType.BIOME);
+            if (preyBiome) {
+                const concealmentBonus = preyBiome.biomeEffects.concealmentBonus;
+                if (concealmentBonus > 0) {
+                    // Prey has concealment - reduce detection probability
+                    const detectionChance = 1.0 - concealmentBonus;
+                    if (Math.random() > detectionChance) {
+                        return false; // Prey successfully hidden
+                    }
+                }
+            }
+            
+            return true;
         });
         
         if (stats.energy < stats.maxEnergy * 0.7 && prey.length > 0) {

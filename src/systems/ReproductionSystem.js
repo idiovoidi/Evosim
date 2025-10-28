@@ -52,16 +52,91 @@ export class ReproductionSystem {
         const stats = parent.getComponent(ComponentType.STATS);
         const pos = parent.getComponent(ComponentType.POSITION);
         const status = parent.getComponent(ComponentType.STATUS);
+        const biome = parent.getComponent(ComponentType.BIOME);
+        const habitat = parent.getComponent(ComponentType.HABITAT);
+        
+        // Calculate biome favorability bonus
+        let reproductionBonus = 1.0;
+        let cooldownModifier = 1.0;
+        
+        if (biome && habitat && biome.currentBiome) {
+            const preference = habitat.getPreference(biome.currentBiome);
+            
+            // Apply reproduction success rate bonus for preferred biomes (15-30% as per requirements)
+            if (habitat.isPreferred(biome.currentBiome)) {
+                reproductionBonus = 1.0 + (preference - 1.0) * 0.25; // Up to 25% bonus
+            }
+            
+            // Adjust reproduction cooldown based on biome favorability
+            // Preferred biomes reduce cooldown, avoided biomes increase it
+            cooldownModifier = 2.0 - preference; // preference 1.5 -> 0.5 modifier (faster), preference 0.5 -> 1.5 modifier (slower)
+        }
+        
+        // For plants, check biome plant density at current location
+        if (stats.species === 'plant') {
+            const currentBiomeData = this.world.getBiomeAt(pos.x, pos.y);
+            
+            // Prevent plant spawning in water, deep_water, and snow biomes
+            if (currentBiomeData && currentBiomeData.plantDensity === 0.0) {
+                // Cannot reproduce in this biome
+                stats.energy -= 10; // Small energy cost for failed attempt
+                stats.reproductionCooldown = 4 * cooldownModifier;
+                return;
+            }
+            
+            // Apply plant density modifier to reproduction success rate
+            if (currentBiomeData && currentBiomeData.plantDensity < 1.0) {
+                // Lower density biomes reduce reproduction success
+                reproductionBonus *= currentBiomeData.plantDensity;
+            }
+        }
+        
+        // Apply reproduction success check for preferred biomes
+        if (Math.random() > reproductionBonus) {
+            // Reproduction attempt failed due to unfavorable conditions
+            stats.energy -= 20; // Partial energy cost for failed attempt
+            stats.reproductionCooldown = 4 * cooldownModifier;
+            return;
+        }
         
         // Cost energy
         stats.energy -= 50;
-        stats.reproductionCooldown = 8;
+        stats.reproductionCooldown = 8 * cooldownModifier;
         
         // Create offspring
         const offsetX = (Math.random() - 0.5) * 60;
         const offsetY = (Math.random() - 0.5) * 60;
-        const x = Math.max(0, Math.min(this.world.width, pos.x + offsetX));
-        const y = Math.max(0, Math.min(this.world.height, pos.y + offsetY));
+        let x = Math.max(0, Math.min(this.world.width, pos.x + offsetX));
+        let y = Math.max(0, Math.min(this.world.height, pos.y + offsetY));
+        
+        // For plants, verify offspring location has valid plant density
+        if (stats.species === 'plant') {
+            let validLocation = false;
+            let attempts = 0;
+            const maxAttempts = 10;
+            
+            while (!validLocation && attempts < maxAttempts) {
+                const offspringBiome = this.world.getBiomeAt(x, y);
+                
+                if (offspringBiome && offspringBiome.plantDensity > 0) {
+                    validLocation = true;
+                } else {
+                    // Try a different location
+                    const newOffsetX = (Math.random() - 0.5) * 60;
+                    const newOffsetY = (Math.random() - 0.5) * 60;
+                    x = Math.max(0, Math.min(this.world.width, pos.x + newOffsetX));
+                    y = Math.max(0, Math.min(this.world.height, pos.y + newOffsetY));
+                    attempts++;
+                }
+            }
+            
+            // If no valid location found, reproduction fails
+            if (!validLocation) {
+                stats.energy += 30; // Refund some energy
+                stats.reproductionCooldown = 4 * cooldownModifier;
+                return;
+            }
+        }
         
         // Offspring inherits parent's generation + 1
         const offspringGeneration = (stats.generation || 1) + 1;
@@ -73,7 +148,9 @@ export class ReproductionSystem {
             type: 'asexual',
             offspringId: offspring.id,
             energyCost: 50,
-            position: { x: Math.round(pos.x), y: Math.round(pos.y) }
+            position: { x: Math.round(pos.x), y: Math.round(pos.y) },
+            biome: biome?.currentBiome,
+            reproductionBonus: reproductionBonus
         });
         
         // Show heart effect
@@ -88,12 +165,41 @@ export class ReproductionSystem {
         const status2 = parent2.getComponent(ComponentType.STATUS);
         const genetics1 = parent1.getComponent(ComponentType.GENETICS);
         const genetics2 = parent2.getComponent(ComponentType.GENETICS);
+        const biome1 = parent1.getComponent(ComponentType.BIOME);
+        const habitat1 = parent1.getComponent(ComponentType.HABITAT);
+        
+        // Calculate biome favorability bonus (use parent1's location)
+        let reproductionBonus = 1.0;
+        let cooldownModifier = 1.0;
+        
+        if (biome1 && habitat1 && biome1.currentBiome) {
+            const preference = habitat1.getPreference(biome1.currentBiome);
+            
+            // Apply reproduction success rate bonus for preferred biomes (15-30% as per requirements)
+            if (habitat1.isPreferred(biome1.currentBiome)) {
+                reproductionBonus = 1.0 + (preference - 1.0) * 0.25; // Up to 25% bonus
+            }
+            
+            // Adjust reproduction cooldown based on biome favorability
+            // Preferred biomes reduce cooldown, avoided biomes increase it
+            cooldownModifier = 2.0 - preference; // preference 1.5 -> 0.5 modifier (faster), preference 0.5 -> 1.5 modifier (slower)
+        }
+        
+        // Apply reproduction success check for preferred biomes
+        if (Math.random() > reproductionBonus) {
+            // Reproduction attempt failed due to unfavorable conditions
+            stats1.energy -= 20; // Partial energy cost for failed attempt
+            stats2.energy -= 20;
+            stats1.reproductionCooldown = 5 * cooldownModifier;
+            stats2.reproductionCooldown = 5 * cooldownModifier;
+            return;
+        }
         
         // Cost energy
         stats1.energy -= 50;
         stats2.energy -= 50;
-        stats1.reproductionCooldown = 10;
-        stats2.reproductionCooldown = 10;
+        stats1.reproductionCooldown = 10 * cooldownModifier;
+        stats2.reproductionCooldown = 10 * cooldownModifier;
         
         // Create offspring genetics with crossover
         const offspringGenetics = genetics1.crossover(genetics2, 0.1);
@@ -117,7 +223,9 @@ export class ReproductionSystem {
             offspringId: offspring.id,
             mateId: parent2.id,
             energyCost: 50,
-            position: { x: Math.round(pos1.x), y: Math.round(pos1.y) }
+            position: { x: Math.round(pos1.x), y: Math.round(pos1.y) },
+            biome: biome1?.currentBiome,
+            reproductionBonus: reproductionBonus
         };
         status1.logAction('reproduced', stats1.age, reproductionDetails);
         status2.logAction('reproduced', stats2.age, {

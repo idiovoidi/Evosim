@@ -21,6 +21,12 @@ export class Renderer {
     this.lodEnabled = false; // LOD disabled by default for full detail
     this.showDetailedPerformance = false; // Toggle for detailed performance view
 
+    // Animation timing for biome effects
+    this.animationTime = 0;
+
+    // Biome highlighting (set by BiomeLegendPanel)
+    this.highlightedBiome = null;
+
     // Initialize visual indicator system
     this.visualIndicators = new VisualIndicatorSystem(this);
 
@@ -152,6 +158,9 @@ export class Renderer {
     // Reset culled entity count for this frame
     this.culledEntityCount = 0;
 
+    // Update animation timing (use fixed dt of 16ms for consistent 60fps animation)
+    this.animationTime += 0.016;
+
     // Update visual indicators (position history, effects)
     // Use a fixed dt of 16ms (60fps) for consistent animation
     this.visualIndicators.update(0.016);
@@ -210,23 +219,354 @@ export class Renderer {
   }
 
   renderTerrain() {
-    const terrain = this.world.terrain;
+    const biomeGenerator = this.world.biomeGenerator;
     const ctx = this.ctx;
 
-    for (let y = 0; y < terrain.tilesY; y++) {
-      for (let x = 0; x < terrain.tilesX; x++) {
-        const tile = terrain.terrainMap[y][x];
-        const color = terrain.getTerrainColor(tile.type);
+    for (let y = 0; y < biomeGenerator.tilesY; y++) {
+      for (let x = 0; x < biomeGenerator.tilesX; x++) {
+        const biome = biomeGenerator.biomeMap[y][x];
+        const tileX = x * biomeGenerator.tileSize;
+        const tileY = y * biomeGenerator.tileSize;
+        const tileSize = biomeGenerator.tileSize;
 
-        ctx.fillStyle = color;
-        ctx.fillRect(
-          x * terrain.tileSize,
-          y * terrain.tileSize,
-          terrain.tileSize,
-          terrain.tileSize
-        );
+        // Get transition data for smooth blending
+        const worldX = tileX + tileSize / 2;
+        const worldY = tileY + tileSize / 2;
+        const transition = biomeGenerator.getBiomeTransition(worldX, worldY, 1);
+
+        // Render base color with transition blending
+        this.renderBiomeWithTransition(ctx, tileX, tileY, tileSize, transition);
+
+        // Render biome pattern on top (with animation time)
+        this.renderBiomePattern(ctx, tileX, tileY, tileSize, biome, this.animationTime);
+        
+        // Render highlight overlay if this biome is selected
+        if (this.highlightedBiome && biome.id === this.highlightedBiome) {
+          this.renderBiomeHighlight(ctx, tileX, tileY, tileSize);
+        }
       }
     }
+  }
+
+  /**
+   * Render biome tile with smooth transition blending
+   */
+  renderBiomeWithTransition(ctx, x, y, size, transition) {
+    const weights = transition.weights;
+    
+    // If only one biome, render solid color
+    if (weights.size === 1) {
+      const biome = transition.primaryBiome;
+      ctx.fillStyle = biome.color;
+      ctx.fillRect(x, y, size, size);
+      return;
+    }
+
+    // Blend multiple biomes
+    // Start with primary biome as base
+    ctx.fillStyle = transition.primaryBiome.color;
+    ctx.fillRect(x, y, size, size);
+
+    // Overlay other biomes with transparency based on weight
+    for (const [biomeId, weight] of weights.entries()) {
+      if (biomeId === transition.primaryBiome.id) continue;
+      
+      const biome = this.world.biomeGenerator.biomeById.get(biomeId);
+      if (!biome) continue;
+
+      // Apply biome color with alpha based on weight
+      const alpha = Math.min(weight * 1.5, 0.6); // Cap alpha for visibility
+      ctx.fillStyle = this.hexToRgba(biome.color, alpha);
+      ctx.fillRect(x, y, size, size);
+    }
+  }
+
+  /**
+   * Render biome-specific pattern
+   * Passes animation time to animated patterns (grass, waves)
+   */
+  renderBiomePattern(ctx, x, y, size, biome, time) {
+    if (!biome.pattern || biome.pattern === 'solid') return;
+
+    ctx.save();
+
+    switch (biome.pattern) {
+      case 'dots':
+        this.renderDotsPattern(ctx, x, y, size, biome);
+        break;
+      case 'stripes':
+        this.renderStripesPattern(ctx, x, y, size, biome);
+        break;
+      case 'grass':
+        // Animated pattern - pass time parameter
+        this.renderGrassPattern(ctx, x, y, size, biome, time);
+        break;
+      case 'sparse_grass':
+        // Static pattern - no animation
+        this.renderSparseGrassPattern(ctx, x, y, size, biome);
+        break;
+      case 'waves':
+        // Animated pattern - pass time parameter
+        this.renderWavesPattern(ctx, x, y, size, biome, time);
+        break;
+      case 'trees':
+        this.renderTreesPattern(ctx, x, y, size, biome);
+        break;
+      case 'rocks':
+        this.renderRocksPattern(ctx, x, y, size, biome);
+        break;
+      case 'dunes':
+        this.renderDunesPattern(ctx, x, y, size, biome);
+        break;
+      case 'snow':
+        this.renderSnowPattern(ctx, x, y, size, biome);
+        break;
+    }
+
+    ctx.restore();
+  }
+
+  /**
+   * Render dots pattern (for sand)
+   */
+  renderDotsPattern(ctx, x, y, size, biome) {
+    ctx.fillStyle = biome.secondaryColor;
+    const dotCount = 8;
+    const dotSize = size / 20;
+
+    for (let i = 0; i < dotCount; i++) {
+      // Use tile position for consistent dot placement
+      const seed = (x + y) * 0.1 + i;
+      const dotX = x + (Math.sin(seed * 12.9898) * 0.5 + 0.5) * size;
+      const dotY = y + (Math.sin(seed * 78.233) * 0.5 + 0.5) * size;
+
+      ctx.beginPath();
+      ctx.arc(dotX, dotY, dotSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /**
+   * Render stripes pattern
+   */
+  renderStripesPattern(ctx, x, y, size, biome) {
+    ctx.strokeStyle = biome.secondaryColor;
+    ctx.lineWidth = 2;
+    const stripeCount = 4;
+
+    for (let i = 0; i < stripeCount; i++) {
+      const offset = (i / stripeCount) * size;
+      ctx.beginPath();
+      ctx.moveTo(x + offset, y);
+      ctx.lineTo(x + offset, y + size);
+      ctx.stroke();
+    }
+  }
+
+  /**
+   * Render grass pattern with animation
+   * Implements gentle swaying motion controlled by biome animationSpeed
+   */
+  renderGrassPattern(ctx, x, y, size, biome, time) {
+    const bladeCount = 12;
+    const bladeHeight = size / 3;
+    const animSpeed = biome.animationSpeed || 0;
+
+    ctx.strokeStyle = biome.secondaryColor;
+    ctx.lineWidth = 1;
+
+    for (let i = 0; i < bladeCount; i++) {
+      const seed = (x + y) * 0.1 + i;
+      const bladeX = x + (Math.sin(seed * 12.9898) * 0.5 + 0.5) * size;
+      const bladeY = y + size;
+
+      // Animated sway - each blade sways at slightly different phase
+      // Animation speed is controlled by biome.animationSpeed property
+      const sway = animSpeed > 0 
+        ? Math.sin(time * animSpeed * 2 + seed) * (size / 15)
+        : 0;
+
+      ctx.beginPath();
+      ctx.moveTo(bladeX, bladeY);
+      ctx.lineTo(bladeX + sway, bladeY - bladeHeight);
+      ctx.stroke();
+    }
+  }
+
+  /**
+   * Render sparse grass pattern (for savanna)
+   * Static pattern without animation for performance
+   */
+  renderSparseGrassPattern(ctx, x, y, size, biome) {
+    const bladeCount = 6;
+    const bladeHeight = size / 4;
+
+    ctx.strokeStyle = biome.secondaryColor;
+    ctx.lineWidth = 1.5;
+
+    for (let i = 0; i < bladeCount; i++) {
+      const seed = (x + y) * 0.1 + i;
+      const bladeX = x + (Math.sin(seed * 12.9898) * 0.5 + 0.5) * size;
+      const bladeY = y + size;
+
+      ctx.beginPath();
+      ctx.moveTo(bladeX, bladeY);
+      ctx.lineTo(bladeX, bladeY - bladeHeight);
+      ctx.stroke();
+    }
+  }
+
+  /**
+   * Render waves pattern with animation (for water)
+   * Implements expanding ripple effect controlled by biome animationSpeed
+   */
+  renderWavesPattern(ctx, x, y, size, biome, time) {
+    const animSpeed = biome.animationSpeed || 0;
+    const waveCount = 3;
+
+    ctx.strokeStyle = biome.secondaryColor;
+    ctx.lineWidth = 1;
+    ctx.globalAlpha = 0.4;
+
+    for (let i = 0; i < waveCount; i++) {
+      // Calculate wave radius with animation
+      // Animation speed is controlled by biome.animationSpeed property
+      const offset = animSpeed > 0 
+        ? ((time * animSpeed * 10 + i * 10) % size)
+        : i * (size / waveCount);
+
+      ctx.beginPath();
+      ctx.arc(x + size / 2, y + size / 2, offset, 0, Math.PI * 2);
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 1.0;
+  }
+
+  /**
+   * Render trees pattern (for forest)
+   */
+  renderTreesPattern(ctx, x, y, size, biome) {
+    const treeCount = 4;
+    const treeSize = size / 6;
+
+    ctx.fillStyle = biome.secondaryColor;
+
+    for (let i = 0; i < treeCount; i++) {
+      const seed = (x + y) * 0.1 + i;
+      const treeX = x + (Math.sin(seed * 12.9898) * 0.5 + 0.5) * size;
+      const treeY = y + (Math.sin(seed * 78.233) * 0.5 + 0.5) * size;
+
+      // Simple tree shape (triangle)
+      ctx.beginPath();
+      ctx.moveTo(treeX, treeY - treeSize);
+      ctx.lineTo(treeX - treeSize / 2, treeY);
+      ctx.lineTo(treeX + treeSize / 2, treeY);
+      ctx.closePath();
+      ctx.fill();
+    }
+  }
+
+  /**
+   * Render rocks pattern (for mountain)
+   */
+  renderRocksPattern(ctx, x, y, size, biome) {
+    const rockCount = 5;
+
+    ctx.fillStyle = biome.secondaryColor;
+
+    for (let i = 0; i < rockCount; i++) {
+      const seed = (x + y) * 0.1 + i;
+      const rockX = x + (Math.sin(seed * 12.9898) * 0.5 + 0.5) * size;
+      const rockY = y + (Math.sin(seed * 78.233) * 0.5 + 0.5) * size;
+      const rockSize = size / 10 + (Math.sin(seed * 43.758) * 0.5 + 0.5) * (size / 15);
+
+      // Irregular rock shape
+      ctx.beginPath();
+      ctx.arc(rockX, rockY, rockSize, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  /**
+   * Render dunes pattern (for desert)
+   */
+  renderDunesPattern(ctx, x, y, size, biome) {
+    ctx.strokeStyle = biome.secondaryColor;
+    ctx.lineWidth = 2;
+    ctx.globalAlpha = 0.3;
+
+    const waveCount = 3;
+    for (let i = 0; i < waveCount; i++) {
+      const yOffset = y + (i / waveCount) * size + size / 4;
+      
+      ctx.beginPath();
+      ctx.moveTo(x, yOffset);
+      
+      // Create wavy line
+      for (let px = 0; px <= size; px += size / 4) {
+        const seed = (x + y + i) * 0.1;
+        const wave = Math.sin((px / size) * Math.PI * 2 + seed) * (size / 10);
+        ctx.lineTo(x + px, yOffset + wave);
+      }
+      
+      ctx.stroke();
+    }
+
+    ctx.globalAlpha = 1.0;
+  }
+
+  /**
+   * Render snow pattern
+   */
+  renderSnowPattern(ctx, x, y, size, biome) {
+    const flakeCount = 10;
+    const flakeSize = size / 25;
+
+    ctx.fillStyle = biome.secondaryColor;
+
+    for (let i = 0; i < flakeCount; i++) {
+      const seed = (x + y) * 0.1 + i;
+      const flakeX = x + (Math.sin(seed * 12.9898) * 0.5 + 0.5) * size;
+      const flakeY = y + (Math.sin(seed * 78.233) * 0.5 + 0.5) * size;
+
+      // Simple snowflake (small cross)
+      ctx.fillRect(flakeX - flakeSize, flakeY - flakeSize / 3, flakeSize * 2, flakeSize / 1.5);
+      ctx.fillRect(flakeX - flakeSize / 3, flakeY - flakeSize, flakeSize / 1.5, flakeSize * 2);
+    }
+  }
+
+  /**
+   * Convert hex color to rgba with alpha
+   */
+  hexToRgba(hex, alpha) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+  }
+
+  /**
+   * Render highlight overlay for selected biome
+   * Used by BiomeLegendPanel to highlight biomes on the map
+   */
+  renderBiomeHighlight(ctx, x, y, size) {
+    ctx.save();
+    
+    // Pulsing highlight effect
+    const pulseSpeed = 2.0;
+    const pulseIntensity = Math.sin(this.animationTime * pulseSpeed) * 0.15 + 0.25;
+    
+    // Draw highlight border
+    ctx.strokeStyle = `rgba(76, 175, 80, ${pulseIntensity + 0.4})`;
+    ctx.lineWidth = 3;
+    ctx.strokeRect(x + 1.5, y + 1.5, size - 3, size - 3);
+    
+    // Draw subtle overlay
+    ctx.fillStyle = `rgba(76, 175, 80, ${pulseIntensity * 0.3})`;
+    ctx.fillRect(x, y, size, size);
+    
+    ctx.restore();
   }
 
   /**

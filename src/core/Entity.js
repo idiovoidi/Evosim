@@ -38,7 +38,9 @@ export const ComponentType = {
     STATUS: 'status',
     GENETICS: 'genetics',
     TRAITS: 'traits',
-    BEHAVIOR: 'behavior'
+    BEHAVIOR: 'behavior',
+    BIOME: 'biome',
+    HABITAT: 'habitat'
 };
 
 // Component classes
@@ -188,5 +190,78 @@ export class Traits {
         this.senseRadius = genetics.genes.senseRadius;
         this.size = genetics.genes.size;
         this.attackStrength = genetics.genes.attackStrength;
+    }
+}
+
+export class BiomeComponent {
+    constructor() {
+        this.currentBiome = null;           // Current biome type ID
+        this.biomeEffects = {               // Active modifiers
+            movementMultiplier: 1.0,
+            energyMultiplier: 1.0,
+            visibilityMultiplier: 1.0,
+            concealmentBonus: 0.0
+        };
+        this.timeInBiome = 0;               // Duration in current biome
+        this.lastBiomeChange = 0;           // Timestamp of last biome change
+    }
+}
+
+export class HabitatComponent {
+    constructor(preferences = {}) {
+        // Map of biome ID to preference value (0.0 to 2.0)
+        // 1.0 = neutral, >1.0 = preferred, <1.0 = avoided
+        this.preferences = preferences;
+        
+        // Derived from preferences
+        this.preferredBiomes = [];          // List of biome IDs with preference > 1.2
+        this.avoidedBiomes = [];            // List of biome IDs with preference < 0.8
+        
+        // Initialize derived arrays
+        this._updateDerivedArrays();
+    }
+    
+    /**
+     * Get preference value for a specific biome
+     * @param {string} biomeId - The biome identifier
+     * @returns {number} Preference value (default 1.0 if not specified)
+     */
+    getPreference(biomeId) {
+        return this.preferences[biomeId] || 1.0;
+    }
+    
+    /**
+     * Check if a biome is preferred by this entity
+     * @param {string} biomeId - The biome identifier
+     * @returns {boolean} True if preference > 1.2
+     */
+    isPreferred(biomeId) {
+        return this.getPreference(biomeId) > 1.2;
+    }
+    
+    /**
+     * Check if a biome is avoided by this entity
+     * @param {string} biomeId - The biome identifier
+     * @returns {boolean} True if preference < 0.8
+     */
+    isAvoided(biomeId) {
+        return this.getPreference(biomeId) < 0.8;
+    }
+    
+    /**
+     * Update the derived arrays based on current preferences
+     * @private
+     */
+    _updateDerivedArrays() {
+        this.preferredBiomes = [];
+        this.avoidedBiomes = [];
+        
+        for (const [biomeId, preference] of Object.entries(this.preferences)) {
+            if (preference > 1.2) {
+                this.preferredBiomes.push(biomeId);
+            } else if (preference < 0.8) {
+                this.avoidedBiomes.push(biomeId);
+            }
+        }
     }
 }

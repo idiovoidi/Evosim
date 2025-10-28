@@ -11,13 +11,56 @@ export class HealthSystem {
             
             const stats = entity.getComponent(ComponentType.STATS);
             const traits = entity.getComponent(ComponentType.TRAITS);
+            const status = entity.getComponent(ComponentType.STATUS);
             
             // Age the entity
             stats.age += dt;
             
+            // Get biome effects if available
+            const biomeComp = entity.getComponent(ComponentType.BIOME);
+            const habitat = entity.getComponent(ComponentType.HABITAT);
+            const energyMultiplier = biomeComp ? biomeComp.biomeEffects.energyMultiplier : 1.0;
+            
             // Energy consumption based on metabolism
             const baseMetabolism = this.getBaseMetabolism(stats.species);
-            stats.energy -= baseMetabolism * traits.metabolism * dt;
+            let energyChange = baseMetabolism * traits.metabolism * dt;
+            
+            // Apply biome energy multiplier to energy consumption/regeneration
+            energyChange *= energyMultiplier;
+            
+            // Apply plant growth rate modifier for plants
+            if (stats.species === 'plant' && baseMetabolism < 0) {
+                // Plants have negative metabolism (they gain energy)
+                const pos = entity.getComponent(ComponentType.POSITION);
+                if (pos) {
+                    const biomeData = this.world.getBiomeAt(pos.x, pos.y);
+                    if (biomeData && biomeData.plantGrowthRate) {
+                        // Apply plantGrowthRate modifier to energy regeneration
+                        energyChange *= biomeData.plantGrowthRate;
+                    }
+                }
+                
+                // Apply plant fertility bonus in fertile biomes
+                if (biomeComp && energyMultiplier < 1.0) {
+                    // In fertile biomes (low energy multiplier), they gain more energy
+                    const fertilityBonus = 1.0 - energyMultiplier; // 0.0 to 1.0
+                    energyChange *= (1.0 + fertilityBonus * 0.5); // Up to 50% bonus
+                }
+            }
+            
+            // Apply resting energy bonus for entities in preferred biomes
+            if (status && status.state === 'idle' && habitat && biomeComp) {
+                const currentBiome = biomeComp.currentBiome;
+                if (currentBiome && habitat.isPreferred(currentBiome)) {
+                    // Reduce energy consumption by 20% when resting in preferred biome
+                    if (energyChange > 0) { // Only for energy drain, not regeneration
+                        energyChange *= 0.8;
+                    }
+                }
+            }
+            
+            // Apply energy change
+            stats.energy -= energyChange;
             
             // Die if out of energy
             if (stats.energy <= 0) {

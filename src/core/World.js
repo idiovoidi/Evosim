@@ -1,4 +1,4 @@
-import { TerrainGenerator } from './TerrainGenerator.js';
+import { BiomeGenerator } from './BiomeGenerator.js';
 import { EntityFactory } from './EntityFactory.js';
 import { EntityPool } from './EntityPool.js';
 import { SaveSystem } from './SaveSystem.js';
@@ -7,6 +7,7 @@ import { BehaviorSystem } from '../systems/BehaviorSystem.js';
 import { MovementSystem } from '../systems/MovementSystem.js';
 import { HealthSystem } from '../systems/HealthSystem.js';
 import { ReproductionSystem } from '../systems/ReproductionSystem.js';
+import { BiomeEffectSystem } from '../systems/BiomeEffectSystem.js';
 import { ComponentType } from './Entity.js';
 import { PerformanceMonitor } from '../ui/PerformanceMonitor.js';
 import { AdaptiveQualityManager } from '../utils/AdaptiveQualityManager.js';
@@ -17,7 +18,7 @@ export class World {
         this.width = width;
         this.height = height;
         this.entities = [];
-        this.terrain = new TerrainGenerator(width, height);
+        this.biomeGenerator = new BiomeGenerator(width, height);
         this.factory = new EntityFactory(this);
         this.pool = new EntityPool(this);
         this.saveSystem = new SaveSystem(this);
@@ -50,6 +51,7 @@ export class World {
         
         // Initialize systems
         this.systems = [
+            new BiomeEffectSystem(this),
             new BehaviorSystem(this),
             new MovementSystem(this),
             new HealthSystem(this),
@@ -79,7 +81,7 @@ export class World {
     resize(width, height) {
         this.width = width;
         this.height = height;
-        this.terrain.resize(width, height);
+        this.biomeGenerator.resize(width, height);
         
         // Recreate QuadTree with new bounds
         this.quadTree = new QuadTree(
@@ -170,7 +172,14 @@ export class World {
     }
     
     getTerrainAt(x, y) {
-        return this.terrain.getTerrainAt(x, y);
+        // Return biome ID instead of terrain type
+        const biome = this.biomeGenerator.getBiomeAt(x, y);
+        return biome.id;
+    }
+    
+    getBiomeAt(x, y) {
+        // Return full BiomeType object
+        return this.biomeGenerator.getBiomeAt(x, y);
     }
     
     isValidPosition(x, y) {
@@ -180,17 +189,17 @@ export class World {
     spawnInitialEntities() {
         // Spawn herbivores
         for (let i = 0; i < this.config.initialHerbivores; i++) {
-            this.spawnEntityOnValidTerrain('herbivore', ['grass', 'forest']);
+            this.spawnEntityOnValidTerrain('herbivore', ['grassland', 'forest']);
         }
         
         // Spawn predators
         for (let i = 0; i < this.config.initialPredators; i++) {
-            this.spawnEntityOnValidTerrain('predator', ['grass', 'forest', 'mountain']);
+            this.spawnEntityOnValidTerrain('predator', ['grassland', 'forest', 'mountain']);
         }
         
         // Spawn plants
         for (let i = 0; i < this.config.initialPlants; i++) {
-            this.spawnEntityOnValidTerrain('plant', ['grass', 'forest']);
+            this.spawnEntityOnValidTerrain('plant', ['grassland', 'forest']);
         }
         
         // Spawn fish
@@ -200,20 +209,39 @@ export class World {
         
         // Spawn birds
         for (let i = 0; i < this.config.initialBirds; i++) {
-            this.spawnEntityOnValidTerrain('bird', ['grass', 'forest', 'mountain']);
+            this.spawnEntityOnValidTerrain('bird', ['grassland', 'forest', 'mountain']);
         }
     }
     
-    spawnEntityOnValidTerrain(species, validTerrains) {
+    spawnEntityOnValidTerrain(species, validBiomes) {
         let attempts = 0;
         const maxAttempts = 50;
         
         while (attempts < maxAttempts) {
             const x = Math.random() * this.width;
             const y = Math.random() * this.height;
-            const terrain = this.getTerrainAt(x, y);
+            const biomeId = this.getTerrainAt(x, y);
             
-            if (validTerrains.includes(terrain)) {
+            if (validBiomes.includes(biomeId)) {
+                // For plants, check biome plant density
+                if (species === 'plant') {
+                    const biome = this.getBiomeAt(x, y);
+                    if (biome) {
+                        // Prevent plant spawning in water, deep_water, and snow biomes
+                        if (biome.plantDensity === 0.0) {
+                            attempts++;
+                            continue;
+                        }
+                        
+                        // Apply density modifier as probability check
+                        // Higher density = higher chance to spawn
+                        if (Math.random() > biome.plantDensity / 2.5) {
+                            attempts++;
+                            continue;
+                        }
+                    }
+                }
+                
                 const entity = this.pool.acquire(species, x, y);
                 this.addEntity(entity);
                 return entity;
@@ -222,7 +250,23 @@ export class World {
             attempts++;
         }
         
-        // Fallback: spawn anywhere
+        // Fallback: spawn anywhere (but still respect plant density for plants)
+        if (species === 'plant') {
+            // Try to find a valid location with non-zero plant density
+            for (let i = 0; i < 10; i++) {
+                const x = Math.random() * this.width;
+                const y = Math.random() * this.height;
+                const biome = this.getBiomeAt(x, y);
+                
+                if (biome && biome.plantDensity > 0) {
+                    const entity = this.pool.acquire(species, x, y);
+                    this.addEntity(entity);
+                    return entity;
+                }
+            }
+        }
+        
+        // Final fallback: spawn anywhere
         const x = Math.random() * this.width;
         const y = Math.random() * this.height;
         const entity = this.pool.acquire(species, x, y);
@@ -303,7 +347,7 @@ export class World {
         this.time = 0;
         this.selectedEntity = null;
         this.lastRebuildTime = 0;
-        this.terrain.regenerate();
+        this.biomeGenerator.regenerate();
         
         // Clear QuadTree
         this.quadTree.clear();

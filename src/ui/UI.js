@@ -1,10 +1,13 @@
 import { StatsGraph } from './StatsGraph.js';
 import { EntityInfoPanel } from './EntityInfoPanel.js';
 import { NotificationManager } from './NotificationManager.js';
+import { BiomeTooltip } from './BiomeTooltip.js';
+import { BiomeLegendPanel } from './BiomeLegendPanel.js';
 
 export class UI {
-    constructor(world) {
+    constructor(world, renderer = null) {
         this.world = world;
+        this.renderer = renderer;
         this.startTime = Date.now();
         
         // Initialize stats graph
@@ -18,9 +21,32 @@ export class UI {
         
         // Initialize notification manager
         this.notificationManager = new NotificationManager();
+        
+        // Initialize biome tooltip (will be set up after renderer is available)
+        this.biomeTooltip = null;
+        
+        // Initialize biome legend panel (will be set up after renderer is available)
+        this.biomeLegendPanel = null;
     }
     
-    update(fps) {
+    /**
+     * Set the renderer reference and initialize biome tooltip
+     */
+    setRenderer(renderer) {
+        this.renderer = renderer;
+        
+        // Initialize biome tooltip now that we have the renderer
+        if (this.renderer && !this.biomeTooltip) {
+            this.biomeTooltip = new BiomeTooltip(this.world, this.renderer);
+        }
+        
+        // Initialize biome legend panel now that we have the renderer
+        if (this.renderer && !this.biomeLegendPanel) {
+            this.biomeLegendPanel = new BiomeLegendPanel(this.world, this.renderer);
+        }
+    }
+    
+    update(fps, dt = 0.016) {
         const stats = this.world.getStats();
         
         // Update population counts
@@ -70,7 +96,12 @@ export class UI {
         
         // Update notification manager
         if (this.notificationManager) {
-            this.notificationManager.update(0.016); // Approximate dt
+            this.notificationManager.update(dt);
+        }
+        
+        // Update biome tooltip
+        if (this.biomeTooltip && this.world.mousePos) {
+            this.biomeTooltip.update(dt, this.world.mousePos.x, this.world.mousePos.y);
         }
     }
     

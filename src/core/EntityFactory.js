@@ -1,4 +1,5 @@
-import { Entity, ComponentType, Position, Velocity, Appearance, Stats, Status, Genetics, Traits } from './Entity.js';
+import { Entity, ComponentType, Position, Velocity, Appearance, Stats, Status, Genetics, Traits, BiomeComponent, HabitatComponent } from './Entity.js';
+import { HABITAT_PREFERENCES } from './BiomeConstants.js';
 
 export class EntityFactory {
     constructor(world) {
@@ -74,6 +75,48 @@ export class EntityFactory {
         
         // Traits (derived from genetics)
         entity.addComponent(ComponentType.TRAITS, new Traits(geneComponent));
+        
+        // Biome components - add to all entities
+        try {
+            // Add BiomeComponent to track current biome and effects
+            const biomeComponent = new BiomeComponent();
+            entity.addComponent(ComponentType.BIOME, biomeComponent);
+            
+            // Add HabitatComponent with species-specific preferences
+            const preferences = HABITAT_PREFERENCES[species];
+            if (preferences) {
+                entity.addComponent(ComponentType.HABITAT, new HabitatComponent(preferences));
+            } else {
+                console.warn(`[EntityFactory] No habitat preferences defined for species: ${species}`);
+                // Add empty habitat component with neutral preferences
+                entity.addComponent(ComponentType.HABITAT, new HabitatComponent({}));
+            }
+            
+            // Initialize biome effects based on spawn location
+            if (this.world.biomeGenerator) {
+                const spawnBiome = this.world.biomeGenerator.getBiomeAt(x, y);
+                if (spawnBiome) {
+                    biomeComponent.currentBiome = spawnBiome.id;
+                    
+                    // Calculate initial biome effects based on habitat preference
+                    const habitatComponent = entity.getComponent(ComponentType.HABITAT);
+                    const preference = habitatComponent ? habitatComponent.getPreference(spawnBiome.id) : 1.0;
+                    
+                    // Apply modifiers with habitat preference
+                    biomeComponent.biomeEffects.movementMultiplier = spawnBiome.movementModifier * preference;
+                    biomeComponent.biomeEffects.energyMultiplier = spawnBiome.energyModifier * (2.0 - preference);
+                    biomeComponent.biomeEffects.visibilityMultiplier = spawnBiome.visibilityModifier;
+                    biomeComponent.biomeEffects.concealmentBonus = spawnBiome.concealmentBonus;
+                    
+                    biomeComponent.lastBiomeChange = this.world.time || 0;
+                }
+            } else {
+                console.warn('[EntityFactory] BiomeGenerator not available, biome effects not initialized');
+            }
+        } catch (error) {
+            console.error(`[EntityFactory] Error adding biome components to ${species}:`, error);
+            // Continue without biome components - graceful degradation
+        }
         
         return entity;
     }
