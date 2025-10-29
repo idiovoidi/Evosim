@@ -48,6 +48,13 @@ export class EntityInfoPanel {
     // Build the enhanced info panel HTML
     let html = this.buildBasicInfo(stats, pos, vel, status);
 
+    // Add territory statistics section
+    const territory = entity.getComponent(ComponentType.TERRITORY);
+    const thirst = entity.getComponent(ComponentType.THIRST);
+    if (territory || thirst) {
+      html += this.buildResourceCompetitionInfo(entity, territory, thirst, pos);
+    }
+
     // Add biome information section
     const biome = entity.getComponent(ComponentType.BIOME);
     const habitat = entity.getComponent(ComponentType.HABITAT);
@@ -139,6 +146,116 @@ export class EntityInfoPanel {
                 </div>
             </div>
         `;
+  }
+
+  /**
+   * Build resource competition information section
+   */
+  buildResourceCompetitionInfo(entity, territory, thirst, pos) {
+    let html = `
+      <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid #444;">
+        <div style="font-size: 12px; color: #888; margin-bottom: 10px; font-weight: bold;">RESOURCE COMPETITION</div>
+    `;
+
+    // Territory information
+    if (territory) {
+      const territoryColor = territory.conflictCount > 0 ? '#F44336' : '#FFD700';
+      html += `
+        <div style="margin-bottom: 12px; padding: 10px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid ${territoryColor};">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div>
+              <div style="font-size: 11px; color: #888; margin-bottom: 2px;">TERRITORY</div>
+              <div style="font-weight: bold; font-size: 13px; color: ${territoryColor};">Claimed</div>
+            </div>
+            <div style="font-size: 11px; color: #aaa;">
+              Radius: ${Math.round(territory.radius)}
+            </div>
+          </div>
+      `;
+      
+      if (territory.conflictCount > 0) {
+        html += `
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px; padding-top: 8px; border-top: 1px solid #2a2a2a;">
+            <span style="font-size: 11px; color: #aaa;">⚔️ Conflicts</span>
+            <span style="font-size: 11px; font-weight: bold; color: #F44336;">${territory.conflictCount}</span>
+          </div>
+        `;
+      }
+      
+      html += `</div>`;
+    } else {
+      // Show "Territory: None" for land entities that could have territory
+      const stats = entity.getComponent(ComponentType.STATS);
+      if (stats && (stats.species === 'herbivore' || stats.species === 'predator')) {
+        html += `
+          <div style="margin-bottom: 12px; padding: 10px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid #666;">
+            <div style="font-size: 11px; color: #888; margin-bottom: 2px;">TERRITORY</div>
+            <div style="font-weight: bold; font-size: 13px; color: #666;">None</div>
+          </div>
+        `;
+      }
+    }
+
+    // Thirst information
+    if (thirst) {
+      const thirstPercent = (thirst.thirst / thirst.maxThirst) * 100;
+      let thirstColor = '#4CAF50'; // Green
+      if (thirstPercent < 30) {
+        thirstColor = '#F44336'; // Red
+      } else if (thirstPercent < 60) {
+        thirstColor = '#FFC107'; // Yellow
+      }
+      
+      html += `
+        <div style="margin-bottom: 12px; padding: 10px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid ${thirstColor};">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div>
+              <div style="font-size: 11px; color: #888; margin-bottom: 2px;">THIRST</div>
+              <div style="font-weight: bold; font-size: 13px; color: ${thirstColor};">${Math.round(thirstPercent)}%</div>
+            </div>
+            <div style="font-size: 11px; color: #aaa;">
+              ${thirst.isDrinking ? '💧 Drinking' : ''}
+            </div>
+          </div>
+          <div style="background: #0a0a0a; height: 6px; border-radius: 3px; overflow: hidden;">
+            <div style="
+              width: ${thirstPercent}%; 
+              height: 100%; 
+              background: linear-gradient(90deg, ${thirstColor}88, ${thirstColor});
+              transition: width 0.3s ease;
+            "></div>
+          </div>
+        </div>
+      `;
+    }
+
+    // Grazing pressure information (for all entities)
+    if (this.world.grazingPressureGrid) {
+      const pressure = this.world.grazingPressureGrid.getPressure(pos.x, pos.y);
+      let pressureColor = '#4CAF50'; // Green
+      if (pressure > 15) {
+        pressureColor = '#F44336'; // Red
+      } else if (pressure > 5) {
+        pressureColor = '#FFC107'; // Yellow
+      }
+      
+      html += `
+        <div style="margin-bottom: 12px; padding: 10px; background: #1a1a1a; border-radius: 4px; border-left: 3px solid ${pressureColor};">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div style="font-size: 11px; color: #888; margin-bottom: 2px;">GRAZING PRESSURE</div>
+              <div style="font-weight: bold; font-size: 13px; color: ${pressureColor};">${pressure.toFixed(1)}</div>
+            </div>
+            <div style="font-size: 11px; color: #aaa;">
+              ${pressure < 5 ? '✓ Low' : pressure < 15 ? '⚠ Medium' : '✗ High'}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    html += `</div>`;
+    return html;
   }
 
   /**

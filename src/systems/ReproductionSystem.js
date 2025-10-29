@@ -89,6 +89,12 @@ export class ReproductionSystem {
                 // Lower density biomes reduce reproduction success
                 reproductionBonus *= currentBiomeData.plantDensity;
             }
+            
+            // Apply grazing pressure modifier to reproduction success rate
+            if (this.world.resourceDepletionSystem) {
+                const pressureModifier = this.world.resourceDepletionSystem.getPlantSpawnModifier(pos.x, pos.y);
+                reproductionBonus *= pressureModifier;
+            }
         }
         
         // Apply reproduction success check for preferred biomes

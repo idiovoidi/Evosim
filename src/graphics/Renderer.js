@@ -178,8 +178,16 @@ export class Renderer {
     // Render terrain
     this.renderTerrain();
 
+    // Render water sources (after terrain, before entities)
+    this.renderWaterSources(this.world.waterSources);
+
     // Render heatmap overlay (after terrain, before entities)
     this.heatmapRenderer.render(ctx);
+
+    // Render resource depletion zones (only if heatmap is enabled)
+    if (this.heatmapRenderer.isEnabled()) {
+      this.heatmapRenderer.renderDepletionZones(ctx, this.world.grazingPressureGrid);
+    }
 
     // Sort entities by layer
     const entities = this.world
@@ -199,6 +207,11 @@ export class Renderer {
 
     // Render effects
     this.renderEffects(entities);
+
+    // Render territory boundaries (after entity rendering, only for selected entity)
+    if (this.world.selectedEntity && this.world.selectedEntity.hasComponent(ComponentType.TERRITORY)) {
+      this.renderTerritories(this.world.selectedEntity);
+    }
 
     // Render debug visualizations (before restoring camera transform)
     this.debugRenderer.render(ctx);
@@ -853,5 +866,69 @@ export class Renderer {
    */
   getCulledEntityCount() {
     return this.culledEntityCount;
+  }
+
+  /**
+   * Render territory boundaries for the selected entity
+   * Only renders if the entity has a TerritoryComponent
+   * @param {Entity} selectedEntity - The currently selected entity
+   */
+  renderTerritories(selectedEntity) {
+    if (!selectedEntity || !selectedEntity.hasComponent(ComponentType.TERRITORY)) {
+      return;
+    }
+
+    const ctx = this.ctx;
+    const territory = selectedEntity.getComponent(ComponentType.TERRITORY);
+    const pos = selectedEntity.getComponent(ComponentType.POSITION);
+
+    if (!territory || !pos) return;
+
+    ctx.save();
+
+    // Determine color based on conflict status
+    // Yellow for no conflicts, red for active conflicts
+    const hasConflicts = territory.conflictCount > 0;
+    const color = hasConflicts ? '#ff0000' : '#ffff00';
+
+    // Draw semi-transparent circle at territory center
+    ctx.strokeStyle = color;
+    ctx.globalAlpha = 0.4;
+    ctx.lineWidth = 2;
+
+    ctx.beginPath();
+    ctx.arc(territory.centerX, territory.centerY, territory.radius, 0, Math.PI * 2);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  /**
+   * Render water sources as blue circles
+   * @param {Array} waterSources - Array of WaterSource objects
+   */
+  renderWaterSources(waterSources) {
+    if (!waterSources || waterSources.length === 0) {
+      return;
+    }
+
+    const ctx = this.ctx;
+
+    ctx.save();
+
+    for (const source of waterSources) {
+      // Draw blue circle
+      ctx.fillStyle = '#4da6ff';
+      ctx.beginPath();
+      ctx.arc(source.x, source.y, source.radius, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Add subtle white border
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = 2;
+      ctx.stroke();
+    }
+
+    ctx.restore();
   }
 }

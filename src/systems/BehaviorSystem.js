@@ -88,6 +88,40 @@ class HerbivoreBehavior {
             return;
         }
         
+        // Check for thirst and seek water if needed
+        const thirstComp = entity.getComponent(ComponentType.THIRST);
+        if (thirstComp && thirstComp.thirst < 30) {
+            // Find nearest water source
+            const waterSources = this.world.waterSources || [];
+            if (waterSources.length > 0) {
+                let nearestSource = null;
+                let minDist = Infinity;
+                
+                for (const source of waterSources) {
+                    const dist = source.distanceTo(pos.x, pos.y);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearestSource = source;
+                    }
+                }
+                
+                if (nearestSource) {
+                    // Move towards water source
+                    const dx = nearestSource.x - pos.x;
+                    const dy = nearestSource.y - pos.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist > 0) {
+                        vel.dx = (dx / dist) * 2.5 * traits.speed;
+                        vel.dy = (dy / dist) * 2.5 * traits.speed;
+                        status.state = 'seeking_water';
+                        thirstComp.targetWaterSource = nearestSource;
+                        return;
+                    }
+                }
+            }
+        }
+        
         // Find food (plants)
         const plants = nearby.filter(n => 
             n.entity.getComponent(ComponentType.STATS)?.species === 'plant'
@@ -107,6 +141,12 @@ class HerbivoreBehavior {
                 const energyGain = Math.min(45, plantStats.energy); // Increased from 30
                 stats.energy = Math.min(stats.maxEnergy, stats.energy + energyGain);
                 plantStats.energy -= energyGain;
+                
+                // Track grazing pressure at plant consumption location
+                if (this.world.resourceDepletionSystem) {
+                    const foodPos = food.entity.getComponent(ComponentType.POSITION);
+                    this.world.resourceDepletionSystem.grazingGrid.incrementPressure(foodPos.x, foodPos.y, 1);
+                }
                 
                 // Log the eating action
                 status.logAction('ate', stats.age, {
@@ -184,6 +224,120 @@ class PredatorBehavior {
             
             return true;
         });
+        
+        // Check for thirst and seek water if needed
+        const thirstComp = entity.getComponent(ComponentType.THIRST);
+        if (thirstComp && thirstComp.thirst < 30) {
+            // Find nearest water source
+            const waterSources = this.world.waterSources || [];
+            if (waterSources.length > 0) {
+                let nearestSource = null;
+                let minDist = Infinity;
+                
+                for (const source of waterSources) {
+                    const dist = source.distanceTo(pos.x, pos.y);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        nearestSource = source;
+                    }
+                }
+                
+                if (nearestSource) {
+                    // Move towards water source
+                    const dx = nearestSource.x - pos.x;
+                    const dy = nearestSource.y - pos.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (dist > 0) {
+                        vel.dx = (dx / dist) * 3.0 * traits.speed;
+                        vel.dy = (dy / dist) * 3.0 * traits.speed;
+                        status.state = 'seeking_water';
+                        return;
+                    }
+                }
+            }
+        }
+        
+        // Evaluate ambush opportunity at water sources
+        if (stats.energy < stats.maxEnergy * 0.8) {
+            const waterSources = this.world.waterSources || [];
+            
+            for (const source of waterSources) {
+                const distToWater = source.distanceTo(pos.x, pos.y);
+                
+                // Check if within 300 units of water source
+                if (distToWater <= 300) {
+                    // Count prey entities within 100 units of water source
+                    const preyNearWater = prey.filter(p => {
+                        const preyPos = p.entity.getComponent(ComponentType.POSITION);
+                        return source.distanceTo(preyPos.x, preyPos.y) <= 100;
+                    });
+                    
+                    // Trigger ambush mode if 2+ prey present
+                    if (preyNearWater.length >= 2) {
+                        // Position predator within 50 units of water source
+                        if (distToWater > 50) {
+                            // Move towards water source
+                            const dx = source.x - pos.x;
+                            const dy = source.y - pos.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+                            
+                            if (dist > 0) {
+                                vel.dx = (dx / dist) * 2.0 * traits.speed;
+                                vel.dy = (dy / dist) * 2.0 * traits.speed;
+                                status.state = 'ambushing';
+                            }
+                        } else {
+                            // In ambush position - reduce movement speed by 70%
+                            vel.dx *= 0.3;
+                            vel.dy *= 0.3;
+                            status.state = 'ambushing';
+                            
+                            // Check if prey within 40 units while in ambush mode
+                            const closePreyInAmbush = preyNearWater.filter(p => {
+                                const preyPos = p.entity.getComponent(ComponentType.POSITION);
+                                const dx = preyPos.x - pos.x;
+                                const dy = preyPos.y - pos.y;
+                                const dist = Math.sqrt(dx * dx + dy * dy);
+                                return dist <= 40;
+                            });
+                            
+                            // Trigger attack if prey within range
+                            if (closePreyInAmbush.length > 0) {
+                                const target = closePreyInAmbush[0];
+                                const targetPos = target.entity.getComponent(ComponentType.POSITION);
+                                const targetStats = target.entity.getComponent(ComponentType.STATS);
+                                
+                                // Attack
+                                const damage = 45 * traits.attackStrength;
+                                targetStats.energy -= damage;
+                                const energyGained = damage * 0.7;
+                                stats.energy = Math.min(stats.maxEnergy, stats.energy + energyGained);
+                                
+                                // Log the ambush attack
+                                status.logAction('ambushed', stats.age, {
+                                    target: 'herbivore',
+                                    energyGained: Math.round(energyGained),
+                                    damage: Math.round(damage),
+                                    position: { x: Math.round(pos.x), y: Math.round(pos.y) }
+                                });
+                                
+                                if (targetStats.energy <= 0) {
+                                    this.world.pool.release(target.entity);
+                                }
+                                
+                                // Exit ambush mode after attack
+                                vel.dx *= 0.3;
+                                vel.dy *= 0.3;
+                                status.state = 'attacking';
+                                return;
+                            }
+                        }
+                        return;
+                    }
+                }
+            }
+        }
         
         if (stats.energy < stats.maxEnergy * 0.8 && prey.length > 0) {
             // Hunt nearest prey

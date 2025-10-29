@@ -9,7 +9,10 @@ export class StatsGraph {
             predators: '#c89696',
             plants: '#649650',
             fish: '#5a9ed4',
-            birds: '#8b7355'
+            birds: '#8b7355',
+            activeTerritories: '#FFD700',
+            avgGrazingPressure: '#FF9800',
+            territorialConflicts: '#F44336'
         };
     }
     
@@ -20,7 +23,10 @@ export class StatsGraph {
             predators: stats.predators,
             plants: stats.plants,
             fish: stats.fish,
-            birds: stats.birds
+            birds: stats.birds,
+            activeTerritories: stats.activeTerritories || 0,
+            avgGrazingPressure: stats.avgGrazingPressure || 0,
+            territorialConflictsPerMinute: stats.territorialConflictsPerMinute || 0
         });
         
         if (this.history.length > this.maxHistory) {
@@ -46,11 +52,11 @@ export class StatsGraph {
             return;
         }
         
-        // Find max value for scaling
+        // Find max value for scaling (population metrics)
         const maxValue = Math.max(
             1, // Minimum 1 to avoid division by zero
             ...this.history.flatMap(h => [
-                h.herbivores, h.predators, h.plants, h.fish, h.birds
+                h.herbivores, h.predators, h.plants, h.fish, h.birds, h.activeTerritories
             ])
         );
         
@@ -63,9 +69,13 @@ export class StatsGraph {
         this.drawLine(ctx, width, height, maxValue, 'fish', this.colors.fish);
         this.drawLine(ctx, width, height, maxValue, 'predators', this.colors.predators);
         this.drawLine(ctx, width, height, maxValue, 'birds', this.colors.birds);
+        this.drawLine(ctx, width, height, maxValue, 'activeTerritories', this.colors.activeTerritories);
         
         // Draw legend
         this.drawLegend(ctx);
+        
+        // Draw ecosystem metrics
+        this.drawEcosystemMetrics(ctx, width, height);
     }
     
     drawGrid(ctx, width, height, maxValue) {
@@ -131,7 +141,8 @@ export class StatsGraph {
             { label: '🦊', species: 'predators', color: this.colors.predators },
             { label: '🌿', species: 'plants', color: this.colors.plants },
             { label: '🐟', species: 'fish', color: this.colors.fish },
-            { label: '🦅', species: 'birds', color: this.colors.birds }
+            { label: '🦅', species: 'birds', color: this.colors.birds },
+            { label: '🏰', species: 'activeTerritories', color: this.colors.activeTerritories }
         ];
         
         const startX = 35;
@@ -156,6 +167,27 @@ export class StatsGraph {
             ctx.fillStyle = '#fff';
             ctx.fillText(legend.label, x + 18, startY + 4);
         });
+    }
+    
+    drawEcosystemMetrics(ctx, width, height) {
+        if (this.history.length === 0) return;
+        
+        const latest = this.history[this.history.length - 1];
+        
+        // Position at bottom of graph
+        const startY = height - 25;
+        const startX = 35;
+        
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'left';
+        
+        // Average Grazing Pressure
+        ctx.fillStyle = this.colors.avgGrazingPressure;
+        ctx.fillText(`🌾 Avg Grazing: ${latest.avgGrazingPressure.toFixed(1)}`, startX, startY);
+        
+        // Territorial Conflicts per Minute
+        ctx.fillStyle = this.colors.territorialConflicts;
+        ctx.fillText(`⚔️ Conflicts/min: ${latest.territorialConflictsPerMinute.toFixed(1)}`, startX + 130, startY);
     }
     
     clear() {

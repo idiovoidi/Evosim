@@ -1,4 +1,4 @@
-import { Entity, ComponentType, Position, Velocity, Appearance, Stats, Status, Genetics, Traits, BiomeComponent, HabitatComponent } from './Entity.js';
+import { Entity, ComponentType, Position, Velocity, Appearance, Stats, Status, Genetics, Traits, BiomeComponent, HabitatComponent, ThirstComponent } from './Entity.js';
 import { HABITAT_PREFERENCES } from './BiomeConstants.js';
 
 export class EntityFactory {
@@ -116,6 +116,14 @@ export class EntityFactory {
         } catch (error) {
             console.error(`[EntityFactory] Error adding biome components to ${species}:`, error);
             // Continue without biome components - graceful degradation
+        }
+        
+        // Add ThirstComponent to land entities (herbivores and predators only)
+        if (species === 'herbivore' || species === 'predator') {
+            const thirstComponent = new ThirstComponent();
+            thirstComponent.thirst = 100;
+            thirstComponent.thirstRate = 0.5;
+            entity.addComponent(ComponentType.THIRST, thirstComponent);
         }
         
         return entity;

@@ -40,7 +40,9 @@ export const ComponentType = {
     TRAITS: 'traits',
     BEHAVIOR: 'behavior',
     BIOME: 'biome',
-    HABITAT: 'habitat'
+    HABITAT: 'habitat',
+    TERRITORY: 'territory',
+    THIRST: 'thirst'
 };
 
 // Component classes
@@ -263,5 +265,52 @@ export class HabitatComponent {
                 this.avoidedBiomes.push(biomeId);
             }
         }
+    }
+}
+
+export class TerritoryComponent {
+    constructor(centerX, centerY, radius) {
+        this.centerX = centerX;             // Territory center X coordinate
+        this.centerY = centerY;             // Territory center Y coordinate
+        this.radius = radius;               // Territory radius (50-200 units)
+        this.claimedAt = 0;                 // Timestamp when claimed
+        this.intruders = [];                // List of current intruders
+        this.conflictCount = 0;             // Total conflicts
+    }
+    
+    /**
+     * Check if a point is within the territory
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     * @returns {boolean} True if point is within territory radius
+     */
+    containsPoint(x, y) {
+        const dx = x - this.centerX;
+        const dy = y - this.centerY;
+        return Math.sqrt(dx * dx + dy * dy) <= this.radius;
+    }
+    
+    /**
+     * Calculate distance from territory center to a point
+     * @param {number} x - X coordinate
+     * @param {number} y - Y coordinate
+     * @returns {number} Distance from center
+     */
+    distanceFromCenter(x, y) {
+        const dx = x - this.centerX;
+        const dy = y - this.centerY;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+}
+
+export class ThirstComponent {
+    constructor() {
+        this.thirst = 100;                  // Current thirst (0-100)
+        this.maxThirst = 100;               // Maximum thirst
+        this.thirstRate = 0.5;              // Decrease per second
+        this.drinkingRate = 33.33;          // Restore rate (100 in 3 seconds)
+        this.isDrinking = false;            // Currently at water source
+        this.lastDrinkTime = 0;             // Timestamp of last drink
+        this.targetWaterSource = null;      // Current water source target
     }
 }

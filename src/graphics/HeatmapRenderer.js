@@ -239,4 +239,42 @@ export class HeatmapRenderer {
         // Force update after resize
         this.update(true);
     }
+
+    /**
+     * Render resource depletion zones based on grazing pressure
+     * Only renders when heatmap is enabled
+     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context
+     * @param {GrazingPressureGrid} grazingGrid - The grazing pressure grid
+     */
+    renderDepletionZones(ctx, grazingGrid) {
+        if (!this.enabled || !grazingGrid) {
+            return;
+        }
+
+        ctx.save();
+
+        // Iterate through grazing grid cells
+        for (let y = 0; y < grazingGrid.gridHeight; y++) {
+            for (let x = 0; x < grazingGrid.gridWidth; x++) {
+                const pressure = grazingGrid.grid[y][x];
+
+                // Only render cells with pressure > 5
+                if (pressure <= 5) continue;
+
+                // Calculate alpha based on pressure: min(0.3, pressure / 40)
+                const alpha = Math.min(0.3, pressure / 40);
+
+                // Draw brown tint overlay (rgba(139, 69, 19, alpha))
+                ctx.fillStyle = `rgba(139, 69, 19, ${alpha})`;
+                ctx.fillRect(
+                    x * grazingGrid.cellSize,
+                    y * grazingGrid.cellSize,
+                    grazingGrid.cellSize,
+                    grazingGrid.cellSize
+                );
+            }
+        }
+
+        ctx.restore();
+    }
 }

@@ -8,6 +8,10 @@ import { MovementSystem } from '../systems/MovementSystem.js';
 import { HealthSystem } from '../systems/HealthSystem.js';
 import { ReproductionSystem } from '../systems/ReproductionSystem.js';
 import { BiomeEffectSystem } from '../systems/BiomeEffectSystem.js';
+import { TerritorySystem } from '../systems/TerritorySystem.js';
+import { ResourceDepletionSystem } from '../systems/ResourceDepletionSystem.js';
+import { WaterSourceSystem } from '../systems/WaterSourceSystem.js';
+import { GrazingPressureGrid } from '../systems/GrazingPressureGrid.js';
 import { ComponentType } from './Entity.js';
 import { PerformanceMonitor } from '../ui/PerformanceMonitor.js';
 import { AdaptiveQualityManager } from '../utils/AdaptiveQualityManager.js';
@@ -29,6 +33,12 @@ export class World {
             10,  // maxEntities per node
             5    // maxDepth
         );
+        
+        // Initialize grazing pressure grid for resource depletion tracking
+        this.grazingPressureGrid = new GrazingPressureGrid(width, height, 100);
+        
+        // Initialize water sources array
+        this.waterSources = [];
         
         // Pre-allocate entity pools
         this.pool.preAllocate();
@@ -187,6 +197,12 @@ export class World {
     }
     
     spawnInitialEntities() {
+        // Generate water sources first (needed for entity spawning logic)
+        const waterSourceSystem = this.systems.find(s => s instanceof WaterSourceSystem);
+        if (waterSourceSystem) {
+            this.waterSources = waterSourceSystem.generateWaterSources();
+        }
+        
         // Spawn herbivores
         for (let i = 0; i < this.config.initialHerbivores; i++) {
             this.spawnEntityOnValidTerrain('herbivore', ['grassland', 'forest']);
@@ -363,6 +379,29 @@ export class World {
     }
     
     getStats() {
+        // Count active territories
+        let activeTerritories = 0;
+        for (const entity of this.entities) {
+            if (entity.active && entity.hasComponent(ComponentType.TERRITORY)) {
+                activeTerritories++;
+            }
+        }
+        
+        // Get average grazing pressure
+        const avgGrazingPressure = this.grazingPressureGrid 
+            ? this.grazingPressureGrid.getAveragePressure() 
+            : 0;
+        
+        // Calculate territorial conflicts per minute
+        let totalConflicts = 0;
+        for (const entity of this.entities) {
+            if (entity.active && entity.hasComponent(ComponentType.TERRITORY)) {
+                const territory = entity.getComponent(ComponentType.TERRITORY);
+                totalConflicts += territory.conflictCount;
+            }
+        }
+        const conflictsPerMinute = this.time > 0 ? (totalConflicts / this.time) * 60 : 0;
+        
         return {
             herbivores: this.getEntitiesBySpecies('herbivore').length,
             predators: this.getEntitiesBySpecies('predator').length,
@@ -370,7 +409,10 @@ export class World {
             fish: this.getEntitiesBySpecies('fish').length,
             birds: this.getEntitiesBySpecies('bird').length,
             total: this.entities.filter(e => e.active).length,
-            time: this.time
+            time: this.time,
+            activeTerritories: activeTerritories,
+            avgGrazingPressure: avgGrazingPressure,
+            territorialConflictsPerMinute: conflictsPerMinute
         };
     }
 }

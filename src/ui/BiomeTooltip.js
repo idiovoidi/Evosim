@@ -15,6 +15,7 @@ export class BiomeTooltip {
         // Tooltip state
         this.isVisible = false;
         this.currentBiome = null;
+        this.currentWaterSource = null;
         this.fadeTimer = 0;
         this.fadeDuration = 0.15; // 150ms fade
         this.opacity = 0;
@@ -84,6 +85,44 @@ export class BiomeTooltip {
         // Convert screen coordinates to world coordinates
         const worldPos = this.screenToWorld(mouseX, mouseY);
         
+        // Check if hovering over a water source
+        const waterSource = this.getWaterSourceAt(worldPos.x, worldPos.y);
+        
+        if (waterSource) {
+            // Show water source tooltip
+            const waterSourceChanged = !this.currentWaterSource || this.currentWaterSource !== waterSource;
+            
+            if (waterSourceChanged) {
+                this.currentWaterSource = waterSource;
+                this.currentBiome = null;
+                this.hoverTimer = 0;
+            }
+            
+            // Update hover timer
+            if (!this.isVisible) {
+                this.hoverTimer += dt;
+                
+                if (this.hoverTimer >= this.hoverDelay) {
+                    this.show(mouseX, mouseY);
+                }
+            } else {
+                // Update position if visible
+                this.updatePosition(mouseX, mouseY);
+                
+                // Update content if water source changed
+                if (waterSourceChanged) {
+                    this.updateContent();
+                }
+            }
+            
+            // Update fade animation
+            this.updateFade(dt);
+            return;
+        }
+        
+        // Clear water source if not hovering
+        this.currentWaterSource = null;
+        
         // Get biome at mouse position
         const biome = this.world.biomeGenerator.getBiomeAt(worldPos.x, worldPos.y);
         
@@ -122,10 +161,30 @@ export class BiomeTooltip {
     }
     
     /**
+     * Get water source at world position
+     */
+    getWaterSourceAt(worldX, worldY) {
+        if (!this.world.waterSources) return null;
+        
+        for (const waterSource of this.world.waterSources) {
+            const dx = worldX - waterSource.x;
+            const dy = worldY - waterSource.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Check if within water source radius (with some extra margin for easier hovering)
+            if (distance <= waterSource.radius + 10) {
+                return waterSource;
+            }
+        }
+        
+        return null;
+    }
+    
+    /**
      * Show the tooltip
      */
     show(mouseX, mouseY) {
-        if (!this.currentBiome) return;
+        if (!this.currentBiome && !this.currentWaterSource) return;
         
         this.isVisible = true;
         this.tooltip.style.display = 'block';
@@ -158,6 +217,12 @@ export class BiomeTooltip {
      * Update tooltip content
      */
     updateContent() {
+        // Check if showing water source tooltip
+        if (this.currentWaterSource) {
+            this.updateWaterSourceContent();
+            return;
+        }
+        
         if (!this.currentBiome) return;
         
         // Count entities in the current biome tile
@@ -180,6 +245,72 @@ export class BiomeTooltip {
                 </div>
                 ${this.buildModifiersList()}
             </div>
+        `;
+        
+        this.tooltip.innerHTML = html;
+    }
+    
+    /**
+     * Update water source tooltip content
+     */
+    updateWaterSourceContent() {
+        if (!this.currentWaterSource) return;
+        
+        // Count nearby entities (within 100 units)
+        const nearbyCount = this.countNearbyEntities(this.currentWaterSource.x, this.currentWaterSource.y, 100);
+        
+        // Calculate recent visits per minute
+        const currentTime = this.world.time;
+        const timeSinceReset = currentTime - this.currentWaterSource.lastResetTime;
+        const visitsPerMinute = timeSinceReset > 0 
+            ? (this.currentWaterSource.recentVisits / timeSinceReset) * 60 
+            : 0;
+        
+        // Build tooltip HTML
+        const html = `
+            <div style="margin-bottom: 8px;">
+                <div style="font-weight: bold; font-size: 15px; margin-bottom: 4px; color: #4da6ff;">
+                    💧 Water Source
+                </div>
+                <div style="font-size: 11px; color: #888;">
+                    Essential resource for land entities
+                </div>
+            </div>
+            
+            <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 8px; margin-top: 8px;">
+                <div style="font-size: 11px; color: #aaa; margin-bottom: 6px; font-weight: bold;">
+                    STATISTICS
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 11px;">
+                    <span style="color: #aaa;">
+                        <span style="margin-right: 6px;">📊</span>Total Visits
+                    </span>
+                    <span style="font-weight: bold; color: #4da6ff;">${this.currentWaterSource.visitCount}</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 11px;">
+                    <span style="color: #aaa;">
+                        <span style="margin-right: 6px;">⏱️</span>Visits/Minute
+                    </span>
+                    <span style="font-weight: bold; color: #4da6ff;">${visitsPerMinute.toFixed(1)}</span>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; font-size: 11px;">
+                    <span style="color: #aaa;">
+                        <span style="margin-right: 6px;">👥</span>Nearby Entities
+                    </span>
+                    <span style="font-weight: bold; color: ${nearbyCount > 5 ? '#FFD700' : '#4da6ff'};">${nearbyCount}</span>
+                </div>
+            </div>
+            
+            ${nearbyCount > 5 ? `
+                <div style="margin-top: 8px; padding: 6px; background: rgba(255, 215, 0, 0.1); border-radius: 4px; border-left: 3px solid #FFD700;">
+                    <div style="font-size: 10px; color: #FFD700;">
+                        ⚠️ High activity - potential ambush site
+                    </div>
+                </div>
+            ` : ''}
         `;
         
         this.tooltip.innerHTML = html;
@@ -304,6 +435,14 @@ export class BiomeTooltip {
         
         // Filter to only active entities
         return entitiesInTile.filter(entity => entity.active).length;
+    }
+    
+    /**
+     * Count entities near a specific position
+     */
+    countNearbyEntities(x, y, radius) {
+        const nearby = this.world.getNearbyEntities({ x, y }, radius);
+        return nearby.length;
     }
     
     /**
