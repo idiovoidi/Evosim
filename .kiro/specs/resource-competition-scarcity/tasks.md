@@ -261,7 +261,9 @@
     - Show count of nearby entities (within 100 units)
     - _Requirements: 5.5_
 
-- [ ] 10. Integrate systems with World.js
+- [x] 10. Integrate systems with World.js
+
+
 
 
 
@@ -281,7 +283,9 @@
     - Store result in this.waterSources
     - _Requirements: 3.1, 3.2_
 
-  - [ ] 10.3 Add new systems to World.systems array
+  - [x] 10.3 Add new systems to World.systems array
+
+
 
     - Instantiate TerritorySystem(this)
     - Instantiate ResourceDepletionSystem(this)
@@ -289,11 +293,15 @@
     - Add before BehaviorSystem to ensure proper update order
     - _Requirements: 1.1, 2.1, 3.1_
 
+
+
   - [ ] 10.4 Update World.reset() to clear new systems
 
     - Clear grazingPressureGrid (reinitialize)
     - Clear waterSources array
     - Reset territory assignments
+
+
     - _Requirements: 1.1, 2.1, 3.1_
 
   - [ ] 10.5 Update World.getStats() to include new metrics
