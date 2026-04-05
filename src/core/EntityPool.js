@@ -1,4 +1,6 @@
 import { Entity, ComponentType, Position, Velocity, Appearance, Stats, Status, Genetics, Traits } from './Entity.js';
+import { SPECIES_CONFIG, getSpeciesConfig } from './SpeciesConfig.js';
+import { createBaseEntity } from './EntityBuilder.js';
 
 /**
  * EntityPool manages object reuse for entities to reduce garbage collection.
@@ -15,45 +17,6 @@ export class EntityPool {
             plant: { active: [], inactive: [] },
             fish: { active: [], inactive: [] },
             bird: { active: [], inactive: [] }
-        };
-        
-        // Species configuration
-        this.speciesConfig = {
-            herbivore: {
-                emoji: '🐰',
-                color: '#96c896',
-                maxEnergy: 200,
-                initialEnergy: 150,
-                layer: 2
-            },
-            predator: {
-                emoji: '🦊',
-                color: '#c89696',
-                maxEnergy: 250,
-                initialEnergy: 200,
-                layer: 2
-            },
-            plant: {
-                emoji: '🌿',
-                color: '#649650',
-                maxEnergy: 100,
-                initialEnergy: 100,
-                layer: 0
-            },
-            fish: {
-                emoji: '🐟',
-                color: '#5a9ed4',
-                maxEnergy: 150,
-                initialEnergy: 120,
-                layer: 1
-            },
-            bird: {
-                emoji: '🦅',
-                color: '#8b7355',
-                maxEnergy: 180,
-                initialEnergy: 140,
-                layer: 3
-            }
         };
         
         // Pool configuration
@@ -172,38 +135,7 @@ export class EntityPool {
      * @returns {Entity} The new entity
      */
     createNewEntity(species, x, y, genetics = null, generation = 1) {
-        const config = this.speciesConfig[species];
-        if (!config) {
-            throw new Error(`Unknown species: ${species}`);
-        }
-        
-        const entity = new Entity();
-        
-        // Position
-        entity.addComponent(ComponentType.POSITION, new Position(x, y));
-        
-        // Velocity
-        entity.addComponent(ComponentType.VELOCITY, new Velocity());
-        
-        // Appearance
-        entity.addComponent(ComponentType.APPEARANCE, 
-            new Appearance(config.emoji, config.color, 1.0, config.layer));
-        
-        // Stats
-        entity.addComponent(ComponentType.STATS, 
-            new Stats(species, config.initialEnergy, config.maxEnergy, generation));
-        
-        // Status
-        entity.addComponent(ComponentType.STATUS, new Status());
-        
-        // Genetics
-        const geneComponent = genetics || new Genetics();
-        entity.addComponent(ComponentType.GENETICS, geneComponent);
-        
-        // Traits (derived from genetics)
-        entity.addComponent(ComponentType.TRAITS, new Traits(geneComponent));
-        
-        return entity;
+        return createBaseEntity(Entity, species, x, y, genetics, generation);
     }
     
     /**
@@ -216,7 +148,7 @@ export class EntityPool {
      * @param {number} generation - Generation number (default 1)
      */
     resetEntity(entity, species, x, y, genetics = null, generation = 1) {
-        const config = this.speciesConfig[species];
+        const config = getSpeciesConfig(species);
         
         // Reset active state
         entity.active = true;

@@ -18,13 +18,15 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "clean": "rm -rf dist"
+    "clean": "rm -rf dist",
+    "detect-duplicates": "jscpd src/ --reporters console,html --output ./jscpd-report"
   },
   "dependencies": {
     "alea": "^1.0.1",
     "simplex-noise": "^4.0.1"
   },
   "devDependencies": {
+    "jscpd": "^4.0.8",
     "vite": "^5.0.0"
   },
   "engines": {

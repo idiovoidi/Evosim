@@ -1,0 +1,1194 @@
+{
+  "statistics": {
+    "detectionDate": "2026-04-05T09:03:47.846Z",
+    "formats": {
+      "markdown": {
+        "sources": {
+          "src/utils/PERFORMANCE_CONFIG_USAGE.md": {
+            "lines": 358,
+            "tokens": 1732,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/PERFORMANCE_CONFIG_SUMMARY.md": {
+            "lines": 339,
+            "tokens": 2128,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/PERFORMANCE_CONFIG_INTEGRATION.md": {
+            "lines": 402,
+            "tokens": 1827,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/ADAPTIVE_QUALITY.md": {
+            "lines": 206,
+            "tokens": 1557,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/graphics/HEATMAP_USAGE.md": {
+            "lines": 142,
+            "tokens": 1106,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/graphics/HEATMAP_SPECIES_FILTERING.md": {
+            "lines": 77,
+            "tokens": 949,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/graphics/DEBUG_FEATURES.md": {
+            "lines": 76,
+            "tokens": 769,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 1600,
+          "tokens": 10068,
+          "sources": 7,
+          "clones": 0,
+          "duplicatedLines": 0,
+          "duplicatedTokens": 0,
+          "percentage": 0,
+          "percentageTokens": 0,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      },
+      "javascript": {
+        "sources": {
+          "src/utils/PerformanceConfig.js": {
+            "lines": 671,
+            "tokens": 4052,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/AdaptiveQualityManager.test.js": {
+            "lines": 61,
+            "tokens": 512,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/utils/AdaptiveQualityManager.js": {
+            "lines": 376,
+            "tokens": 2648,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/ui/UI.js": {
+            "lines": 153,
+            "tokens": 1366,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/ui/Tutorial.js": {
+            "lines": 185,
+            "tokens": 1478,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/ui/StatsGraph.js": {
+            "lines": 195,
+            "tokens": 2148,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/ui/SettingsPanel.js": {
+            "lines": 91,
+            "tokens": 579,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/ui/PerformanceMonitor.js": {
+            "lines": 283,
+            "tokens": 2409,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/ui/NotificationManager.js": {
+            "lines": 307,
+            "tokens": 1816,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/ui/EntityInfoPanel.js": {
+            "lines": 687,
+            "tokens": 4115,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/ui/BiomeTooltip.js": {
+            "lines": 505,
+            "tokens": 3703,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 30,
+            "duplicatedTokens": 226,
+            "percentage": 5.94,
+            "percentageTokens": 6.1,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/ui/BiomeLegendPanel.js": {
+            "lines": 450,
+            "tokens": 2732,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/WaterSourceSystem.js": {
+            "lines": 134,
+            "tokens": 1146,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/WaterSource.js": {
+            "lines": 48,
+            "tokens": 260,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/TerritorySystem.js": {
+            "lines": 106,
+            "tokens": 1013,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/ResourceDepletionSystem.js": {
+            "lines": 27,
+            "tokens": 264,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/ReproductionSystem.js": {
+            "lines": 241,
+            "tokens": 2557,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/MovementSystem.js": {
+            "lines": 72,
+            "tokens": 739,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/HealthSystem.js": {
+            "lines": 86,
+            "tokens": 798,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/GrazingPressureGrid.js": {
+            "lines": 100,
+            "tokens": 790,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/EcosystemEventDetector.js": {
+            "lines": 344,
+            "tokens": 2735,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/BiomeEffectSystem.js": {
+            "lines": 110,
+            "tokens": 722,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/systems/BehaviorSystem.js": {
+            "lines": 592,
+            "tokens": 6698,
+            "sources": 1,
+            "clones": 16,
+            "duplicatedLines": 186,
+            "duplicatedTokens": 2022,
+            "percentage": 31.42,
+            "percentageTokens": 30.19,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/graphics/VisualIndicatorSystem.js": {
+            "lines": 679,
+            "tokens": 5808,
+            "sources": 1,
+            "clones": 3,
+            "duplicatedLines": 50,
+            "duplicatedTokens": 411,
+            "percentage": 7.36,
+            "percentageTokens": 7.08,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/graphics/Renderer.js": {
+            "lines": 899,
+            "tokens": 8290,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 14,
+            "duplicatedTokens": 226,
+            "percentage": 1.56,
+            "percentageTokens": 2.73,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/graphics/HeatmapRenderer.js": {
+            "lines": 279,
+            "tokens": 2135,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/graphics/DebugRenderer.js": {
+            "lines": 454,
+            "tokens": 3589,
+            "sources": 1,
+            "clones": 1,
+            "duplicatedLines": 8,
+            "duplicatedTokens": 99,
+            "percentage": 1.76,
+            "percentageTokens": 2.76,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/World.js": {
+            "lines": 464,
+            "tokens": 4327,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 14,
+            "duplicatedTokens": 190,
+            "percentage": 3.02,
+            "percentageTokens": 4.39,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/TerrainGenerator.js": {
+            "lines": 81,
+            "tokens": 886,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/SpeciesConfig.js": {
+            "lines": 55,
+            "tokens": 336,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/SaveSystem.js": {
+            "lines": 196,
+            "tokens": 1784,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/QuadTree.js": {
+            "lines": 368,
+            "tokens": 2826,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/InputHandlerManager.js": {
+            "lines": 205,
+            "tokens": 1890,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 10,
+            "duplicatedTokens": 194,
+            "percentage": 4.88,
+            "percentageTokens": 10.26,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/InputHandler.js": {
+            "lines": 42,
+            "tokens": 399,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/GridConfig.js": {
+            "lines": 20,
+            "tokens": 158,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/EntityPool.js": {
+            "lines": 232,
+            "tokens": 1855,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/EntityFinder.js": {
+            "lines": 29,
+            "tokens": 218,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/EntityFactory.js": {
+            "lines": 85,
+            "tokens": 952,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/EntityBuilder.js": {
+            "lines": 74,
+            "tokens": 526,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/Entity.js": {
+            "lines": 315,
+            "tokens": 2593,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/BiomeGenerator.js": {
+            "lines": 395,
+            "tokens": 3476,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/core/BiomeConstants.js": {
+            "lines": 234,
+            "tokens": 1881,
+            "sources": 1,
+            "clones": 0,
+            "duplicatedLines": 0,
+            "duplicatedTokens": 0,
+            "percentage": 0,
+            "percentageTokens": 0,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          },
+          "src/main.js": {
+            "lines": 486,
+            "tokens": 4663,
+            "sources": 1,
+            "clones": 2,
+            "duplicatedLines": 18,
+            "duplicatedTokens": 166,
+            "percentage": 3.7,
+            "percentageTokens": 3.56,
+            "newDuplicatedLines": 0,
+            "newClones": 0
+          }
+        },
+        "total": {
+          "lines": 11416,
+          "tokens": 93872,
+          "sources": 43,
+          "clones": 15,
+          "duplicatedLines": 165,
+          "duplicatedTokens": 1767,
+          "percentage": 1.45,
+          "percentageTokens": 1.88,
+          "newDuplicatedLines": 0,
+          "newClones": 0
+        }
+      }
+    },
+    "total": {
+      "lines": 13016,
+      "tokens": 103940,
+      "sources": 50,
+      "clones": 15,
+      "duplicatedLines": 165,
+      "duplicatedTokens": 1767,
+      "percentage": 1.27,
+      "percentageTokens": 1.7,
+      "newDuplicatedLines": 0,
+      "newClones": 0
+    }
+  },
+  "duplicates": [
+    {
+      "format": "javascript",
+      "lines": 16,
+      "fragment": ";\r\n            this.hoverTimer = 0;\r\n        }\r\n        \r\n        // Update hover timer\r\n        if (!this.isVisible) {\r\n            this.hoverTimer += dt;\r\n            \r\n            if (this.hoverTimer >= this.hoverDelay) {\r\n                this.show(mouseX, mouseY);\r\n            }\r\n        } else {\r\n            // Update position if visible\r\n            this.updatePosition(mouseX, mouseY);\r\n            \r\n            // Update content if biome changed",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\ui\\BiomeTooltip.js",
+        "start": 138,
+        "end": 153,
+        "startLoc": {
+          "line": 138,
+          "column": 6,
+          "position": 958
+        },
+        "endLoc": {
+          "line": 153,
+          "column": 35,
+          "position": 1071
+        }
+      },
+      "secondFile": {
+        "name": "src\\ui\\BiomeTooltip.js",
+        "start": 97,
+        "end": 112,
+        "startLoc": {
+          "line": 97,
+          "column": 5,
+          "position": 655
+        },
+        "endLoc": {
+          "line": 112,
+          "column": 42,
+          "position": 768
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 10,
+      "fragment": "let nearestSource = null;\r\n                let minDist = Infinity;\r\n                for (const source of waterSources) {\r\n                    const dist = source.distanceTo(pos.x, pos.y);\r\n                    if (dist < minDist) {\r\n                        minDist = dist;\r\n                        nearestSource = source;\r\n                    }\r\n                }\r\n                thirstComp",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 150,
+        "end": 159,
+        "startLoc": {
+          "line": 150,
+          "column": 17,
+          "position": 1511
+        },
+        "endLoc": {
+          "line": 159,
+          "column": 11,
+          "position": 1612
+        }
+      },
+      "secondFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 26,
+        "end": 37,
+        "startLoc": {
+          "line": 26,
+          "column": 5,
+          "position": 151
+        },
+        "endLoc": {
+          "line": 37,
+          "column": 3,
+          "position": 256
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 13,
+      "fragment": "{\r\n    constructor(world) {\r\n        this.world = world;\r\n    }\r\n    \r\n    update(entity, dt) {\r\n        const pos = entity.getComponent(ComponentType.POSITION);\r\n        const vel = entity.getComponent(ComponentType.VELOCITY);\r\n        const stats = entity.getComponent(ComponentType.STATS);\r\n        const traits = entity.getComponent(ComponentType.TRAITS);\r\n        const status = entity.getComponent(ComponentType.STATUS);\r\n        \r\n        // Apply biome visibility modifier to detection range",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 225,
+        "end": 237,
+        "startLoc": {
+          "line": 225,
+          "column": 2,
+          "position": 2381
+        },
+        "endLoc": {
+          "line": 237,
+          "column": 54,
+          "position": 2515
+        }
+      },
+      "secondFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 82,
+        "end": 93,
+        "startLoc": {
+          "line": 82,
+          "column": 2,
+          "position": 708
+        },
+        "endLoc": {
+          "line": 93,
+          "column": 6,
+          "position": 840
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 12,
+      "fragment": ", stats.age, {\r\n                    target: 'herbivore',\r\n                    energyGained: Math.round(energyGained),\r\n                    damage: Math.round(damage),\r\n                    position: { x: Math.round(pos.x), y: Math.round(pos.y) }\r\n                });\r\n                \r\n                if (targetStats.energy <= 0) {\r\n                    this.world.pool.release(target.entity);\r\n                }\r\n                \r\n                vel",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 370,
+        "end": 381,
+        "startLoc": {
+          "line": 370,
+          "column": 9,
+          "position": 4031
+        },
+        "endLoc": {
+          "line": 381,
+          "column": 4,
+          "position": 4156
+        }
+      },
+      "secondFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 329,
+        "end": 340,
+        "startLoc": {
+          "line": 329,
+          "column": 11,
+          "position": 3572
+        },
+        "endLoc": {
+          "line": 340,
+          "column": 33,
+          "position": 3697
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 13,
+      "fragment": "{\r\n    constructor(world) {\r\n        this.world = world;\r\n    }\r\n    \r\n    update(entity, dt) {\r\n        const pos = entity.getComponent(ComponentType.POSITION);\r\n        const vel = entity.getComponent(ComponentType.VELOCITY);\r\n        const stats = entity.getComponent(ComponentType.STATS);\r\n        const traits = entity.getComponent(ComponentType.TRAITS);\r\n        const status = entity.getComponent(ComponentType.STATUS);\r\n        \r\n        // Stay in water",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 427,
+        "end": 439,
+        "startLoc": {
+          "line": 427,
+          "column": 2,
+          "position": 4653
+        },
+        "endLoc": {
+          "line": 439,
+          "column": 17,
+          "position": 4787
+        }
+      },
+      "secondFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 82,
+        "end": 93,
+        "startLoc": {
+          "line": 82,
+          "column": 2,
+          "position": 708
+        },
+        "endLoc": {
+          "line": 93,
+          "column": 6,
+          "position": 840
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 14,
+      "fragment": "{\r\n    constructor(world) {\r\n        this.world = world;\r\n    }\r\n    \r\n    update(entity, dt) {\r\n        const pos = entity.getComponent(ComponentType.POSITION);\r\n        const vel = entity.getComponent(ComponentType.VELOCITY);\r\n        const stats = entity.getComponent(ComponentType.STATS);\r\n        const traits = entity.getComponent(ComponentType.TRAITS);\r\n        const status = entity.getComponent(ComponentType.STATUS);\r\n        \r\n        // Apply biome visibility modifier to detection range\r\n        const",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 500,
+        "end": 513,
+        "startLoc": {
+          "line": 500,
+          "column": 2,
+          "position": 5573
+        },
+        "endLoc": {
+          "line": 513,
+          "column": 6,
+          "position": 5711
+        }
+      },
+      "secondFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 82,
+        "end": 238,
+        "startLoc": {
+          "line": 82,
+          "column": 2,
+          "position": 708
+        },
+        "endLoc": {
+          "line": 238,
+          "column": 75,
+          "position": 2519
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 21,
+      "fragment": "species !== 'herbivore') {\r\n                return false;\r\n            }\r\n            \r\n            // Check if prey is concealed by their current biome\r\n            const preyBiome = preyEntity.getComponent(ComponentType.BIOME);\r\n            if (preyBiome) {\r\n                const concealmentBonus = preyBiome.biomeEffects.concealmentBonus;\r\n                if (concealmentBonus > 0) {\r\n                    // Prey has concealment - reduce detection probability\r\n                    const detectionChance = 1.0 - concealmentBonus;\r\n                    if (Math.random() > detectionChance) {\r\n                        return false; // Prey successfully hidden\r\n                    }\r\n                }\r\n            }\r\n            \r\n            return true;\r\n        });\r\n        \r\n        if",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 522,
+        "end": 542,
+        "startLoc": {
+          "line": 522,
+          "column": 2,
+          "position": 5863
+        },
+        "endLoc": {
+          "line": 542,
+          "column": 3,
+          "position": 6023
+        }
+      },
+      "secondFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 247,
+        "end": 267,
+        "startLoc": {
+          "line": 247,
+          "column": 2,
+          "position": 2656
+        },
+        "endLoc": {
+          "line": 267,
+          "column": 45,
+          "position": 2816
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 7,
+      "fragment": "const target = prey[0];\r\n            const targetPos = target.entity.getComponent(ComponentType.POSITION);\r\n            const dx = targetPos.x - pos.x;\r\n            const dy = targetPos.y - pos.y;\r\n            const dist = Math.sqrt(dx * dx + dy * dy);\r\n            \r\n            if (dist < 30",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 543,
+        "end": 549,
+        "startLoc": {
+          "line": 543,
+          "column": 13,
+          "position": 6055
+        },
+        "endLoc": {
+          "line": 549,
+          "column": 3,
+          "position": 6164
+        }
+      },
+      "secondFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 355,
+        "end": 361,
+        "startLoc": {
+          "line": 355,
+          "column": 13,
+          "position": 3806
+        },
+        "endLoc": {
+          "line": 361,
+          "column": 3,
+          "position": 3915
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 11,
+      "fragment": ",\r\n                    energyGained: Math.round(energyGained),\r\n                    damage: Math.round(damage),\r\n                    position: { x: Math.round(pos.x), y: Math.round(pos.y) }\r\n                });\r\n                \r\n                if (targetStats.energy <= 0) {\r\n                    this.world.pool.release(target.entity);\r\n                }\r\n                \r\n                status",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 561,
+        "end": 571,
+        "startLoc": {
+          "line": 561,
+          "column": 14,
+          "position": 6322
+        },
+        "endLoc": {
+          "line": 571,
+          "column": 7,
+          "position": 6432
+        }
+      },
+      "secondFile": {
+        "name": "src\\systems\\BehaviorSystem.js",
+        "start": 330,
+        "end": 340,
+        "startLoc": {
+          "line": 330,
+          "column": 12,
+          "position": 3587
+        },
+        "endLoc": {
+          "line": 340,
+          "column": 33,
+          "position": 3697
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 22,
+      "fragment": ";\r\n        \r\n        ctx.save();\r\n        ctx.strokeStyle = config.color;\r\n        ctx.fillStyle = config.color;\r\n        ctx.globalAlpha = config.alpha;\r\n        ctx.lineWidth = config.width;\r\n        \r\n        ctx.beginPath();\r\n        ctx.arc(position.x, position.y, radius, 0, Math.PI * 2);\r\n        ctx.fill();\r\n        ctx.globalAlpha = 1.0;\r\n        ctx.stroke();\r\n        \r\n        ctx.restore();\r\n    }\r\n    \r\n    /**\r\n     * Render motion trails for fast-moving entities\r\n     * @param {CanvasRenderingContext2D} ctx - Canvas rendering context\r\n     * @param {Array} entities - Array of entities\r\n     */",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\graphics\\VisualIndicatorSystem.js",
+        "start": 383,
+        "end": 404,
+        "startLoc": {
+          "line": 383,
+          "column": 11,
+          "position": 3396
+        },
+        "endLoc": {
+          "line": 404,
+          "column": 8,
+          "position": 3552
+        }
+      },
+      "secondFile": {
+        "name": "src\\graphics\\VisualIndicatorSystem.js",
+        "start": 359,
+        "end": 381,
+        "startLoc": {
+          "line": 359,
+          "column": 13,
+          "position": 3210
+        },
+        "endLoc": {
+          "line": 381,
+          "column": 8,
+          "position": 3366
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 8,
+      "fragment": ";\r\n\r\n    for (let i = 0; i < bladeCount; i++) {\r\n      const seed = (x + y) * 0.1 + i;\r\n      const bladeX = x + (Math.sin(seed * 12.9898) * 0.5 + 0.5) * size;\r\n      const bladeY = y + size;\r\n\r\n      ctx",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\graphics\\Renderer.js",
+        "start": 418,
+        "end": 425,
+        "startLoc": {
+          "line": 418,
+          "column": 4,
+          "position": 3700
+        },
+        "endLoc": {
+          "line": 425,
+          "column": 4,
+          "position": 3813
+        }
+      },
+      "secondFile": {
+        "name": "src\\graphics\\Renderer.js",
+        "start": 389,
+        "end": 396,
+        "startLoc": {
+          "line": 389,
+          "column": 2,
+          "position": 3388
+        },
+        "endLoc": {
+          "line": 396,
+          "column": 64,
+          "position": 3501
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 9,
+      "fragment": "const entities = this.world.getActiveEntities();\r\n        \r\n        for (const entity of entities) {\r\n            if (!entity.hasComponents(ComponentType.POSITION, ComponentType.VELOCITY)) continue;\r\n            \r\n            const pos = entity.getComponent(ComponentType.POSITION);\r\n            const vel = entity.getComponent(ComponentType.VELOCITY);\r\n            \r\n            // Calculate velocity magnitude",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\graphics\\DebugRenderer.js",
+        "start": 331,
+        "end": 339,
+        "startLoc": {
+          "line": 331,
+          "column": 9,
+          "position": 2441
+        },
+        "endLoc": {
+          "line": 339,
+          "column": 32,
+          "position": 2540
+        }
+      },
+      "secondFile": {
+        "name": "src\\graphics\\VisualIndicatorSystem.js",
+        "start": 82,
+        "end": 90,
+        "startLoc": {
+          "line": 82,
+          "column": 9,
+          "position": 662
+        },
+        "endLoc": {
+          "line": 90,
+          "column": 19,
+          "position": 761
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 8,
+      "fragment": "entities) {\r\n        if (!entity.active || !entity.hasComponent(ComponentType.POSITION))\r\n          continue;\r\n\r\n        const pos = entity.getComponent(ComponentType.POSITION);\r\n        const dx = pos.x - position.x;\r\n        const dy = pos.y - position.y;\r\n        const distSq",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\core\\World.js",
+        "start": 175,
+        "end": 182,
+        "startLoc": {
+          "line": 175,
+          "column": 2,
+          "position": 1638
+        },
+        "endLoc": {
+          "line": 182,
+          "column": 7,
+          "position": 1733
+        }
+      },
+      "secondFile": {
+        "name": "src\\core\\World.js",
+        "start": 150,
+        "end": 157,
+        "startLoc": {
+          "line": 150,
+          "column": 2,
+          "position": 1362
+        },
+        "endLoc": {
+          "line": 157,
+          "column": 9,
+          "position": 1457
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 6,
+      "fragment": "// Convert screen coordinates to world coordinates\r\n    const worldX = (x - this.renderer.camera.x) / this.renderer.camera.zoom;\r\n    const worldY = (y - this.renderer.camera.y) / this.renderer.camera.zoom;\r\n\r\n    const maxDist = 30 / this.renderer.camera.zoom;\r\n    this.world.selectedEntity",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\core\\InputHandlerManager.js",
+        "start": 166,
+        "end": 171,
+        "startLoc": {
+          "line": 166,
+          "column": 5,
+          "position": 1571
+        },
+        "endLoc": {
+          "line": 171,
+          "column": 15,
+          "position": 1668
+        }
+      },
+      "secondFile": {
+        "name": "src\\core\\InputHandlerManager.js",
+        "start": 150,
+        "end": 155,
+        "startLoc": {
+          "line": 150,
+          "column": 5,
+          "position": 1360
+        },
+        "endLoc": {
+          "line": 155,
+          "column": 14,
+          "position": 1457
+        }
+      }
+    },
+    {
+      "format": "javascript",
+      "lines": 10,
+      "fragment": "if (this.world.adaptiveQualityManager.isManualOverride()) {\r\n            this.world.adaptiveQualityManager.resetToAuto();\r\n            console.log('🎨 Automatic quality adjustment enabled');\r\n        } else {\r\n            this.world.adaptiveQualityManager.setManualOverride(true);\r\n            console.log('🎨 Automatic quality adjustment disabled');\r\n        }\r\n    }\r\n    \r\n    toggleHeatmap",
+      "tokens": 0,
+      "firstFile": {
+        "name": "src\\main.js",
+        "start": 339,
+        "end": 348,
+        "startLoc": {
+          "line": 339,
+          "column": 9,
+          "position": 3229
+        },
+        "endLoc": {
+          "line": 348,
+          "column": 14,
+          "position": 3312
+        }
+      },
+      "secondFile": {
+        "name": "src\\main.js",
+        "start": 285,
+        "end": 293,
+        "startLoc": {
+          "line": 285,
+          "column": 25,
+          "position": 2686
+        },
+        "endLoc": {
+          "line": 293,
+          "column": 6,
+          "position": 2767
+        }
+      }
+    }
+  ],
+  "filename": "C:\\Users\\Mitchell\\Documents\\My_Code\\Fun\\Evolution Simulations\\Evosim_PlayCanvas\\node_modules\\@jscpd\\html-reporter\\dist\\templates\\main.pug"
+}

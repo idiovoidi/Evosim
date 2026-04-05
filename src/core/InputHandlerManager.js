@@ -1,4 +1,4 @@
-import { ComponentType } from "./Entity.js";
+import { findClosestEntity } from "./EntityFinder.js";
 
 /**
  * Enhanced input handler with camera controls
@@ -151,24 +151,8 @@ export class InputHandlerManager {
     const worldX = (x - this.renderer.camera.x) / this.renderer.camera.zoom;
     const worldY = (y - this.renderer.camera.y) / this.renderer.camera.zoom;
 
-    let closestEntity = null;
-    let closestDist = 30 / this.renderer.camera.zoom; // Adjust hover distance by zoom
-
-    for (const entity of this.world.getActiveEntities()) {
-      if (!entity.hasComponent(ComponentType.POSITION)) continue;
-
-      const pos = entity.getComponent(ComponentType.POSITION);
-      const dx = pos.x - worldX;
-      const dy = pos.y - worldY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestEntity = entity;
-      }
-    }
-
-    this.world.hoveredEntity = closestEntity;
+    const maxDist = 30 / this.renderer.camera.zoom;
+    this.world.hoveredEntity = findClosestEntity(this.world, worldX, worldY, maxDist);
   }
 
   handleClick(e) {
@@ -183,25 +167,8 @@ export class InputHandlerManager {
     const worldX = (x - this.renderer.camera.x) / this.renderer.camera.zoom;
     const worldY = (y - this.renderer.camera.y) / this.renderer.camera.zoom;
 
-    // Find entity at click position
-    let closestEntity = null;
-    let closestDist = 30 / this.renderer.camera.zoom; // Adjust click distance by zoom
-
-    for (const entity of this.world.getActiveEntities()) {
-      if (!entity.hasComponent(ComponentType.POSITION)) continue;
-
-      const pos = entity.getComponent(ComponentType.POSITION);
-      const dx = pos.x - worldX;
-      const dy = pos.y - worldY;
-      const dist = Math.sqrt(dx * dx + dy * dy);
-
-      if (dist < closestDist) {
-        closestDist = dist;
-        closestEntity = entity;
-      }
-    }
-
-    this.world.selectedEntity = closestEntity;
+    const maxDist = 30 / this.renderer.camera.zoom;
+    this.world.selectedEntity = findClosestEntity(this.world, worldX, worldY, maxDist);
   }
 
   /**

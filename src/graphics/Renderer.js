@@ -810,42 +810,8 @@ export class Renderer {
     ctx.textBaseline = "middle";
     ctx.fillText(appearance.emoji, pos.x, pos.y);
 
-    // Draw health bar
-    if (stats) {
-      const barWidth = 30;
-      const barHeight = 4;
-      const healthPercent = stats.energy / stats.maxEnergy;
-
-      ctx.fillStyle = "#333";
-      ctx.fillRect(
-        pos.x - barWidth / 2,
-        pos.y - size / 2 - 8,
-        barWidth,
-        barHeight
-      );
-
-      ctx.fillStyle =
-        healthPercent > 0.5
-          ? "#4CAF50"
-          : healthPercent > 0.25
-          ? "#FFC107"
-          : "#f44336";
-      ctx.fillRect(
-        pos.x - barWidth / 2,
-        pos.y - size / 2 - 8,
-        barWidth * healthPercent,
-        barHeight
-      );
-    }
-
-    // Highlight selected entity
-    if (entity === this.world.selectedEntity) {
-      ctx.strokeStyle = "#FFD700";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.arc(pos.x, pos.y, size / 2 + 5, 0, Math.PI * 2);
-      ctx.stroke();
-    }
+    // Draw health bar and selection highlight (shared logic)
+    this.renderEntityExtras(entity, size);
   }
 
   renderEffects(entities) {

@@ -1,4 +1,5 @@
 import { ComponentType } from '../core/Entity.js';
+import { calculateOffspringGeneration, calculateSpawnPosition } from '../core/EntityBuilder.js';
 
 export class ReproductionSystem {
     constructor(world) {
@@ -210,17 +211,12 @@ export class ReproductionSystem {
         // Create offspring genetics with crossover
         const offspringGenetics = genetics1.crossover(genetics2, 0.1);
         
-        // Calculate offspring generation (max of parents + 1)
-        const offspringGeneration = Math.max(stats1.generation || 1, stats2.generation || 1) + 1;
-        
-        // Spawn near parent
-        const offsetX = (Math.random() - 0.5) * 50;
-        const offsetY = (Math.random() - 0.5) * 50;
-        const x = Math.max(0, Math.min(this.world.width, pos1.x + offsetX));
-        const y = Math.max(0, Math.min(this.world.height, pos1.y + offsetY));
+        // Calculate offspring generation and position
+        const offspringGeneration = calculateOffspringGeneration(stats1.generation, stats2.generation);
+        const spawnPos = calculateSpawnPosition(this.world, pos1.x, pos1.y);
         
         // Acquire offspring from pool with genetics and generation
-        const offspring = this.world.pool.acquire(stats1.species, x, y, offspringGenetics, offspringGeneration);
+        const offspring = this.world.pool.acquire(stats1.species, spawnPos.x, spawnPos.y, offspringGenetics, offspringGeneration);
         this.world.addEntity(offspring);
         
         // Log reproduction action for both parents

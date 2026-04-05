@@ -1,6 +1,7 @@
 import { createNoise2D } from 'simplex-noise';
 import alea from 'alea';
 import { BiomeType, BIOME_DEFINITIONS } from './BiomeConstants.js';
+import { initializeGridConfig, resizeGridConfig } from './GridConfig.js';
 
 /**
  * BiomeGenerator - Procedural biome generation using multi-layer noise
@@ -8,11 +9,8 @@ import { BiomeType, BIOME_DEFINITIONS } from './BiomeConstants.js';
  */
 export class BiomeGenerator {
     constructor(width, height, seed = null) {
-        this.width = width;
-        this.height = height;
-        this.tileSize = 40;
-        this.tilesX = Math.ceil(width / this.tileSize);
-        this.tilesY = Math.ceil(height / this.tileSize);
+        const config = initializeGridConfig(width, height);
+        Object.assign(this, config);
         
         // Seed for reproducibility
         this.seed = seed !== null ? seed : Math.random();
@@ -64,10 +62,7 @@ export class BiomeGenerator {
      * Resize the generator and regenerate biomes
      */
     resize(width, height) {
-        this.width = width;
-        this.height = height;
-        this.tilesX = Math.ceil(width / this.tileSize);
-        this.tilesY = Math.ceil(height / this.tileSize);
+        resizeGridConfig(this, width, height);
         this.transitionCache.clear();
         this.generate();
     }

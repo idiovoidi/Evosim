@@ -1,4 +1,4 @@
-import { ComponentType } from './Entity.js';
+import { findClosestEntity } from './EntityFinder.js';
 
 export class InputHandler {
     constructor(canvas, world) {
@@ -30,24 +30,7 @@ export class InputHandler {
      * @param {number} y - Mouse y position
      */
     updateHoveredEntity(x, y) {
-        let closestEntity = null;
-        let closestDist = 30; // Max hover distance
-        
-        for (const entity of this.world.getActiveEntities()) {
-            if (!entity.hasComponent(ComponentType.POSITION)) continue;
-            
-            const pos = entity.getComponent(ComponentType.POSITION);
-            const dx = pos.x - x;
-            const dy = pos.y - y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist < closestDist) {
-                closestDist = dist;
-                closestEntity = entity;
-            }
-        }
-        
-        this.world.hoveredEntity = closestEntity;
+        this.world.hoveredEntity = findClosestEntity(this.world, x, y, 30);
     }
     
     handleClick(e) {
@@ -55,24 +38,6 @@ export class InputHandler {
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
         
-        // Find entity at click position
-        let closestEntity = null;
-        let closestDist = 30; // Max click distance
-        
-        for (const entity of this.world.getActiveEntities()) {
-            if (!entity.hasComponent(ComponentType.POSITION)) continue;
-            
-            const pos = entity.getComponent(ComponentType.POSITION);
-            const dx = pos.x - x;
-            const dy = pos.y - y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            
-            if (dist < closestDist) {
-                closestDist = dist;
-                closestEntity = entity;
-            }
-        }
-        
-        this.world.selectedEntity = closestEntity;
+        this.world.selectedEntity = findClosestEntity(this.world, x, y, 30);
     }
 }

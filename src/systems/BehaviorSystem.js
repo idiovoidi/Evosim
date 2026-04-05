@@ -1,5 +1,58 @@
 import { ComponentType } from '../core/Entity.js';
 
+/**
+ * Shared helper: Check if entity needs water and seek nearest source
+ * @param {World} world - The world instance
+ * @param {Entity} entity - The entity seeking water
+ * @param {Position} pos - Entity position component
+ * @param {Velocity} vel - Entity velocity component
+ * @param {Status} status - Entity status component
+ * @param {Traits} traits - Entity traits component
+ * @param {number} speedMultiplier - Speed multiplier for movement
+ * @returns {boolean} True if seeking water, false otherwise
+ */
+function seekWaterIfNeeded(world, entity, pos, vel, status, traits, speedMultiplier) {
+    const thirstComp = entity.getComponent(ComponentType.THIRST);
+    if (!thirstComp || thirstComp.thirst >= 30) {
+        return false;
+    }
+    
+    const waterSources = world.waterSources || [];
+    if (waterSources.length === 0) {
+        return false;
+    }
+    
+    // Find nearest water source
+    let nearestSource = null;
+    let minDist = Infinity;
+    
+    for (const source of waterSources) {
+        const dist = source.distanceTo(pos.x, pos.y);
+        if (dist < minDist) {
+            minDist = dist;
+            nearestSource = source;
+        }
+    }
+    
+    if (!nearestSource) {
+        return false;
+    }
+    
+    // Move towards water source
+    const dx = nearestSource.x - pos.x;
+    const dy = nearestSource.y - pos.y;
+    const dist = Math.sqrt(dx * dx + dy * dy);
+    
+    if (dist > 0) {
+        vel.dx = (dx / dist) * speedMultiplier * traits.speed;
+        vel.dy = (dy / dist) * speedMultiplier * traits.speed;
+        status.state = 'seeking_water';
+        return true;
+    }
+    
+    return false;
+}
+
 export class BehaviorSystem {
     constructor(world) {
         this.world = world;
@@ -89,14 +142,13 @@ class HerbivoreBehavior {
         }
         
         // Check for thirst and seek water if needed
-        const thirstComp = entity.getComponent(ComponentType.THIRST);
-        if (thirstComp && thirstComp.thirst < 30) {
-            // Find nearest water source
-            const waterSources = this.world.waterSources || [];
-            if (waterSources.length > 0) {
+        if (seekWaterIfNeeded(this.world, entity, pos, vel, status, traits, 2.5)) {
+            const thirstComp = entity.getComponent(ComponentType.THIRST);
+            if (thirstComp) {
+                const waterSources = this.world.waterSources || [];
+                // Find nearest source and set target
                 let nearestSource = null;
                 let minDist = Infinity;
-                
                 for (const source of waterSources) {
                     const dist = source.distanceTo(pos.x, pos.y);
                     if (dist < minDist) {
@@ -104,22 +156,9 @@ class HerbivoreBehavior {
                         nearestSource = source;
                     }
                 }
-                
-                if (nearestSource) {
-                    // Move towards water source
-                    const dx = nearestSource.x - pos.x;
-                    const dy = nearestSource.y - pos.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist > 0) {
-                        vel.dx = (dx / dist) * 2.5 * traits.speed;
-                        vel.dy = (dy / dist) * 2.5 * traits.speed;
-                        status.state = 'seeking_water';
-                        thirstComp.targetWaterSource = nearestSource;
-                        return;
-                    }
-                }
+                thirstComp.targetWaterSource = nearestSource;
             }
+            return;
         }
         
         // Find food (plants)
@@ -226,36 +265,8 @@ class PredatorBehavior {
         });
         
         // Check for thirst and seek water if needed
-        const thirstComp = entity.getComponent(ComponentType.THIRST);
-        if (thirstComp && thirstComp.thirst < 30) {
-            // Find nearest water source
-            const waterSources = this.world.waterSources || [];
-            if (waterSources.length > 0) {
-                let nearestSource = null;
-                let minDist = Infinity;
-                
-                for (const source of waterSources) {
-                    const dist = source.distanceTo(pos.x, pos.y);
-                    if (dist < minDist) {
-                        minDist = dist;
-                        nearestSource = source;
-                    }
-                }
-                
-                if (nearestSource) {
-                    // Move towards water source
-                    const dx = nearestSource.x - pos.x;
-                    const dy = nearestSource.y - pos.y;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    
-                    if (dist > 0) {
-                        vel.dx = (dx / dist) * 3.0 * traits.speed;
-                        vel.dy = (dy / dist) * 3.0 * traits.speed;
-                        status.state = 'seeking_water';
-                        return;
-                    }
-                }
-            }
+        if (seekWaterIfNeeded(this.world, entity, pos, vel, status, traits, 3.0)) {
+            return;
         }
         
         // Evaluate ambush opportunity at water sources

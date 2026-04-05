@@ -1,12 +1,10 @@
 import { createNoise2D } from 'simplex-noise';
+import { initializeGridConfig, resizeGridConfig } from './GridConfig.js';
 
 export class TerrainGenerator {
     constructor(width, height) {
-        this.width = width;
-        this.height = height;
-        this.tileSize = 40;
-        this.tilesX = Math.ceil(width / this.tileSize);
-        this.tilesY = Math.ceil(height / this.tileSize);
+        const config = initializeGridConfig(width, height);
+        Object.assign(this, config);
         
         this.noise = createNoise2D();
         this.terrainMap = [];
@@ -15,10 +13,7 @@ export class TerrainGenerator {
     }
     
     resize(width, height) {
-        this.width = width;
-        this.height = height;
-        this.tilesX = Math.ceil(width / this.tileSize);
-        this.tilesY = Math.ceil(height / this.tileSize);
+        resizeGridConfig(this, width, height);
         this.generate();
     }
     
