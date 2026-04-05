@@ -378,32 +378,143 @@ export class Renderer {
 
   /**
    * Render grass pattern with animation
-   * Implements gentle swaying motion controlled by biome animationSpeed
+   * Implements realistic grass blades with curved shapes, color variation, and natural sway
    */
   renderGrassPattern(ctx, x, y, size, biome, time) {
-    const bladeCount = 12;
-    const bladeHeight = size / 3;
-    const animSpeed = biome.animationSpeed || 0;
-
-    ctx.strokeStyle = biome.secondaryColor;
-    ctx.lineWidth = 1;
-
+    const bladeCount = 24; // Increased density
+    const baseAnimSpeed = biome.animationSpeed || 0;
+    
+    // Base colors for grass variation
+    const baseColor = biome.secondaryColor || '#7fb857';
+    const darkColor = biome.color || '#6b9e4d';
+    
     for (let i = 0; i < bladeCount; i++) {
-      const seed = (x + y) * 0.1 + i;
-      const bladeX = x + (Math.sin(seed * 12.9898) * 0.5 + 0.5) * size;
+      // Consistent random values based on position
+      const seed = (x * 73 + y * 37 + i * 17) * 0.131;
+      const rand = (offset) => ((Math.sin(seed + offset) + 1) * 0.5);
+      
+      // Blade position within tile
+      const bladeX = x + rand(0.1) * size;
       const bladeY = y + size;
-
-      // Animated sway - each blade sways at slightly different phase
-      // Animation speed is controlled by biome.animationSpeed property
-      const sway = animSpeed > 0 
-        ? Math.sin(time * animSpeed * 2 + seed) * (size / 15)
+      
+      // Varied blade properties
+      const bladeHeight = size * (0.25 + rand(0.2) * 0.35); // 25-60% of tile height
+      const bladeWidth = 1 + rand(0.3) * 2; // 1-3px width
+      const bladeCurve = (rand(0.4) - 0.5) * size * 0.3; // Curve direction and amount
+      
+      // Color variation - mix between dark and light green
+      const colorMix = rand(0.5);
+      const bladeColor = this.blendColors(darkColor, baseColor, colorMix);
+      
+      // Animated sway with wind gust effect
+      const windPhase = seed * 10;
+      const swayAmount = baseAnimSpeed > 0 
+        ? Math.sin(time * baseAnimSpeed * 2 + windPhase) * (size / 20) + 
+          Math.sin(time * baseAnimSpeed * 0.5 + windPhase) * (size / 40) // Add slower gust
         : 0;
-
+      
+      // Draw grass blade as curved path
+      ctx.strokeStyle = bladeColor;
+      ctx.lineWidth = bladeWidth;
+      ctx.lineCap = 'round';
+      
       ctx.beginPath();
       ctx.moveTo(bladeX, bladeY);
-      ctx.lineTo(bladeX + sway, bladeY - bladeHeight);
+      
+      // Control point for quadratic curve (creates natural blade bend)
+      const cpX = bladeX + bladeCurve + swayAmount * 0.5;
+      const cpY = bladeY - bladeHeight * 0.6;
+      
+      // End point with sway
+      const endX = bladeX + bladeCurve * 1.5 + swayAmount;
+      const endY = bladeY - bladeHeight;
+      
+      ctx.quadraticCurveTo(cpX, cpY, endX, endY);
       ctx.stroke();
+      
+      // Add subtle highlight to top of some blades
+      if (rand(0.6) > 0.7) {
+        ctx.strokeStyle = this.lightenColor(bladeColor, 0.15);
+        ctx.lineWidth = Math.max(0.5, bladeWidth * 0.5);
+        ctx.beginPath();
+        ctx.moveTo(endX - swayAmount * 0.2, endY + bladeHeight * 0.15);
+        ctx.quadraticCurveTo(cpX, cpY + bladeHeight * 0.1, bladeX + bladeCurve * 0.3, bladeY - bladeHeight * 0.3);
+        ctx.stroke();
+      }
     }
+    
+    // Add some "tuft" clusters for density variation
+    const tuftCount = 4;
+    for (let t = 0; t < tuftCount; t++) {
+      const seed = (x * 91 + y * 53 + t * 29) * 0.071;
+      const rand = (offset) => ((Math.sin(seed + offset) + 1) * 0.5);
+      
+      const tuftX = x + rand(0.1) * size;
+      const tuftY = y + size - rand(0.2) * 5;
+      
+      // Draw small cluster of short blades
+      ctx.strokeStyle = this.darkenColor(baseColor, 0.1);
+      ctx.lineWidth = 1;
+      
+      for (let b = 0; b < 3; b++) {
+        const angle = (b / 2 - 0.5) * 0.5 + rand(0.3) * 0.3;
+        const h = size * 0.15;
+        
+        ctx.beginPath();
+        ctx.moveTo(tuftX, tuftY);
+        ctx.lineTo(tuftX + Math.sin(angle) * h, tuftY - Math.cos(angle) * h);
+        ctx.stroke();
+      }
+    }
+  }
+
+  /**
+   * Blend two hex colors by ratio (0 = color1, 1 = color2)
+   */
+  blendColors(color1, color2, ratio) {
+    const r1 = parseInt(color1.slice(1, 3), 16);
+    const g1 = parseInt(color1.slice(3, 5), 16);
+    const b1 = parseInt(color1.slice(5, 7), 16);
+    
+    const r2 = parseInt(color2.slice(1, 3), 16);
+    const g2 = parseInt(color2.slice(3, 5), 16);
+    const b2 = parseInt(color2.slice(5, 7), 16);
+    
+    const r = Math.round(r1 + (r2 - r1) * ratio);
+    const g = Math.round(g1 + (g2 - g1) * ratio);
+    const b = Math.round(b1 + (b2 - b1) * ratio);
+    
+    return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  }
+
+  /**
+   * Lighten a hex color by amount (0-1)
+   */
+  lightenColor(color, amount) {
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    
+    const r2 = Math.min(255, Math.round(r + (255 - r) * amount));
+    const g2 = Math.min(255, Math.round(g + (255 - g) * amount));
+    const b2 = Math.min(255, Math.round(b + (255 - b) * amount));
+    
+    return `#${r2.toString(16).padStart(2, '0')}${g2.toString(16).padStart(2, '0')}${b2.toString(16).padStart(2, '0')}`;
+  }
+
+  /**
+   * Darken a hex color by amount (0-1)
+   */
+  darkenColor(color, amount) {
+    const r = parseInt(color.slice(1, 3), 16);
+    const g = parseInt(color.slice(3, 5), 16);
+    const b = parseInt(color.slice(5, 7), 16);
+    
+    const r2 = Math.max(0, Math.round(r * (1 - amount)));
+    const g2 = Math.max(0, Math.round(g * (1 - amount)));
+    const b2 = Math.max(0, Math.round(b * (1 - amount)));
+    
+    return `#${r2.toString(16).padStart(2, '0')}${g2.toString(16).padStart(2, '0')}${b2.toString(16).padStart(2, '0')}`;
   }
 
   /**
@@ -412,19 +523,36 @@ export class Renderer {
    */
   renderSparseGrassPattern(ctx, x, y, size, biome) {
     const bladeCount = 6;
-    const bladeHeight = size / 4;
-
-    ctx.strokeStyle = biome.secondaryColor;
-    ctx.lineWidth = 1.5;
+    const baseColor = biome.secondaryColor || '#d4c291';
+    const darkColor = biome.color || '#b8a76f';
 
     for (let i = 0; i < bladeCount; i++) {
-      const seed = (x + y) * 0.1 + i;
-      const bladeX = x + (Math.sin(seed * 12.9898) * 0.5 + 0.5) * size;
+      const seed = (x * 73 + y * 37 + i * 17) * 0.131;
+      const rand = (offset) => ((Math.sin(seed + offset) + 1) * 0.5);
+      
+      const bladeX = x + rand(0.1) * size;
       const bladeY = y + size;
+      
+      const bladeHeight = size * (0.2 + rand(0.2) * 0.25);
+      const bladeWidth = 1.5 + rand(0.3) * 1;
+      const bladeCurve = (rand(0.4) - 0.5) * size * 0.2;
+      
+      const colorMix = rand(0.5);
+      const bladeColor = this.blendColors(darkColor, baseColor, colorMix);
+
+      ctx.strokeStyle = bladeColor;
+      ctx.lineWidth = bladeWidth;
+      ctx.lineCap = 'round';
 
       ctx.beginPath();
       ctx.moveTo(bladeX, bladeY);
-      ctx.lineTo(bladeX, bladeY - bladeHeight);
+      
+      const cpX = bladeX + bladeCurve;
+      const cpY = bladeY - bladeHeight * 0.6;
+      const endX = bladeX + bladeCurve * 1.5;
+      const endY = bladeY - bladeHeight;
+      
+      ctx.quadraticCurveTo(cpX, cpY, endX, endY);
       ctx.stroke();
     }
   }
