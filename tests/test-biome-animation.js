@@ -3,8 +3,8 @@
  * Verifies that animation timing is properly integrated into the Renderer
  */
 
-import { BiomeGenerator } from './src/core/BiomeGenerator.js';
-import { Renderer } from './src/graphics/Renderer.js';
+import { BiomeGenerator } from '../src/core/BiomeGenerator.js';
+import { Renderer } from '../src/graphics/Renderer.js';
 
 console.log('Testing biome animation timing...\n');
 

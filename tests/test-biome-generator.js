@@ -1,5 +1,5 @@
 // Quick test to verify BiomeGenerator functionality
-import { BiomeGenerator } from "./src/core/BiomeGenerator.js";
+import { BiomeGenerator } from "../src/core/BiomeGenerator.js";
 
 console.log("Testing BiomeGenerator...\n");
 

@@ -3,10 +3,10 @@
  * Tests the biome legend panel UI with color swatches, modifiers, and click-to-highlight
  */
 
-import { World } from './src/core/World.js';
-import { Renderer } from './src/graphics/Renderer.js';
-import { BiomeLegendPanel } from './src/ui/BiomeLegendPanel.js';
-import { BIOME_DEFINITIONS } from './src/core/BiomeConstants.js';
+import { World } from '../src/core/World.js';
+import { Renderer } from '../src/graphics/Renderer.js';
+import { BiomeLegendPanel } from '../src/ui/BiomeLegendPanel.js';
+import { BIOME_DEFINITIONS } from '../src/core/BiomeConstants.js';
 
 console.log('🧪 Testing BiomeLegendPanel Component...\n');
 

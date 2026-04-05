@@ -2,8 +2,8 @@
  * Test that plants cannot spawn in water, deep_water, and snow biomes
  */
 
-import { World } from './src/core/World.js';
-import { ComponentType } from './src/core/Entity.js';
+import { World } from '../src/core/World.js';
+import { ComponentType } from '../src/core/Entity.js';
 
 console.log('=== Testing Plant Biome Restrictions ===\n');
 

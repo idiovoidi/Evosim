@@ -2,8 +2,8 @@
  * Test plant spawning with biome density modifiers
  */
 
-import { World } from "./src/core/World.js";
-import { ComponentType } from "./src/core/Entity.js";
+import { World } from "../src/core/World.js";
+import { ComponentType } from "../src/core/Entity.js";
 
 console.log("=== Testing Plant Spawning with Biome Density Modifiers ===\n");
 

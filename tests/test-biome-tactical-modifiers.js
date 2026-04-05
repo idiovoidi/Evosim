@@ -3,8 +3,8 @@
  * Verifies that visibility modifiers and concealment bonuses work correctly
  */
 
-import { Entity, ComponentType, Position, Velocity, Stats, Traits, Status, BiomeComponent, Genetics } from './src/core/Entity.js';
-import { BehaviorSystem } from './src/systems/BehaviorSystem.js';
+import { Entity, ComponentType, Position, Velocity, Stats, Traits, Status, BiomeComponent, Genetics } from '../src/core/Entity.js';
+import { BehaviorSystem } from '../src/systems/BehaviorSystem.js';
 
 // Mock World class for testing
 class MockWorld {

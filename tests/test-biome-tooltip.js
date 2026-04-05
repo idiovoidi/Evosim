@@ -3,9 +3,9 @@
  * Verifies tooltip creation, update logic, and content generation
  */
 
-import { BiomeTooltip } from './src/ui/BiomeTooltip.js';
-import { World } from './src/core/World.js';
-import { Renderer } from './src/graphics/Renderer.js';
+import { BiomeTooltip } from '../src/ui/BiomeTooltip.js';
+import { World } from '../src/core/World.js';
+import { Renderer } from '../src/graphics/Renderer.js';
 
 console.log('🧪 Testing BiomeTooltip Component...\n');
 

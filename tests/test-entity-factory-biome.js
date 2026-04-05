@@ -2,9 +2,9 @@
  * Test script to verify EntityFactory adds biome components correctly
  */
 
-import { EntityFactory } from './src/core/EntityFactory.js';
-import { ComponentType } from './src/core/Entity.js';
-import { BiomeGenerator } from './src/core/BiomeGenerator.js';
+import { EntityFactory } from '../src/core/EntityFactory.js';
+import { ComponentType } from '../src/core/Entity.js';
+import { BiomeGenerator } from '../src/core/BiomeGenerator.js';
 
 // Mock world object with biome generator
 const mockWorld = {

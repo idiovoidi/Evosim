@@ -3,8 +3,8 @@
  * Verifies the component exports and structure without requiring DOM
  */
 
-import { BiomeLegendPanel } from './src/ui/BiomeLegendPanel.js';
-import { BIOME_DEFINITIONS } from './src/core/BiomeConstants.js';
+import { BiomeLegendPanel } from '../src/ui/BiomeLegendPanel.js';
+import { BIOME_DEFINITIONS } from '../src/core/BiomeConstants.js';
 
 console.log('🧪 Testing BiomeLegendPanel Structure...\n');
 

@@ -3,7 +3,7 @@
  * Run with: node test-entity-info-biome.js
  */
 
-import { Entity, ComponentType, Position, BiomeComponent, HabitatComponent, Stats, Status, Velocity } from './src/core/Entity.js';
+import { Entity, ComponentType, Position, BiomeComponent, HabitatComponent, Stats, Status, Velocity } from '../src/core/Entity.js';
 
 console.log('Testing EntityInfoPanel Biome Information...\n');
 

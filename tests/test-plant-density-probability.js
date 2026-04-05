@@ -2,8 +2,8 @@
  * Test plant density probability distribution
  */
 
-import { World } from './src/core/World.js';
-import { ComponentType } from './src/core/Entity.js';
+import { World } from '../src/core/World.js';
+import { ComponentType } from '../src/core/Entity.js';
 
 console.log('=== Testing Plant Density Probability ===\n');
 

@@ -3,8 +3,8 @@
  * This test verifies the biome rendering implementation without requiring a browser
  */
 
-import { BiomeGenerator } from './src/core/BiomeGenerator.js';
-import { BIOME_DEFINITIONS } from './src/core/BiomeConstants.js';
+import { BiomeGenerator } from '../src/core/BiomeGenerator.js';
+import { BIOME_DEFINITIONS } from '../src/core/BiomeConstants.js';
 
 console.log('Testing biome rendering implementation...\n');
 
