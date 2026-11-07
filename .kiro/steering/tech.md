@@ -3,7 +3,7 @@
 ## Build System
 
 - **Vite 5.0+**: Build tool and development server
-- **Node.js 16+**: Runtime requirement
+- **Node.js 18+**: Runtime requirement (tests use `node:test`)
 - **ES6+ Modules**: Native JavaScript modules (type: "module")
 
 ## Frontend Stack
@@ -36,7 +36,12 @@ npm run dev          # Start dev server (http://localhost:3000)
 ```bash
 npm run build        # Build for production (outputs to dist/)
 npm run preview      # Preview production build
-npm run clean        # Remove dist folder
+```
+
+### Testing and tuning
+```bash
+npm test                                   # node:test suites in tests/
+npm run headless -- 1800 myseed 60         # simulate 1800s headless, report every 60s
 ```
 
 ### Development Server

@@ -3,505 +3,92 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ecosystem Simulation</title>
-    <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
-
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          Oxygen, Ubuntu, Cantarell, sans-serif;
-        background: #1a1a1a;
-        color: #fff;
-        overflow: hidden;
-      }
-
-      /* Loading Screen */
-      #loading-screen {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: linear-gradient(135deg, #1a1a1a 0%, #2a2a2a 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 9999;
-        transition: opacity 0.5s ease;
-      }
-
-      #loading-screen.hidden {
-        opacity: 0;
-        pointer-events: none;
-      }
-
-      .loading-content {
-        text-align: center;
-      }
-
-      .loading-content h2 {
-        font-size: 32px;
-        margin-bottom: 20px;
-        color: #4caf50;
-      }
-
-      .spinner {
-        width: 60px;
-        height: 60px;
-        border: 5px solid #333;
-        border-top: 5px solid #4caf50;
-        border-radius: 50%;
-        animation: spin 1s linear infinite;
-        margin: 0 auto 30px;
-      }
-
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-
-      #loading-status {
-        color: #888;
-        font-size: 14px;
-        margin-top: 10px;
-      }
-
-      /* Tutorial Overlay */
-      #tutorial-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 10000;
-        transition: opacity 0.3s ease;
-      }
-
-      .tutorial-backdrop {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.8);
-        backdrop-filter: blur(4px);
-      }
-
-      .tutorial-box {
-        position: absolute;
-        background: linear-gradient(135deg, #2a2a2a 0%, #1f1f1f 100%);
-        border: 2px solid #4caf50;
-        border-radius: 12px;
-        padding: 30px;
-        max-width: 450px;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        animation: slideIn 0.3s ease;
-      }
-
-      @keyframes slideIn {
-        from {
-          transform: translateY(-20px);
-          opacity: 0;
-        }
-        to {
-          transform: translateY(0);
-          opacity: 1;
-        }
-      }
-
-      .tutorial-box.center {
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-      }
-
-      .tutorial-box.left {
-        top: 50%;
-        left: 40px;
-        transform: translateY(-50%);
-      }
-
-      .tutorial-box.right {
-        top: 50%;
-        right: 340px;
-        transform: translateY(-50%);
-      }
-
-      .tutorial-box h3 {
-        margin-bottom: 15px;
-        color: #4caf50;
-        font-size: 20px;
-      }
-
-      .tutorial-box p {
-        line-height: 1.6;
-        color: #ccc;
-        margin-bottom: 20px;
-      }
-
-      .tutorial-buttons {
-        display: flex;
-        gap: 10px;
-        margin-top: 20px;
-      }
-
-      .tutorial-btn {
-        flex: 1;
-        padding: 12px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 14px;
-        font-weight: 600;
-        transition: all 0.2s;
-      }
-
-      .tutorial-btn.primary {
-        background: #4caf50;
-        color: white;
-      }
-
-      .tutorial-btn.primary:hover {
-        background: #45a049;
-        transform: translateY(-1px);
-      }
-
-      .tutorial-btn.secondary {
-        background: #444;
-        color: #ccc;
-      }
-
-      .tutorial-btn.secondary:hover {
-        background: #555;
-      }
-
-      .tutorial-progress {
-        text-align: center;
-        margin-top: 15px;
-        color: #666;
-        font-size: 12px;
-      }
-
-      .tutorial-highlight {
-        box-shadow: 0 0 0 4px #4caf50, 0 0 30px rgba(76, 175, 80, 0.6) !important;
-        border-radius: 8px;
-        animation: pulse 2s infinite;
-      }
-
-      @keyframes pulse {
-        0%,
-        100% {
-          box-shadow: 0 0 0 4px #4caf50, 0 0 30px rgba(76, 175, 80, 0.6);
-        }
-        50% {
-          box-shadow: 0 0 0 4px #4caf50, 0 0 40px rgba(76, 175, 80, 0.8);
-        }
-      }
-
-      /* Save Notification */
-      .save-notification {
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: #4caf50;
-        color: white;
-        padding: 15px 25px;
-        border-radius: 8px;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-        z-index: 10002;
-        opacity: 0;
-        transform: translateX(400px);
-        transition: all 0.3s ease;
-        font-weight: 600;
-      }
-
-      .save-notification.show {
-        opacity: 1;
-        transform: translateX(0);
-      }
-
-      .save-notification.error {
-        background: #f44336;
-      }
-
-      #app {
-        display: flex;
-        height: 100vh;
-      }
-
-      #canvas-container {
-        flex: 1;
-        position: relative;
-        overflow: hidden;
-      }
-
-      canvas {
-        display: block;
-        cursor: crosshair;
-      }
-
-      #sidebar {
-        width: 300px;
-        background: #2a2a2a;
-        padding: 20px;
-        overflow-y: auto;
-        border-left: 1px solid #444;
-      }
-
-      h2 {
-        font-size: 18px;
-        margin-bottom: 15px;
-        color: #4caf50;
-      }
-
-      .stat-group {
-        margin-bottom: 20px;
-      }
-
-      .stat {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid #333;
-      }
-
-      .stat-label {
-        color: #aaa;
-      }
-
-      .stat-value {
-        font-weight: bold;
-      }
-
-      .controls {
-        margin-top: 20px;
-      }
-
-      button {
-        width: 100%;
-        padding: 10px;
-        margin: 5px 0;
-        background: #4caf50;
-        color: white;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-        font-size: 14px;
-        transition: background 0.2s;
-      }
-
-      button:hover {
-        background: #45a049;
-      }
-
-      button.danger {
-        background: #f44336;
-      }
-
-      button.danger:hover {
-        background: #da190b;
-      }
-
-      .slider-control {
-        margin: 15px 0;
-      }
-
-      .slider-control label {
-        display: block;
-        margin-bottom: 5px;
-        color: #aaa;
-      }
-
-      input[type="range"] {
-        width: 100%;
-      }
-
-      .entity-info {
-        background: #333;
-        padding: 10px;
-        border-radius: 4px;
-        margin-top: 10px;
-        font-size: 12px;
-      }
-
-      .entity-info div {
-        margin: 5px 0;
-      }
-
-      .legend {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin-top: 10px;
-      }
-
-      .legend-item {
-        display: flex;
-        align-items: center;
-        gap: 5px;
-      }
-
-      .legend-icon {
-        font-size: 20px;
-      }
-    </style>
+    <title>Evosim — Living Ecosystem</title>
+    <link rel="stylesheet" href="/src/styles/main.css" />
   </head>
   <body>
-    <!-- Loading Screen -->
-    <div id="loading-screen">
-      <div class="loading-content">
-        <div class="spinner"></div>
-        <h2>🌍 Ecosystem Simulation</h2>
-        <p id="loading-status">Initializing...</p>
-      </div>
-    </div>
-
     <div id="app">
-      <div id="canvas-container">
-        <canvas id="canvas"></canvas>
+      <canvas id="world"></canvas>
+
+      <header class="topbar glass">
+        <div class="brand">EVO<span>SIM</span></div>
+        <div class="divider"></div>
+        <div class="clock">
+          <canvas id="clock-dial" width="72" height="72"></canvas>
+          <div>
+            <div id="clock-primary" class="clock-primary">Day 1 · Spring</div>
+            <div id="clock-secondary" class="muted small">Year 1 · 07:12</div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="transport">
+          <button id="btn-pause" class="icon-btn" data-tip="Pause / resume (Space)"></button>
+          <div id="speed-group" class="segmented"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="actions">
+          <button id="btn-new" class="icon-btn" data-tip="New world (N)"></button>
+          <button id="btn-save" class="icon-btn" data-tip="Save (Ctrl+S)"></button>
+          <button id="btn-load" class="icon-btn" data-tip="Load (Ctrl+O)"></button>
+          <button id="btn-view" class="icon-btn" data-tip="View options (V)"></button>
+          <button id="btn-help" class="icon-btn" data-tip="Help (?)"></button>
+        </div>
+        <div id="view-menu" class="dropdown glass hidden"></div>
+      </header>
+
+      <aside id="eco-panel" class="panel left glass">
+        <div class="panel-header">
+          <h2>Ecosystem</h2>
+          <button id="btn-collapse" class="icon-btn small" data-tip="Collapse panel"></button>
+        </div>
+        <div class="panel-body">
+          <div id="species-cards" class="species-cards"></div>
+          <div class="resource-bars">
+            <div class="resource">
+              <div class="resource-label"><span>Vegetation</span><span id="veg-value" class="muted">—</span></div>
+              <div class="bar"><div id="veg-bar" class="bar-fill veg"></div></div>
+            </div>
+            <div class="resource">
+              <div class="resource-label"><span>Algae</span><span id="algae-value" class="muted">—</span></div>
+              <div class="bar"><div id="algae-bar" class="bar-fill algae"></div></div>
+            </div>
+          </div>
+          <div class="tabs" id="chart-tabs">
+            <button data-tab="population" class="active">Population</button>
+            <button data-tab="evolution">Evolution</button>
+          </div>
+          <div class="chart-wrap">
+            <canvas id="main-chart"></canvas>
+          </div>
+          <div id="evolution-controls" class="chip-row hidden"></div>
+          <div id="trait-controls" class="chip-row hidden"></div>
+          <div class="totals" id="totals"></div>
+        </div>
+      </aside>
+
+      <aside id="inspector" class="panel right glass hidden"></aside>
+
+      <div id="toasts"></div>
+
+      <div class="minimap glass">
+        <canvas id="minimap" width="240" height="160"></canvas>
+        <div id="minimap-legend" class="legend"></div>
       </div>
-      <div id="sidebar">
-        <h2>🌍 Ecosystem Simulation</h2>
 
-        <div class="stat-group">
-          <h3 style="font-size: 14px; margin-bottom: 10px">Population</h3>
-          <div class="stat">
-            <span class="stat-label">🐰 Herbivores</span>
-            <span class="stat-value" id="herbivore-count">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">🦊 Predators</span>
-            <span class="stat-value" id="predator-count">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">🌿 Plants</span>
-            <span class="stat-value" id="plant-count">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">🐟 Fish</span>
-            <span class="stat-value" id="fish-count">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">🦅 Birds</span>
-            <span class="stat-value" id="bird-count">0</span>
-          </div>
-        </div>
+      <div id="statusbar" class="statusbar"></div>
+      <div id="tooltip" class="tooltip hidden"></div>
 
-        <div class="stat-group">
-          <h3 style="font-size: 14px; margin-bottom: 10px">Statistics</h3>
-          <div class="stat">
-            <span class="stat-label">Total Entities</span>
-            <span class="stat-value" id="total-count">0</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">FPS</span>
-            <span class="stat-value" id="fps">60</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Time Elapsed</span>
-            <span class="stat-value" id="time-elapsed">0s</span>
-          </div>
-          <div class="stat">
-            <span class="stat-label">Quality</span>
-            <span class="stat-value" id="quality-level">HIGH</span>
-          </div>
-        </div>
+      <div id="modal-root"></div>
 
-        <div class="stat-group">
-          <h3 style="font-size: 14px; margin-bottom: 10px">
-            Population History
-          </h3>
-          <canvas
-            id="stats-graph"
-            width="260"
-            height="150"
-            style="border-radius: 4px"
-          ></canvas>
-        </div>
-
-        <div class="controls">
-          <button id="pause-btn">⏸️ Pause</button>
-          <button id="reset-btn" class="danger">🔄 Reset</button>
-          <button id="save-btn">💾 Save</button>
-          <button id="load-btn">📂 Load</button>
-          <button id="tutorial-btn">📖 Tutorial</button>
-
-          <div class="slider-control">
-            <label>Speed: <span id="speed-value">1.0x</span></label>
-            <input
-              type="range"
-              id="speed-slider"
-              min="0.1"
-              max="5"
-              step="0.1"
-              value="1"
-            />
-          </div>
-
-          <div class="slider-control">
-            <label>Zoom: <span id="zoom-value">1.0x</span></label>
-            <input
-              type="range"
-              id="zoom-slider"
-              min="0.5"
-              max="3"
-              step="0.1"
-              value="1"
-            />
-          </div>
-
-          <div class="quality-controls" style="margin-top: 15px;">
-            <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 13px;">
-              Quality Settings
-            </label>
-            <div style="display: flex; gap: 5px; margin-bottom: 8px;">
-              <button id="quality-low" style="flex: 1; padding: 6px; font-size: 12px; background: #666;">LOW</button>
-              <button id="quality-medium" style="flex: 1; padding: 6px; font-size: 12px; background: #666;">MED</button>
-              <button id="quality-high" style="flex: 1; padding: 6px; font-size: 12px; background: #666;">HIGH</button>
-            </div>
-            <button id="quality-auto" style="padding: 8px; font-size: 12px; background: #4caf50;">
-              🔄 Auto Quality: ON
-            </button>
-          </div>
-
-          <div class="heatmap-controls" style="margin-top: 15px;">
-            <label style="display: block; margin-bottom: 8px; color: #aaa; font-size: 13px;">
-              Population Heatmap (H)
-            </label>
-            <button id="heatmap-toggle" style="padding: 8px; font-size: 12px; background: #666; margin-bottom: 8px;">
-              🗺️ Heatmap: OFF
-            </button>
-            <div id="heatmap-species-controls" style="display: none;">
-              <label style="display: block; margin-bottom: 5px; color: #888; font-size: 11px;">
-                Species Filter (Shift+H)
-              </label>
-              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin-bottom: 5px;">
-                <button id="heatmap-all" style="padding: 6px; font-size: 11px; background: #4caf50; font-weight: bold;">All</button>
-                <button id="heatmap-herbivore" style="padding: 6px; font-size: 11px; background: #666;">🐰 Herb</button>
-                <button id="heatmap-predator" style="padding: 6px; font-size: 11px; background: #666;">🦊 Pred</button>
-                <button id="heatmap-plant" style="padding: 6px; font-size: 11px; background: #666;">🌿 Plant</button>
-                <button id="heatmap-fish" style="padding: 6px; font-size: 11px; background: #666;">🐟 Fish</button>
-                <button id="heatmap-bird" style="padding: 6px; font-size: 11px; background: #666;">🦅 Bird</button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="entity-info" id="entity-info" style="display: none">
-          <h3 style="font-size: 14px; margin-bottom: 5px">Selected Entity</h3>
-          <div id="entity-details"></div>
+      <div id="loading">
+        <div class="loading-card">
+          <div class="brand big">EVO<span>SIM</span></div>
+          <p class="muted">A living ecosystem shaped by natural selection</p>
+          <div class="progress"><div id="loading-bar"></div></div>
+          <p id="loading-status" class="muted small">Seeding the world…</p>
         </div>
       </div>
     </div>
-
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>

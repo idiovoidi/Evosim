@@ -4,99 +4,60 @@
 
 ```
 src/
-├── core/           # Core simulation logic and entity management
-├── systems/        # ECS systems (behavior, movement, health, reproduction, biome effects)
-├── graphics/       # Rendering (Renderer, HeatmapRenderer, DebugRenderer, VisualIndicatorSystem)
-├── ui/             # User interface components (panels, tooltips, notifications, graphs)
-├── utils/          # Utilities (AdaptiveQualityManager, PerformanceConfig)
-└── main.js         # Application entry point
+├── main.js            # Entry point: creates the App
+├── app/               # Browser composition root (App) and SaveManager
+├── config/            # Data only: defaults, species archetypes, genes, biomes
+├── errors/            # EvosimError hierarchy
+├── utils/             # decorators, math, random, color, EventBus, Profiler
+├── sim/               # Headless simulation (no DOM; runs in Node)
+│   ├── Simulation.js  # Builds the world and runs systems on a fixed timestep
+│   ├── World.js       # Creature/corpse storage, spawning, spatial indices
+│   ├── Clock.js       # Day/night and seasons
+│   ├── SpatialHash.js
+│   ├── terrain/       # TerrainGenerator, Terrain, VegetationField, distanceField
+│   ├── genetics/      # Genome (crossover/mutation), Phenotype (gene trade-offs)
+│   ├── creatures/     # Creature composed of Needs, Lifecycle, Mind, Record parts
+│   ├── behavior/      # Utility-AI Brain, Perception, behaviours, steering
+│   ├── systems/       # Movement, Metabolism, Reproduction, Decomposition, Immigration
+│   ├── stats/         # StatsRecorder (history) and EventDetector (notices)
+│   └── persistence/   # Snapshot save/load (terrain regenerated from seed)
+├── render/            # Canvas renderer, Camera, Minimap
+│   ├── terrain/       # TerrainPainter bakes ground/canopy/shimmer once per world
+│   └── layers/        # Vegetation, creatures, particles, lighting, overlays
+├── ui/                # DOM HUD: TopBar, PopulationPanel, Inspector, Toasts, dialogs
+│   └── charts/        # LineChart and sparklines
+├── input/             # InputController (pointer, wheel, keyboard)
+└── styles/main.css
 
-systems/            # Python backend
-├── simulation_manager.py
-└── network_protocol.py
-
-player_actions/     # Python player interaction handlers
-└── entity_inspector.py
-
-static/             # Static assets
-└── js/             # Legacy/alternative JS files
-
-dist/               # Production build output (generated)
-node_modules/       # Dependencies (generated)
+scripts/headless.js    # Run the sim in Node and print a population report
+tests/                 # node:test suites (npm test)
 ```
+
+Python files under `systems/` and `player_actions/` are legacy and unused by the JS app.
 
 ## Code Organization Patterns
 
-### Entity-Component-System (ECS)
+### Composition over inheritance
+- `Creature` owns plain part objects (`Needs`, `Lifecycle`, `Mind`, `Record`) and a `Phenotype` derived from its `Genome`.
+- `Simulation` wires systems in update order; each system has `update(dt)` and receives the `World` by injection.
+- `App` is the only place that knows about every subsystem; UI widgets receive callbacks instead of reaching into the app.
 
-**Entities** (`src/core/Entity.js`):
-- Base Entity class with component management
-- Component types defined as constants (ComponentType)
-- Component classes: Position, Velocity, Appearance, Stats, Status, Genetics, Traits, BiomeComponent, HabitatComponent
+### Behaviour
+Each behaviour in `sim/behavior/behaviors.js` is `{ id, label, score, plan, act }`. The `Brain` scores the
+species' behaviour list every `brainInterval` seconds, plans the winner, and acts every step.
 
-**Systems** (`src/systems/`):
-- BehaviorSystem: AI decision-making and state machines
-- MovementSystem: Position updates and physics
-- HealthSystem: Energy consumption and death
-- ReproductionSystem: Breeding and offspring creation
-- BiomeEffectSystem: Terrain-based modifiers
+### Events
+`World.events` (an `EventBus`) carries `birth`, `death`, `kill`, `attack`, `mating`, `stats`, `notice`, etc.
+Renderer particles and UI toasts subscribe; the simulation never imports render or UI code.
 
-**World** (`src/core/World.js`):
-- Central manager coordinating all systems
-- Entity lifecycle management
-- QuadTree spatial partitioning for performance
-- EntityPool for object reuse
+### Errors and decorators
+- All custom errors extend `EvosimError` (`ConfigError`, `SimulationError` → `TerrainError`/`SpawnError`/`GeneticsError`,
+  `RenderError`, `PersistenceError` → `SaveError`/`LoadError`).
+- `utils/decorators.js` provides `guarded`, `validated` and `timed`, applied with
+  `decorate(Class, { method: [guarded(RenderError)] })`.
 
-### Rendering Pipeline
+## Conventions
 
-**Renderer** (`src/graphics/Renderer.js`):
-- Canvas-based 2D rendering
-- Camera system with zoom and pan
-- Layer-based entity rendering
-- Batching for performance optimization
-
-**Specialized Renderers**:
-- HeatmapRenderer: Population density visualization
-- DebugRenderer: Development tools and overlays
-- VisualIndicatorSystem: Entity state indicators
-
-### UI Components
-
-All UI components in `src/ui/`:
-- UI.js: Main controller
-- EntityInfoPanel.js: Selected entity details
-- BiomeLegendPanel.js: Biome information display
-- BiomeTooltip.js: Hover tooltips
-- NotificationManager.js: Event notifications
-- StatsGraph.js: Population history graphs
-- PerformanceMonitor.js: FPS and performance tracking
-- Tutorial.js: Interactive onboarding
-
-## File Naming Conventions
-
-- **PascalCase** for class files: `World.js`, `EntityFactory.js`, `BiomeGenerator.js`
-- **camelCase** for utility files: `main.js`
-- **SCREAMING_SNAKE_CASE** for constants files: `BiomeConstants.js`
-- **snake_case** for Python files: `simulation_manager.py`, `network_protocol.py`
-
-## Import/Export Pattern
-
-Use ES6 named exports for classes:
-```javascript
-export class World { }
-```
-
-Import with explicit names:
-```javascript
-import { World } from './core/World.js';
-```
-
-Always include `.js` extension in imports.
-
-## Performance Considerations
-
-- QuadTree for spatial queries (O(log n) instead of O(n²))
-- EntityPool for object reuse (reduce GC pressure)
-- Adaptive quality system adjusts rendering based on FPS
-- Batched rendering reduces draw calls
-- Periodic QuadTree rebuilds (every 5 seconds)
+- PascalCase files for classes, camelCase for function modules.
+- Named ES exports; always include `.js` in imports.
+- Tunables live in `src/config/`, never inline in systems.
